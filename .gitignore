@@ -1,4 +1,9 @@
 # ----------
+## self
+# build directory/ies
+build/
+
+# ----------
 ## CMake
 CMakeLists.txt.user
 CMakeCache.txt
