@@ -1,3 +1,3 @@
-#define ARTCCEL_VERSION_MAJOR @artccel_VERSION_MAJOR@
-#define ARTCCEL_VERSION_MINOR @artccel_VERSION_MINOR@
-#define ARTCCEL_VERSION_PATCH @artccel_VERSION_PATCH@
+#define ARTCCEL_VERSION_MAJOR /* clang-format off */@artccel_VERSION_MAJOR@ /* clang-format on */
+#define ARTCCEL_VERSION_MINOR /* clang-format off */@artccel_VERSION_MINOR@ /* clang-format on */
+#define ARTCCEL_VERSION_PATCH /* clang-format off */@artccel_VERSION_PATCH@ /* clang-format on */
