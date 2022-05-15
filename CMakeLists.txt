@@ -4,6 +4,8 @@ project(artccel VERSION 1.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+find_package(Microsoft.GSL 4.0.0 EXACT REQUIRED CONFIG)
+
 add_library(artccel INTERFACE)
 configure_file("in/config.h" "include/artccel/config.h")
 target_include_directories(artccel INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
