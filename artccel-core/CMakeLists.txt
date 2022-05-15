@@ -3,7 +3,7 @@ project(artccel-core VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=* -header-filter=.)
+set(CMAKE_CXX_CLANG_TIDY clang-tidy --checks=*,-fuchsia-trailing-return --warnings-as-errors=* --header-filter=.)
 
 add_library(artccel-core SHARED "src/placeholder.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
