@@ -3,6 +3,7 @@ project(artccel VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=* -header-filter=.)
 
 find_package(Microsoft.GSL 4.0.0 EXACT REQUIRED CONFIG)
 
