@@ -22,14 +22,13 @@ enum class bound : uint8_t {
 template <bound Bound, std::totally_ordered auto Left,
           std::totally_ordered auto Right>
 requires std::totally_ordered_with<decltype(Left), decltype(Right)>
-consteval auto bound_less_than() -> bool {
+consteval auto bound_less_than() {
   return (Bound == bound::open && Left < Right) ||
          (Bound == bound::closed && Left <= Right) || Bound == bound::unbounded;
 }
 
 inline auto bound_less_than(bound bound, std::totally_ordered auto const &left,
-                            std::totally_ordered auto const &right)
-    -> bool requires
+                            std::totally_ordered auto const &right) requires
     std::totally_ordered_with<decltype(left), decltype(right)> {
   return (bound == bound::open && left < right) ||
          (bound == bound::closed && left <= right) || bound == bound::unbounded;
