@@ -6,6 +6,7 @@
 #include <cinttypes>
 #include <concepts>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 namespace artccel::core {
@@ -19,9 +20,11 @@ enum class bound : uint8_t {
   unbounded,
 };
 
-constexpr auto bound_less_than(bound bound,
-                               std::totally_ordered auto const &left,
-                               std::totally_ordered auto const &right) requires
+constexpr auto bound_less_than(
+    bound bound, std::totally_ordered auto const &left,
+    std::totally_ordered auto const
+        &right) noexcept(noexcept(left < right) &&noexcept(left <=
+                                                           right)) requires
     std::totally_ordered_with<decltype(left), decltype(right)> {
   return (bound == bound::open && left < right) ||
          (bound == bound::closed && left <= right) || bound == bound::unbounded;
@@ -37,10 +40,12 @@ struct interval {
   - compile-time checking
   */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval interval(Type const &value) requires std::copy_constructible<Type>
+  consteval interval(Type const &value) noexcept(noexcept(interval{
+      value, nullptr})) requires std::copy_constructible<Type>
       : interval{value, nullptr} {}
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval interval(Type &&value) requires std::move_constructible<Type>
+  consteval interval(Type &&value) noexcept(noexcept(interval{
+      std::move(value), nullptr})) requires std::move_constructible<Type>
       : interval{std::move(value), nullptr} {}
   /*
   usage
@@ -49,22 +54,39 @@ struct interval {
   - compile-time checking requires constexpr/consteval context
   - runtime checking
   */
-  constexpr interval(Type const &value,
-                     [[maybe_unused]] std::nullptr_t /*unused*/) requires
+  constexpr interval(
+      Type const &value,
+      [[maybe_unused]] std::
+          nullptr_t /*unused*/) noexcept(std::
+                                             is_nothrow_copy_constructible_v<
+                                                 Type>
+                                                 &&noexcept(check(
+                                                     this->value))) requires
       std::copy_constructible<Type> : value{value} {
     check(this->value);
   }
-  constexpr interval(Type &&value,
-                     [[maybe_unused]] std::nullptr_t /*unused*/) requires
+  constexpr interval(
+      Type &&value,
+      [[maybe_unused]] std::
+          nullptr_t /*unused*/) noexcept(std::
+                                             is_nothrow_move_constructible_v<
+                                                 Type>
+                                                 &&noexcept(check(
+                                                     this->value))) requires
       std::move_constructible<Type> : value{std::move(value)} {
     check(this->value);
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  constexpr operator Type() const { return value; }
+  constexpr operator Type() const
+      noexcept(noexcept(value) && std::is_nothrow_move_constructible_v<Type>) {
+    return value;
+  }
 
 private:
   Type value;
-  static constexpr void check(Type const &value) {
+  static constexpr void check(Type const &value) noexcept(
+      noexcept(bound_less_than(LeftBound, Left, value)) &&noexcept(
+          bound_less_than(RightBound, value, Right))) {
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(bound_less_than(LeftBound, Left, value) &&
