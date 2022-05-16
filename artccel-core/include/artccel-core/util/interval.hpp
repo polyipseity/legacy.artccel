@@ -43,14 +43,16 @@ struct interval {
       : interval{Type{value}} {}
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   interval(Type &&value) : interval{std::move(value), nullptr} {
-    assert(("left >(=) value", bound_less_than(LeftBound, Left, this->value)));
     assert(
-        ("value >(=) right", bound_less_than(RightBound, this->value, Right)));
+        (u8"left >(=) value", bound_less_than(LeftBound, Left, this->value)));
+    assert((u8"value >(=) right",
+            bound_less_than(RightBound, this->value, Right)));
   }
   template <Type Value> static auto check() {
-    static_assert(bound_less_than<LeftBound, Left, Value>(), "left >(=) value");
+    static_assert(bound_less_than<LeftBound, Left, Value>(),
+                  u8"left >(=) value");
     static_assert(bound_less_than<RightBound, Value, Right>(),
-                  "value >(=) right");
+                  u8"value >(=) right");
     return interval{Value, nullptr};
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
