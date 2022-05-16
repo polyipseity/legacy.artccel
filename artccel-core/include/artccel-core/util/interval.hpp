@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cinttypes>
 #include <concepts>
+#include <cstddef>
 #include <utility>
 
 namespace artccel::core {
@@ -42,7 +43,7 @@ struct interval {
   interval(Type const &value) requires std::copyable<Type>
       : interval{Type{value}} {}
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  interval(Type &&value) : interval{std::move(value), false} {
+  interval(Type &&value) : interval{std::move(value), nullptr} {
     assert(("left >(=) value", bound_less_than(LeftBound, Left, this->value)));
     assert(
         ("value >(=) right", bound_less_than(RightBound, this->value, Right)));
@@ -51,14 +52,15 @@ struct interval {
     static_assert(bound_less_than<LeftBound, Left, Value>(), "left >(=) value");
     static_assert(bound_less_than<RightBound, Value, Right>(),
                   "value >(=) right");
-    return interval{Value, false};
+    return interval{Value, nullptr};
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   inline operator Type() const { return value; }
 
 private:
   Type value;
-  interval(Type &&value, [[maybe_unused]] bool /*unused*/) : value{value} {}
+  interval(Type &&value, [[maybe_unused]] std::nullptr_t /*unused*/)
+      : value{value} {}
 };
 
 template <std::totally_ordered Type>
