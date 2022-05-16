@@ -30,12 +30,25 @@ constexpr auto bound_less_than(bound bound,
 template <std::totally_ordered Type, bound LeftBound, Type Left, Type Right,
           bound RightBound>
 struct interval {
+  /*
+  usage
+  `return (constant expression);`
+  checking (debug ONLY)
+  - compile-time checking
+  */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   consteval interval(Type const &value) requires std::copy_constructible<Type>
       : interval{value, nullptr} {}
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   consteval interval(Type &&value) requires std::move_constructible<Type>
       : interval{std::move(value), nullptr} {}
+  /*
+  usage
+  `return {(expression), nullptr};`
+  checking (debug ONLY)
+  - compile-time checking requires constexpr/consteval context
+  - runtime checking
+  */
   constexpr interval(Type const &value,
                      [[maybe_unused]] std::nullptr_t /*unused*/) requires
       std::copy_constructible<Type> : value{value} {
