@@ -1,0 +1,4 @@
+Checks: "*,-fuchsia-trailing-return"
+WarningsAsErrors: "*"
+HeaderFilterRegex: .
+FormatStyle: LLVM
