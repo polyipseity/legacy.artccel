@@ -29,34 +29,38 @@ constexpr auto bound_less_than(bound bound,
 
 template <std::totally_ordered Type, bound LeftBound, Type Left, Type Right,
           bound RightBound>
-requires std::movable<Type>
 struct interval {
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval interval(Type const &value) requires std::copyable<Type>
-      : interval{Type{value}} {}
+  consteval interval(Type const &value) requires std::copy_constructible<Type>
+      : interval{value, nullptr} {}
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval interval(Type &&value) : interval{std::move(value), nullptr} {}
-  constexpr interval(
-      Type const &value,
-      [[maybe_unused]] std::nullptr_t /*unused*/) requires std::copyable<Type>
-      : interval{Type{value}, nullptr} {}
-  constexpr interval(Type &&value, [[maybe_unused]] std::nullptr_t /*unused*/)
-      : value{value} {
-    // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(
-        bound_less_than(LeftBound, Left, this->value) && u8"left >(=) value");
-    // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(
-        bound_less_than(RightBound, this->value, Right) &&
-        u8"value >(=) right");
+  consteval interval(Type &&value) requires std::move_constructible<Type>
+      : interval{std::move(value), nullptr} {}
+  constexpr interval(Type const &value,
+                     [[maybe_unused]] std::nullptr_t /*unused*/) requires
+      std::copy_constructible<Type> : value{value} {
+    check(this->value);
+  }
+  constexpr interval(Type &&value,
+                     [[maybe_unused]] std::nullptr_t /*unused*/) requires
+      std::move_constructible<Type> : value{std::move(value)} {
+    check(this->value);
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   constexpr operator Type() const { return value; }
 
 private:
   Type value;
+  static constexpr void check(Type const &value) {
+    // clang-format off
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+    /* clang-format on */ assert(bound_less_than(LeftBound, Left, value) &&
+                                 u8"left >(=) value");
+    // clang-format off
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+    /* clang-format on */ assert(bound_less_than(RightBound, value, Right) &&
+                                 u8"value >(=) right");
+  }
 };
 
 template <std::totally_ordered Type>
