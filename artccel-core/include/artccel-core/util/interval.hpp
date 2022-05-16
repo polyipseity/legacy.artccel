@@ -58,7 +58,7 @@ struct interval {
 
 private:
   Type value;
-  interval(Type &&value, bool /*unused*/) : value{value} {}
+  interval(Type &&value, [[maybe_unused]] bool /*unused*/) : value{value} {}
 };
 
 template <std::totally_ordered Type>
