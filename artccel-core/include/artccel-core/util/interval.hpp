@@ -27,8 +27,8 @@ consteval auto bound_less_than() {
          (Bound == bound::closed && Left <= Right) || Bound == bound::unbounded;
 }
 
-inline auto bound_less_than(bound bound, std::totally_ordered auto const &left,
-                            std::totally_ordered auto const &right) requires
+auto bound_less_than(bound bound, std::totally_ordered auto const &left,
+                     std::totally_ordered auto const &right) requires
     std::totally_ordered_with<decltype(left), decltype(right)> {
   return (bound == bound::open && left < right) ||
          (bound == bound::closed && left <= right) || bound == bound::unbounded;
@@ -54,7 +54,7 @@ struct interval {
     return interval{Value, nullptr};
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  inline operator Type() const { return value; }
+  operator Type() const { return value; }
 
 private:
   Type value;
