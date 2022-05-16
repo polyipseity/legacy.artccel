@@ -19,16 +19,9 @@ enum class bound : uint8_t {
   unbounded,
 };
 
-template <bound Bound, std::totally_ordered auto Left,
-          std::totally_ordered auto Right>
-requires std::totally_ordered_with<decltype(Left), decltype(Right)>
-consteval auto bound_less_than() {
-  return (Bound == bound::open && Left < Right) ||
-         (Bound == bound::closed && Left <= Right) || Bound == bound::unbounded;
-}
-
-auto bound_less_than(bound bound, std::totally_ordered auto const &left,
-                     std::totally_ordered auto const &right) requires
+constexpr auto bound_less_than(bound bound,
+                               std::totally_ordered auto const &left,
+                               std::totally_ordered auto const &right) requires
     std::totally_ordered_with<decltype(left), decltype(right)> {
   return (bound == bound::open && left < right) ||
          (bound == bound::closed && left <= right) || bound == bound::unbounded;
@@ -39,33 +32,31 @@ template <std::totally_ordered Type, bound LeftBound, Type Left, Type Right,
 requires std::movable<Type>
 struct interval {
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  interval(Type const &value) requires std::copyable<Type>
+  consteval interval(Type const &value) requires std::copyable<Type>
       : interval{Type{value}} {}
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  interval(Type &&value) : interval{std::move(value), nullptr} {
+  consteval interval(Type &&value) : interval{std::move(value), nullptr} {}
+  constexpr interval(
+      Type const &value,
+      [[maybe_unused]] std::nullptr_t /*unused*/) requires std::copyable<Type>
+      : interval{Type{value}, nullptr} {}
+  constexpr interval(Type &&value, [[maybe_unused]] std::nullptr_t /*unused*/)
+      : value{value} {
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(
         bound_less_than(LeftBound, Left, this->value) && u8"left >(=) value");
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(bound_less_than(
-        RightBound, this->value, Right && u8"value >(=) right"));
-  }
-  template <Type Value> static auto check() {
-    static_assert(bound_less_than<LeftBound, Left, Value>(),
-                  u8"left >(=) value");
-    static_assert(bound_less_than<RightBound, Value, Right>(),
-                  u8"value >(=) right");
-    return interval{Value, nullptr};
+    /* clang-format on */ assert(
+        bound_less_than(RightBound, this->value, Right) &&
+        u8"value >(=) right");
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator Type() const { return value; }
+  constexpr operator Type() const { return value; }
 
 private:
   Type value;
-  interval(Type &&value, [[maybe_unused]] std::nullptr_t /*unused*/)
-      : value{value} {}
 };
 
 template <std::totally_ordered Type>
