@@ -11,7 +11,7 @@
 namespace artccel::core {
 template <std::totally_ordered Type>
 requires std::default_initializable<Type>
-constexpr Type unbounded{}; // NOLINT(misc-definitions-in-headers)
+constexpr Type unbounded{};
 
 enum class bound : uint8_t {
   open,
