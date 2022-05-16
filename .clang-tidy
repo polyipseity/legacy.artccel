@@ -1,4 +1,4 @@
-Checks: "*,-fuchsia-trailing-return"
+Checks: "*,-fuchsia-trailing-return,-llvmlibc-implementation-in-namespace"
 WarningsAsErrors: "*"
 HeaderFilterRegex: .
 FormatStyle: LLVM
