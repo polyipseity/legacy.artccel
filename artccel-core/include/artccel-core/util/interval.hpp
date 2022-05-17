@@ -14,10 +14,10 @@ template <std::totally_ordered Type>
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct bound {
 public:
-  bound(bound const &) = delete;
-  auto operator=(bound const &) = delete;
-  bound(bound &&) = delete;
-  auto operator=(bound &&) = delete;
+  bound(bound<Type> const &) = delete;
+  auto operator=(bound<Type> const &) = delete;
+  bound(bound<Type> &&) = delete;
+  auto operator=(bound<Type> &&) = delete;
 
 protected:
   consteval bound() noexcept = default;
