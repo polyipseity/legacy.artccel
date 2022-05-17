@@ -15,9 +15,9 @@ template <std::totally_ordered Type>
 struct bound {
 public:
   bound(bound const &) = delete;
-  auto operator=(bound const &) -> auto & = delete;
+  auto operator=(bound const &) = delete;
   bound(bound &&) = delete;
-  auto operator=(bound &&) -> auto & = delete;
+  auto operator=(bound &&) = delete;
 
 protected:
   consteval bound() noexcept = default;
