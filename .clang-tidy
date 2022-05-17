@@ -1,4 +1,4 @@
-Checks: "*,-llvmlibc-*,-fuchsia-trailing-return"
+Checks: "*,-llvmlibc-*,-fuchsia-trailing-return,-fuchsia-overloaded-operator"
 WarningsAsErrors: "*"
 HeaderFilterRegex: .
 FormatStyle: LLVM

@@ -3,7 +3,7 @@
 #pragma once
 
 #include <cassert>
-#include <cinttypes>
+#include <compare>
 #include <concepts>
 #include <cstddef>
 #include <type_traits>
@@ -11,28 +11,267 @@
 
 namespace artccel::core {
 template <std::totally_ordered Type>
-requires std::default_initializable<Type>
-constexpr Type unbounded{};
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct bound {
+public:
+  bound(bound const &) = delete;
+  auto operator=(bound const &) -> auto & = delete;
+  bound(bound &&) = delete;
+  auto operator=(bound &&) -> auto & = delete;
 
-enum class bound : uint8_t {
-  open,
-  closed,
-  unbounded,
+protected:
+  consteval bound() noexcept = default;
+  constexpr ~bound() = default;
 };
 
-constexpr auto bound_less_than(
-    bound bound, std::totally_ordered auto const &left,
-    std::totally_ordered auto const
-        &right) noexcept(noexcept(left < right) &&noexcept(left <=
-                                                           right)) requires
-    std::totally_ordered_with<decltype(left), decltype(right)> {
-  return (bound == bound::open && left < right) ||
-         (bound == bound::closed && left <= right) || bound == bound::unbounded;
-}
+template <std::totally_ordered Type, Type Value>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct open_bound : bound<Type> {
+  consteval open_bound() noexcept = default;
+  friend constexpr auto operator==(const open_bound<Type, Value> &left
+                                   [[maybe_unused]],
+                                   const Type &right
+                                   [[maybe_unused]]) noexcept {
+    return false;
+  }
+  friend constexpr auto operator==(const Type &left [[maybe_unused]],
+                                   const open_bound<Type, Value> &right
+                                   [[maybe_unused]]) noexcept {
+    return false;
+  }
+  friend constexpr auto operator!=(const open_bound<Type, Value> &left
+                                   [[maybe_unused]],
+                                   const Type &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator!=(const Type &left [[maybe_unused]],
+                                   const open_bound<Type, Value> &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto
+  operator<(const open_bound<Type, Value> &left [[maybe_unused]],
+            const Type &right) noexcept(noexcept(Value < right)) {
+    return Value < right;
+  }
+  friend constexpr auto
+  operator<(const Type &left, const open_bound<Type, Value> &right
+            [[maybe_unused]]) noexcept(noexcept(left < Value)) {
+    return left < Value;
+  }
+  friend constexpr auto
+  operator>(const open_bound<Type, Value> &left [[maybe_unused]],
+            const Type &right) noexcept(noexcept(Value > right)) {
+    return Value > right;
+  }
+  friend constexpr auto
+  operator>(const Type &left, const open_bound<Type, Value> &right
+            [[maybe_unused]]) noexcept(noexcept(left > Value)) {
+    return left > Value;
+  }
+  friend constexpr auto
+  operator<=(const open_bound<Type, Value> &left [[maybe_unused]],
+             const Type &right) noexcept(noexcept(Value < right)) {
+    return Value < right;
+  }
+  friend constexpr auto
+  operator<=(const Type &left, const open_bound<Type, Value> &right
+             [[maybe_unused]]) noexcept(noexcept(left < Value)) {
+    return left < Value;
+  }
+  friend constexpr auto
+  operator>=(const open_bound<Type, Value> &left [[maybe_unused]],
+             const Type &right) noexcept(noexcept(Value > left)) {
+    return Value > right;
+  }
+  friend constexpr auto
+  operator>=(const Type &left, const open_bound<Type, Value> &right
+             [[maybe_unused]]) noexcept(noexcept(left > Value)) {
+    return left > Value;
+  }
+  friend constexpr auto operator<=>(
+      const open_bound<Type, Value> &left [[maybe_unused]],
+      const Type &right) noexcept(noexcept(Value < right) &&noexcept(Value >
+                                                                     right)) {
+    return Value < right   ? std::partial_ordering::less
+           : Value > right ? std::partial_ordering::greater
+                           : std::partial_ordering::unordered;
+  }
+  friend constexpr auto operator<=>(
+      const Type &left, const open_bound<Type, Value> &right
+      [[maybe_unused]]) noexcept(noexcept(left < Value) &&noexcept(left >
+                                                                   Value)) {
+    return left < Value   ? std::partial_ordering::less
+           : left > Value ? std::partial_ordering::greater
+                          : std::partial_ordering::unordered;
+  }
+};
 
-template <std::totally_ordered Type, bound LeftBound, Type Left, Type Right,
-          bound RightBound>
-struct interval {
+template <std::totally_ordered Type, Type Value>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct closed_bound : bound<Type> {
+  consteval closed_bound() noexcept = default;
+  friend constexpr auto
+  operator==(const closed_bound<Type, Value> &left [[maybe_unused]],
+             const Type &right) noexcept(noexcept(Value == right)) {
+    return Value == right;
+  }
+  friend constexpr auto
+  operator==(const Type &left, const closed_bound<Type, Value> &right
+             [[maybe_unused]]) noexcept(noexcept(left == Value)) {
+    return left == Value;
+  }
+  friend constexpr auto
+  operator!=(const closed_bound<Type, Value> &left [[maybe_unused]],
+             const Type &right) noexcept(noexcept(Value != right)) {
+    return Value != right;
+  }
+  friend constexpr auto
+  operator!=(const Type &left, const closed_bound<Type, Value> &right
+             [[maybe_unused]]) noexcept(noexcept(left != Value)) {
+    return left != Value;
+  }
+  friend constexpr auto
+  operator<(const closed_bound<Type, Value> &left [[maybe_unused]],
+            const Type &right) noexcept(noexcept(Value <= right)) {
+    return Value <= right;
+  }
+  friend constexpr auto
+  operator<(const Type &left, const closed_bound<Type, Value> &right
+            [[maybe_unused]]) noexcept(noexcept(left <= Value)) {
+    return left <= Value;
+  }
+  friend constexpr auto
+  operator>(const closed_bound<Type, Value> &left [[maybe_unused]],
+            const Type &right) noexcept(noexcept(Value >= right)) {
+    return Value >= right;
+  }
+  friend constexpr auto
+  operator>(const Type &left, const closed_bound<Type, Value> &right
+            [[maybe_unused]]) noexcept(noexcept(left >= Value)) {
+    return left >= Value;
+  }
+  friend constexpr auto
+  operator<=(const closed_bound<Type, Value> &left [[maybe_unused]],
+             const Type &right) noexcept(noexcept(Value <= right)) {
+    return Value <= right;
+  }
+  friend constexpr auto
+  operator<=(const Type &left, const closed_bound<Type, Value> &right
+             [[maybe_unused]]) noexcept(noexcept(left <= Value)) {
+    return left <= Value;
+  }
+  friend constexpr auto
+  operator>=(const closed_bound<Type, Value> &left [[maybe_unused]],
+             const Type &right) noexcept(noexcept(Value >= left)) {
+    return Value >= right;
+  }
+  friend constexpr auto
+  operator>=(const Type &left, const closed_bound<Type, Value> &right
+             [[maybe_unused]]) noexcept(noexcept(left >= Value)) {
+    return left >= Value;
+  }
+  friend constexpr auto operator<=>(
+      const closed_bound<Type, Value> &left [[maybe_unused]],
+      const Type &right) noexcept(noexcept(Value < right) &&noexcept(Value >
+                                                                     right)
+                                      &&noexcept(Value == right)) {
+    return Value < right    ? std::partial_ordering::less
+           : Value > right  ? std::partial_ordering::greater
+           : Value == right ? std::partial_ordering::equivalent
+                            : std::partial_ordering::unordered;
+  }
+  friend constexpr auto operator<=>(
+      const Type &left, const closed_bound<Type, Value> &right
+      [[maybe_unused]]) noexcept(noexcept(left < Value) &&noexcept(left > Value)
+                                     &&noexcept(left == Value)) {
+    return left < Value    ? std::partial_ordering::less
+           : left > Value  ? std::partial_ordering::greater
+           : left == Value ? std::partial_ordering::equivalent
+                           : std::partial_ordering::unordered;
+  }
+};
+
+// NOLINTNEXTLINE(altera-struct-pack-align)
+template <std::totally_ordered Type> struct unbounded : bound<Type> {
+  consteval unbounded() noexcept = default;
+  friend constexpr auto operator==(const unbounded<Type> &left [[maybe_unused]],
+                                   const Type &right
+                                   [[maybe_unused]]) noexcept {
+    return false;
+  }
+  friend constexpr auto operator==(const Type &left [[maybe_unused]],
+                                   const unbounded<Type> &right
+                                   [[maybe_unused]]) noexcept {
+    return false;
+  }
+  friend constexpr auto operator!=(const unbounded<Type> &left [[maybe_unused]],
+                                   const Type &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator!=(const Type &left [[maybe_unused]],
+                                   const unbounded<Type> &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator<(const unbounded<Type> &left [[maybe_unused]],
+                                  const Type &right [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator<(const Type &left [[maybe_unused]],
+                                  const unbounded<Type> &right
+                                  [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator>(const unbounded<Type> &left [[maybe_unused]],
+                                  const Type &right [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator>(const Type &left [[maybe_unused]],
+                                  const unbounded<Type> &right
+                                  [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator<=(const unbounded<Type> &left [[maybe_unused]],
+                                   const Type &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator<=(const Type &left [[maybe_unused]],
+                                   const unbounded<Type> &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator>=(const unbounded<Type> &left [[maybe_unused]],
+                                   const Type &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator>=(const Type &left [[maybe_unused]],
+                                   const unbounded<Type> &right
+                                   [[maybe_unused]]) noexcept {
+    return true;
+  }
+  friend constexpr auto operator<=>(const unbounded<Type> &left
+                                    [[maybe_unused]],
+                                    const Type &right
+                                    [[maybe_unused]]) noexcept {
+    return std::partial_ordering::unordered;
+  }
+  friend constexpr auto operator<=>(const Type &left [[maybe_unused]],
+                                    const unbounded<Type> &right
+                                    [[maybe_unused]]) noexcept {
+    return std::partial_ordering::unordered;
+  }
+};
+
+template <std::totally_ordered Type, typename Left, typename Right>
+requires std::is_base_of_v<bound<Type>, Left> &&
+    std::is_base_of_v<bound<Type>, Right> &&
+    (!std::same_as<Left, bound<Type>>)&&(
+        !std::same_as<Right, bound<Type>>)struct interval {
   /*
   usage
   `return (constant expression);`
@@ -85,35 +324,32 @@ struct interval {
 private:
   Type value;
   static constexpr void check(Type const &value) noexcept(
-      noexcept(bound_less_than(LeftBound, Left, value)) &&noexcept(
-          bound_less_than(RightBound, value, Right))) {
+      noexcept(Left{} < value) &&noexcept(value < Right{})) {
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(bound_less_than(LeftBound, Left, value) &&
-                                 u8"left >(=) value");
+    /* clang-format on */ assert(Left{} < value && u8"Left >(=) value");
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(bound_less_than(RightBound, value, Right) &&
-                                 u8"value >(=) right");
+    /* clang-format on */ assert(value < Right{} && u8"value >(=) Right");
   }
 };
 
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using nonnegative_interval =
-    interval<Type, bound::closed, Type{0}, unbounded<Type>, bound::unbounded>;
+    interval<Type, closed_bound<Type, Type{0}>, unbounded<Type>>;
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using nonpositive_interval =
-    interval<Type, bound::unbounded, unbounded<Type>, Type{0}, bound::closed>;
+    interval<Type, unbounded<Type>, closed_bound<Type, Type{0}>>;
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using positive_interval =
-    interval<Type, bound::open, Type{0}, unbounded<Type>, bound::unbounded>;
+    interval<Type, open_bound<Type, Type{0}>, unbounded<Type>>;
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using negative_interval =
-    interval<Type, bound::unbounded, unbounded<Type>, Type{0}, bound::open>;
+    interval<Type, unbounded<Type>, open_bound<Type, Type{0}>>;
 } // namespace artccel::core
 
 #endif
