@@ -276,7 +276,7 @@ requires std::is_base_of_v<bound<Type>, Left> &&
   usage
   `return (constant expression);`
   checking (debug ONLY)
-  - compile-time checking
+  - compile-time checking, causes (complicated) compile error @ assert
   */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   consteval interval(Type const &value) noexcept(noexcept(interval{
@@ -290,7 +290,8 @@ requires std::is_base_of_v<bound<Type>, Left> &&
   usage
   `return {(expression), nullptr};`
   checking (debug ONLY)
-  - compile-time checking requires constexpr/consteval context
+  - compile-time checking requires constexpr/consteval context, causes
+  (complicated) compile error @ assert
   - runtime checking
   */
   constexpr interval(
