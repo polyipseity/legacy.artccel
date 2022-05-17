@@ -62,6 +62,7 @@
 		"narrow": "cpp",
 		"gsl_algorithm": "cpp",
 		"ratio": "cpp",
-		"iostream": "cpp"
+		"iostream": "cpp",
+		"span_ext": "cpp"
 	}
 }
