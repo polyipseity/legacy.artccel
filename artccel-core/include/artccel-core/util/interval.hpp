@@ -164,7 +164,7 @@ struct closed_bound : bound<Type> {
   }
   friend constexpr auto
   operator>=(const closed_bound<Type, Value> &left [[maybe_unused]],
-             const Type &right) noexcept(noexcept(Value >= left)) {
+             const Type &right) noexcept(noexcept(Value >= right)) {
     return Value >= right;
   }
   friend constexpr auto
