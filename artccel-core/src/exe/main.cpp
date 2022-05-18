@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <gsl/gsl>
 #include <span>
 #include <string_view>
@@ -11,9 +12,8 @@ auto main(std::span<std::string_view const> arguments [[maybe_unused]]) {
 
 auto main(int argc, gsl::zstring argv[]) -> int {
   std::vector<std::string_view> arguments(argc);
-  for (gsl::index i = 0; i < argc; ++i) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    arguments.emplace_back(argv[i]);
-  }
+  std::transform(
+      argv, argv + argc, arguments.begin(),
+      [](gsl::zstring argument) { return std::string_view{argument}; });
   return artccel::main(arguments);
 }
