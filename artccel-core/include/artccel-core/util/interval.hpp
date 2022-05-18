@@ -13,7 +13,7 @@ namespace artccel::core {
 template <std::totally_ordered Type>
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct bound {
-public:
+	using type = Type;
   bound(bound<Type> const &) = delete;
   auto operator=(bound<Type> const &) = delete;
   bound(bound<Type> &&) = delete;
@@ -267,7 +267,7 @@ template <std::totally_ordered Type> struct unbounded : bound<Type> {
   }
 };
 
-template <std::totally_ordered Type, typename Left, typename Right>
+template <typename Left, typename Right, std::totally_ordered Type = typename Left::type>
 requires std::is_base_of_v<bound<Type>, Left> &&
     std::is_base_of_v<bound<Type>, Right> &&
     (!std::same_as<Left, bound<Type>>)&&(
@@ -338,19 +338,19 @@ private:
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using nonnegative_interval =
-    interval<Type, closed_bound<Type, Type{0}>, unbounded<Type>>;
+    interval<closed_bound<Type, Type{0}>, unbounded<Type>>;
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using nonpositive_interval =
-    interval<Type, unbounded<Type>, closed_bound<Type, Type{0}>>;
+    interval<unbounded<Type>, closed_bound<Type, Type{0}>>;
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using positive_interval =
-    interval<Type, open_bound<Type, Type{0}>, unbounded<Type>>;
+    interval<open_bound<Type, Type{0}>, unbounded<Type>>;
 template <std::totally_ordered Type>
 requires std::constructible_from<Type, decltype(0)>
 using negative_interval =
-    interval<Type, unbounded<Type>, open_bound<Type, Type{0}>>;
+    interval<unbounded<Type>, open_bound<Type, Type{0}>>;
 } // namespace artccel::core
 
 #endif
