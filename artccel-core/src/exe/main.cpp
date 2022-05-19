@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <clocale>
 #include <gsl/gsl>
 #include <span>
 #include <string_view>
@@ -6,6 +7,7 @@
 
 namespace artccel {
 auto main(std::span<std::string_view const> arguments [[maybe_unused]]) {
+  std::setlocale(LC_ALL, "C.UTF-8"); // NOLINT(concurrency-mt-unsafe)
   return 0;
 }
 } // namespace artccel
