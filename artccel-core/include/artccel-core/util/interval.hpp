@@ -30,78 +30,78 @@ struct open_bound : bound<T> {
   using type = typename open_bound::type;
   constexpr static auto value{V};
   consteval open_bound() noexcept = default;
-  friend constexpr auto operator==(const open_bound<type, value> &left
+  friend constexpr auto operator==(open_bound<type, value> const &left
                                    [[maybe_unused]],
-                                   const type &right
+                                   type const &right
                                    [[maybe_unused]]) noexcept {
     return false;
   }
-  friend constexpr auto operator==(const type &left [[maybe_unused]],
-                                   const open_bound<type, value> &right
+  friend constexpr auto operator==(type const &left [[maybe_unused]],
+                                   open_bound<type, value> const &right
                                    [[maybe_unused]]) noexcept {
     return false;
   }
-  friend constexpr auto operator!=(const open_bound<type, value> &left
+  friend constexpr auto operator!=(open_bound<type, value> const &left
                                    [[maybe_unused]],
-                                   const type &right
+                                   type const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator!=(const type &left [[maybe_unused]],
-                                   const open_bound<type, value> &right
+  friend constexpr auto operator!=(type const &left [[maybe_unused]],
+                                   open_bound<type, value> const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto
-  operator<(const open_bound<type, value> &left [[maybe_unused]],
-            const type &right) noexcept(noexcept(value < right)) {
+  operator<(open_bound<type, value> const &left [[maybe_unused]],
+            type const &right) noexcept(noexcept(value < right)) {
     return value < right;
   }
   friend constexpr auto
-  operator<(const type &left, const open_bound<type, value> &right
+  operator<(type const &left, open_bound<type, value> const &right
             [[maybe_unused]]) noexcept(noexcept(left < value)) {
     return left < value;
   }
   friend constexpr auto
-  operator>(const open_bound<type, value> &left [[maybe_unused]],
-            const type &right) noexcept(noexcept(value > right)) {
+  operator>(open_bound<type, value> const &left [[maybe_unused]],
+            type const &right) noexcept(noexcept(value > right)) {
     return value > right;
   }
   friend constexpr auto
-  operator>(const type &left, const open_bound<type, value> &right
+  operator>(type const &left, open_bound<type, value> const &right
             [[maybe_unused]]) noexcept(noexcept(left > value)) {
     return left > value;
   }
   friend constexpr auto
-  operator<=(const open_bound<type, value> &left [[maybe_unused]],
-             const type &right) noexcept(noexcept(value < right)) {
+  operator<=(open_bound<type, value> const &left [[maybe_unused]],
+             type const &right) noexcept(noexcept(value < right)) {
     return value < right;
   }
   friend constexpr auto
-  operator<=(const type &left, const open_bound<type, value> &right
+  operator<=(type const &left, open_bound<type, value> const &right
              [[maybe_unused]]) noexcept(noexcept(left < value)) {
     return left < value;
   }
   friend constexpr auto
-  operator>=(const open_bound<type, value> &left [[maybe_unused]],
-             const type &right) noexcept(noexcept(value > left)) {
+  operator>=(open_bound<type, value> const &left [[maybe_unused]],
+             type const &right) noexcept(noexcept(value > left)) {
     return value > right;
   }
   friend constexpr auto
-  operator>=(const type &left, const open_bound<type, value> &right
+  operator>=(type const &left, open_bound<type, value> const &right
              [[maybe_unused]]) noexcept(noexcept(left > value)) {
     return left > value;
   }
   friend constexpr auto operator<=>(
-      const open_bound<type, value> &left [[maybe_unused]],
-      const type &right) noexcept(noexcept(value < right) &&noexcept(value >
+      open_bound<type, value> const &left [[maybe_unused]],
+      type const &right) noexcept(noexcept(value < right) &&noexcept(value >
                                                                      right)) {
     return value < right   ? std::partial_ordering::less
            : value > right ? std::partial_ordering::greater
                            : std::partial_ordering::unordered;
   }
   friend constexpr auto operator<=>(
-      const type &left, const open_bound<type, value> &right
+      type const &left, open_bound<type, value> const &right
       [[maybe_unused]]) noexcept(noexcept(left < value) &&noexcept(left >
                                                                    value)) {
     return left < value   ? std::partial_ordering::less
@@ -117,68 +117,68 @@ struct closed_bound : bound<T> {
   constexpr static auto value{V};
   consteval closed_bound() noexcept = default;
   friend constexpr auto
-  operator==(const closed_bound<type, value> &left [[maybe_unused]],
-             const type &right) noexcept(noexcept(value == right)) {
+  operator==(closed_bound<type, value> const &left [[maybe_unused]],
+             type const &right) noexcept(noexcept(value == right)) {
     return value == right;
   }
   friend constexpr auto
-  operator==(const type &left, const closed_bound<type, value> &right
+  operator==(type const &left, closed_bound<type, value> const &right
              [[maybe_unused]]) noexcept(noexcept(left == value)) {
     return left == value;
   }
   friend constexpr auto
-  operator!=(const closed_bound<type, value> &left [[maybe_unused]],
-             const type &right) noexcept(noexcept(value != right)) {
+  operator!=(closed_bound<type, value> const &left [[maybe_unused]],
+             type const &right) noexcept(noexcept(value != right)) {
     return value != right;
   }
   friend constexpr auto
-  operator!=(const type &left, const closed_bound<type, value> &right
+  operator!=(type const &left, closed_bound<type, value> const &right
              [[maybe_unused]]) noexcept(noexcept(left != value)) {
     return left != value;
   }
   friend constexpr auto
-  operator<(const closed_bound<type, value> &left [[maybe_unused]],
-            const type &right) noexcept(noexcept(value <= right)) {
+  operator<(closed_bound<type, value> const &left [[maybe_unused]],
+            type const &right) noexcept(noexcept(value <= right)) {
     return value <= right;
   }
   friend constexpr auto
-  operator<(const type &left, const closed_bound<type, value> &right
+  operator<(type const &left, closed_bound<type, value> const &right
             [[maybe_unused]]) noexcept(noexcept(left <= value)) {
     return left <= value;
   }
   friend constexpr auto
-  operator>(const closed_bound<type, value> &left [[maybe_unused]],
-            const type &right) noexcept(noexcept(value >= right)) {
+  operator>(closed_bound<type, value> const &left [[maybe_unused]],
+            type const &right) noexcept(noexcept(value >= right)) {
     return value >= right;
   }
   friend constexpr auto
-  operator>(const type &left, const closed_bound<type, value> &right
+  operator>(type const &left, closed_bound<type, value> const &right
             [[maybe_unused]]) noexcept(noexcept(left >= value)) {
     return left >= value;
   }
   friend constexpr auto
-  operator<=(const closed_bound<type, value> &left [[maybe_unused]],
-             const type &right) noexcept(noexcept(value <= right)) {
+  operator<=(closed_bound<type, value> const &left [[maybe_unused]],
+             type const &right) noexcept(noexcept(value <= right)) {
     return value <= right;
   }
   friend constexpr auto
-  operator<=(const type &left, const closed_bound<type, value> &right
+  operator<=(type const &left, closed_bound<type, value> const &right
              [[maybe_unused]]) noexcept(noexcept(left <= value)) {
     return left <= value;
   }
   friend constexpr auto
-  operator>=(const closed_bound<type, value> &left [[maybe_unused]],
-             const type &right) noexcept(noexcept(value >= right)) {
+  operator>=(closed_bound<type, value> const &left [[maybe_unused]],
+             type const &right) noexcept(noexcept(value >= right)) {
     return value >= right;
   }
   friend constexpr auto
-  operator>=(const type &left, const closed_bound<type, value> &right
+  operator>=(type const &left, closed_bound<type, value> const &right
              [[maybe_unused]]) noexcept(noexcept(left >= value)) {
     return left >= value;
   }
   friend constexpr auto operator<=>(
-      const closed_bound<type, value> &left [[maybe_unused]],
-      const type &right) noexcept(noexcept(value < right) &&noexcept(value >
+      closed_bound<type, value> const &left [[maybe_unused]],
+      type const &right) noexcept(noexcept(value < right) &&noexcept(value >
                                                                      right)
                                       &&noexcept(value == right)) {
     return value < right    ? std::partial_ordering::less
@@ -187,7 +187,7 @@ struct closed_bound : bound<T> {
                             : std::partial_ordering::unordered;
   }
   friend constexpr auto operator<=>(
-      const type &left, const closed_bound<type, value> &right
+      type const &left, closed_bound<type, value> const &right
       [[maybe_unused]]) noexcept(noexcept(left < value) &&noexcept(left > value)
                                      &&noexcept(left == value)) {
     return left < value    ? std::partial_ordering::less
@@ -201,72 +201,72 @@ struct closed_bound : bound<T> {
 template <std::totally_ordered T> struct unbounded : bound<T> {
   using type = typename unbounded::type;
   consteval unbounded() noexcept = default;
-  friend constexpr auto operator==(const unbounded<type> &left [[maybe_unused]],
-                                   const type &right
+  friend constexpr auto operator==(unbounded<type> const &left [[maybe_unused]],
+                                   type const &right
                                    [[maybe_unused]]) noexcept {
     return false;
   }
-  friend constexpr auto operator==(const type &left [[maybe_unused]],
-                                   const unbounded<type> &right
+  friend constexpr auto operator==(type const &left [[maybe_unused]],
+                                   unbounded<type> const &right
                                    [[maybe_unused]]) noexcept {
     return false;
   }
-  friend constexpr auto operator!=(const unbounded<type> &left [[maybe_unused]],
-                                   const type &right
+  friend constexpr auto operator!=(unbounded<type> const &left [[maybe_unused]],
+                                   type const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator!=(const type &left [[maybe_unused]],
-                                   const unbounded<type> &right
+  friend constexpr auto operator!=(type const &left [[maybe_unused]],
+                                   unbounded<type> const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator<(const unbounded<type> &left [[maybe_unused]],
-                                  const type &right [[maybe_unused]]) noexcept {
+  friend constexpr auto operator<(unbounded<type> const &left [[maybe_unused]],
+                                  type const &right [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator<(const type &left [[maybe_unused]],
-                                  const unbounded<type> &right
+  friend constexpr auto operator<(type const &left [[maybe_unused]],
+                                  unbounded<type> const &right
                                   [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator>(const unbounded<type> &left [[maybe_unused]],
-                                  const type &right [[maybe_unused]]) noexcept {
+  friend constexpr auto operator>(unbounded<type> const &left [[maybe_unused]],
+                                  type const &right [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator>(const type &left [[maybe_unused]],
-                                  const unbounded<type> &right
+  friend constexpr auto operator>(type const &left [[maybe_unused]],
+                                  unbounded<type> const &right
                                   [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator<=(const unbounded<type> &left [[maybe_unused]],
-                                   const type &right
+  friend constexpr auto operator<=(unbounded<type> const &left [[maybe_unused]],
+                                   type const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator<=(const type &left [[maybe_unused]],
-                                   const unbounded<type> &right
+  friend constexpr auto operator<=(type const &left [[maybe_unused]],
+                                   unbounded<type> const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator>=(const unbounded<type> &left [[maybe_unused]],
-                                   const type &right
+  friend constexpr auto operator>=(unbounded<type> const &left [[maybe_unused]],
+                                   type const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator>=(const type &left [[maybe_unused]],
-                                   const unbounded<type> &right
+  friend constexpr auto operator>=(type const &left [[maybe_unused]],
+                                   unbounded<type> const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator<=>(const unbounded<type> &left
+  friend constexpr auto operator<=>(unbounded<type> const &left
                                     [[maybe_unused]],
-                                    const type &right
+                                    type const &right
                                     [[maybe_unused]]) noexcept {
     return std::partial_ordering::unordered;
   }
-  friend constexpr auto operator<=>(const type &left [[maybe_unused]],
-                                    const unbounded<type> &right
+  friend constexpr auto operator<=>(type const &left [[maybe_unused]],
+                                    unbounded<type> const &right
                                     [[maybe_unused]]) noexcept {
     return std::partial_ordering::unordered;
   }
