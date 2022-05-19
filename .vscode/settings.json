@@ -64,6 +64,7 @@
 		"ratio": "cpp",
 		"iostream": "cpp",
 		"span_ext": "cpp",
-		"gsl": "cpp"
+		"gsl": "cpp",
+		"cuchar": "cpp"
 	}
 }
