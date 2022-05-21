@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_INTERVAL_HPP
-#define ARTCCEL_CORE_UTIL_INTERVAL_HPP
+#ifndef ARTCCEL_CORE_INTERVAL_HPP
+#define ARTCCEL_CORE_INTERVAL_HPP
 #pragma once
 
 #include <cassert>
