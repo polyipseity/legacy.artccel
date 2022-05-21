@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace artccel::core {
+namespace artccel::core::util {
 template <std::totally_ordered T>
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Bound {
@@ -353,6 +353,6 @@ using Positive_interval = Interval<Open_bound<T, T{0}>, Unbounded<T>>;
 template <std::totally_ordered T>
 requires std::constructible_from<T, decltype(0)>
 using Negative_interval = Interval<Unbounded<T>, Open_bound<T, T{0}>>;
-} // namespace artccel::core
+} // namespace artccel::core::util
 
 #endif
