@@ -65,6 +65,8 @@
 		"iostream": "cpp",
 		"span_ext": "cpp",
 		"gsl": "cpp",
-		"cuchar": "cpp"
+		"cuchar": "cpp",
+		"codecvt": "cpp",
+		"ctime": "cpp"
 	}
 }
