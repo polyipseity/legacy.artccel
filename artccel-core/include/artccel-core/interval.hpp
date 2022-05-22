@@ -323,7 +323,7 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
     check(this->value);
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  constexpr operator type() const
+  [[nodiscard]] constexpr operator type() const
       noexcept(noexcept(value) && std::is_nothrow_move_constructible_v<type>) {
     return value;
   }
