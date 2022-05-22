@@ -1,4 +1,11 @@
-Checks: "*,-llvmlibc-*,-fuchsia-trailing-return,-fuchsia-default-arguments-calls,-fuchsia-default-arguments-declarations,-fuchsia-overloaded-operator"
+Checks: >
+  *,
+  -llvmlibc-*,
+  -fuchsia-overloaded-operator,
+  -fuchsia-default-arguments-calls,
+  -fuchsia-default-arguments-declarations,
+  -fuchsia-trailing-return,
+  -google-readability-todo
 WarningsAsErrors: "*"
 HeaderFilterRegex: .
 FormatStyle: LLVM
