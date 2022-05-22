@@ -99,11 +99,10 @@ auto c16srtombs(std::u16string_view c16s) -> std::string {
   for (auto const c16 : c16s) {
     auto const processed{std::c16rtomb(mb.data(), c16, &state)};
     switch (processed) {
-    case cuchar_crtomb_surrogate:
-      break;
       [[unlikely]] case cuchar_crtomb_error :
           // NOLINTNEXTLINE(concurrency-mt-unsafe)
           throw std::invalid_argument{std::strerror(errno)};
+    case cuchar_crtomb_surrogate:
     default:
       result.append(mb.data(), processed);
       break;
