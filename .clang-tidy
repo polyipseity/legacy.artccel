@@ -5,6 +5,8 @@ Checks: >
   -fuchsia-default-arguments-calls,
   -fuchsia-default-arguments-declarations,
   -fuchsia-trailing-return,
+  -altera-unroll-loops,
+  -altera-id-dependent-backward-branch,
   -google-readability-todo
 WarningsAsErrors: "*"
 HeaderFilterRegex: .
