@@ -32,17 +32,14 @@ auto c8srtoc16s(std::u8string_view c8s) -> std::u16string {
           reinterpret_cast<char const *>(c8s.end())); // defined behavior
 }
 auto c16srtoc8s(std::u16string_view c16s) -> std::u8string {
-  auto const c8s_compat{
+  return c8s_compatrtoc8s(
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-          .to_bytes(c16s.begin(),
-                    c16s.end())}; // keep string alive for string_view
-  return c8s_compatrtoc8s(c8s_compat);
+          .to_bytes(c16s.begin(), c16s.end()));
 }
 
 auto mbsrtoc8s(std::string_view mbs) -> std::u8string {
   // TODO: use std::mbrtoc8
-  auto const c16s{mbsrtoc16s(mbs)}; // keep string alive for string_view
-  return c16srtoc8s(c16s);
+  return c16srtoc8s(mbsrtoc16s(mbs));
 }
 auto mbsrtoc16s(std::string_view mbs) -> std::u16string {
   std::u16string result{};
@@ -89,8 +86,7 @@ auto mbsrtoc16s(std::string_view mbs) -> std::u16string {
 
 auto c8srtombs(std::u8string_view c8s) -> std::string {
   // TODO: use std::c8rtomb
-  auto const c16s{c8srtoc16s(c8s)}; // keep string alive for string_view
-  return c16srtombs(c16s);
+  return c16srtombs(c8srtoc16s(c8s));
 }
 auto c16srtombs(std::u16string_view c16s) -> std::string {
   std::string result{};
