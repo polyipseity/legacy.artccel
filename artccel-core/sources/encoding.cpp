@@ -111,13 +111,13 @@ auto c16srtombs(std::u16string_view c16s) -> std::string {
   return result;
 }
 
-auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> size_t {
+auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
   auto const old_state{state};
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
   auto const result{std::mbrlen(mbs.begin(), mbs.size(), &state)};
   [[unlikely]] if (result == cwchar_mbrlen_null) {
     auto const null_len_max{
-        std::min(static_cast<size_t>(MB_LEN_MAX), mbs.size())};
+        std::min(static_cast<std::size_t>(MB_LEN_MAX), mbs.size())};
     for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
       auto state_copy{old_state};
       // NOLINTNEXTLINE(concurrency-mt-unsafe)

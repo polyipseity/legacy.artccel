@@ -29,7 +29,7 @@ auto mbsrtoc16s(std::string_view mbs) -> std::u16string;
 auto c8srtombs(std::u8string_view c8s) -> std::string;
 auto c16srtombs(std::u16string_view c16s) -> std::string;
 
-auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> size_t;
+auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t;
 } // namespace artccel::core::util
 
 #endif
