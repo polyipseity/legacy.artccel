@@ -7,7 +7,7 @@
 namespace artccel::core::util {
 inline namespace literals {
 // NOLINTNEXTLINE(google-runtime-int)
-consteval auto operator""_UZ [[nodiscard]](unsigned long long value) noexcept {
+consteval auto operator""_UZ(unsigned long long value) noexcept {
   return static_cast<std::size_t>(value);
 }
 } // namespace literals
