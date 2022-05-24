@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_CLANG_TIDY clang-tidy "--config-file=${PROJECT_SOURCE_DIR}/../.clang-tidy")
 
-add_library(artccel-core SHARED "sources/encoding.cpp")
+add_library(artccel-core SHARED
+	"sources/encoding.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_link_libraries(artccel-core PUBLIC artccel PRIVATE Microsoft.GSL::GSL)

@@ -118,7 +118,7 @@ auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> size_t {
   [[unlikely]] if (result == cwchar_mbrlen_null) {
     auto const null_len_max{
         std::min(static_cast<size_t>(MB_LEN_MAX), mbs.size())};
-    for (size_t null_len{1}; null_len <= null_len_max; ++null_len) {
+    for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
       auto state_copy{old_state};
       // NOLINTNEXTLINE(concurrency-mt-unsafe)
       if (std::mbrlen(mbs.begin(), null_len, &state_copy) ==
