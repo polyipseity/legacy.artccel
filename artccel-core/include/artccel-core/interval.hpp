@@ -308,13 +308,9 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   - compile-time checking, causes (complicated) compile error @ assert
   */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval Interval(type const &value) noexcept(noexcept(Interval{
+  consteval Interval(type value) noexcept(noexcept(Interval{
       value, nullptr})) requires std::copy_constructible<type>
       : Interval{value, nullptr} {}
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval Interval(type &&value) noexcept(noexcept(Interval{
-      std::move(value), nullptr})) requires std::move_constructible<type>
-      : Interval{std::move(value), nullptr} {}
   /*
   usage
   `return {(expression), nullptr};`
