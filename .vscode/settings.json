@@ -68,6 +68,7 @@
 		"cuchar": "cpp",
 		"codecvt": "cpp",
 		"ctime": "cpp",
-		"climits": "cpp"
+		"climits": "cpp",
+		"strstream": "cpp"
 	}
 }
