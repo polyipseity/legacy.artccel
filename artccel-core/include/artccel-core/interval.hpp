@@ -300,7 +300,7 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   using right = R;
   using type = T;
   // public members to be a structual type
-  type value; // NOLINT(misc-non-private-member-variables-in-classes)
+  type value_; // NOLINT(misc-non-private-member-variables-in-classes)
   /*
   usage
   `return (constant expression);`
@@ -325,10 +325,10 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
           nullptr_t /*unused*/) noexcept(std::
                                              is_nothrow_copy_constructible_v<
                                                  type>
-                                                 &&noexcept(check(
-                                                     this->value))) requires
-      std::copy_constructible<type> : value{value} {
-    check(this->value);
+                                                 &&noexcept(
+                                                     check(value_))) requires
+      std::copy_constructible<type> : value_{value} {
+    check(value_);
   }
   constexpr Interval(
       type &&value,
@@ -336,15 +336,15 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
           nullptr_t /*unused*/) noexcept(std::
                                              is_nothrow_move_constructible_v<
                                                  type>
-                                                 &&noexcept(check(
-                                                     this->value))) requires
-      std::move_constructible<type> : value{std::move(value)} {
-    check(this->value);
+                                                 &&noexcept(
+                                                     check(value_))) requires
+      std::move_constructible<type> : value_{std::move(value)} {
+    check(value_);
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   [[nodiscard]] constexpr operator type() const
-      noexcept(noexcept(value) && std::is_nothrow_move_constructible_v<type>) {
-    return value;
+      noexcept(noexcept(value_) && std::is_nothrow_move_constructible_v<type>) {
+    return value_;
   }
   constexpr Interval(Interval<L, R, T> const &) = default;
   constexpr auto operator=(Interval<L, R, T> const &)
