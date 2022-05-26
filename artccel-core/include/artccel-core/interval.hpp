@@ -21,7 +21,7 @@ struct Bound {
 
 protected:
   consteval Bound() noexcept = default;
-  constexpr ~Bound() = default;
+  constexpr ~Bound() noexcept = default;
 };
 
 template <std::totally_ordered T, T V>
@@ -30,6 +30,13 @@ struct Open_bound : Bound<T> {
   using type = typename Open_bound::type;
   constexpr static auto value{V};
   consteval Open_bound() noexcept = default;
+  consteval Open_bound(Open_bound<T, V> const &) noexcept = default;
+  consteval auto operator=(Open_bound<T, V> const &) noexcept
+      -> Open_bound<T, V> & = default;
+  consteval Open_bound(Open_bound<T, V> &&) noexcept = default;
+  consteval auto operator=(Open_bound<T, V> &&) noexcept
+      -> Open_bound<T, V> & = default;
+  constexpr ~Open_bound() noexcept = default;
   friend constexpr auto operator==(Open_bound<type, value> const &left
                                    [[maybe_unused]],
                                    type const &right
@@ -116,6 +123,13 @@ struct Closed_bound : Bound<T> {
   using type = typename Closed_bound::type;
   constexpr static auto value{V};
   consteval Closed_bound() noexcept = default;
+  consteval Closed_bound(Closed_bound<T, V> const &) noexcept = default;
+  consteval auto operator=(Closed_bound<T, V> const &) noexcept
+      -> Closed_bound<T, V> & = default;
+  consteval Closed_bound(Closed_bound<T, V> &&) noexcept = default;
+  consteval auto operator=(Closed_bound<T, V> &&) noexcept
+      -> Closed_bound<T, V> & = default;
+  constexpr ~Closed_bound() noexcept = default;
   friend constexpr auto
   operator==(Closed_bound<type, value> const &left [[maybe_unused]],
              type const &right) noexcept(noexcept(value == right)) {
@@ -201,6 +215,13 @@ struct Closed_bound : Bound<T> {
 template <std::totally_ordered T> struct Unbounded : Bound<T> {
   using type = typename Unbounded::type;
   consteval Unbounded() noexcept = default;
+  consteval Unbounded(Unbounded<T> const &) noexcept = default;
+  consteval auto operator=(Unbounded<T> const &) noexcept
+      -> Unbounded<T> & = default;
+  consteval Unbounded(Unbounded<T> &&) noexcept = default;
+  consteval auto operator=(Unbounded<T> &&) noexcept
+      -> Unbounded<T> & = default;
+  constexpr ~Unbounded() noexcept = default;
   friend constexpr auto operator==(Unbounded<type> const &left [[maybe_unused]],
                                    type const &right
                                    [[maybe_unused]]) noexcept {
@@ -278,6 +299,8 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   using left = L;
   using right = R;
   using type = T;
+  // public members to be a structual type
+  type value; // NOLINT(misc-non-private-member-variables-in-classes)
   /*
   usage
   `return (constant expression);`
@@ -327,10 +350,19 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
       noexcept(noexcept(value) && std::is_nothrow_move_constructible_v<type>) {
     return value;
   }
+  constexpr Interval(Interval<L, R, T> const &) = default;
+  constexpr auto operator=(Interval<L, R, T> const &)
+      -> Interval<L, R, T> & = default;
+  // NOLINTNEXTLINE(hicpp-noexcept-move, performance-noexcept-move-constructor)
+  constexpr Interval(Interval<L, R, T> &&) =
+      default; // automatic noexcept depending on 'type'
+  // NOLINTNEXTLINE(hicpp-noexcept-move, performance-noexcept-move-constructor)
+  constexpr auto operator=(Interval<L, R, T> &&) -> Interval<L, R, T> & =
+      default; // automatic noexcept depending on 'type'
+  constexpr ~Interval() = default;
 
 private:
-  type value;
-  static constexpr void check(type const &value) noexcept(
+  constexpr static void check(type const &value) noexcept(
       noexcept(left{} < value) &&noexcept(value < right{})) {
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
