@@ -6,7 +6,7 @@
 
 namespace artccel::core::util {
 inline namespace literals {
-// NOLINTNEXTLINE(google-runtime-int)
+// NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
 consteval auto operator""_UZ(unsigned long long value) noexcept {
   return static_cast<std::size_t>(value);
 }
