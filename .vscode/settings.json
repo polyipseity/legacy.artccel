@@ -67,6 +67,7 @@
 		"gsl": "cpp",
 		"cuchar": "cpp",
 		"codecvt": "cpp",
-		"ctime": "cpp"
+		"ctime": "cpp",
+		"climits": "cpp"
 	}
 }
