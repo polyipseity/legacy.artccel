@@ -2,6 +2,7 @@ Checks: >
   *,
   -llvmlibc-*,
   -fuchsia-overloaded-operator,
+  -fuchsia-virtual-inheritance,
   -fuchsia-default-arguments-calls,
   -fuchsia-default-arguments-declarations,
   -fuchsia-trailing-return,
