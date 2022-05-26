@@ -2,10 +2,10 @@
 #define ARTCCEL_CORE_ENCODING_HPP
 #pragma once
 
-#include "polyfill.hpp"
-#include <cwchar>
-#include <string>
-#include <string_view>
+#include "polyfill.hpp" // import literals::operator""_UZ
+#include <cwchar>       // import std::mbstate_t, std::size_t
+#include <string> // import std::string_view, std::u16string_view, std::u8string_view
+#include <string_view> // import std::string, std::u16string, std::u8string
 
 namespace artccel::core::util {
 constexpr auto cwchar_mbrlen_null{0_UZ};

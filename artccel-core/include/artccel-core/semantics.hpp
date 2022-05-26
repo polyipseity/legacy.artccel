@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_SEMANTICS_HPP
 #pragma once
 
-#include <gsl/gsl>
+#include <gsl/gsl> // import gsl::basic_zstring, gsl::dynamic_extent
 
 namespace artccel::core::util {
 using Cu8zstring = gsl::basic_zstring<char8_t const, gsl::dynamic_extent>;

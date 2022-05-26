@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_POLYFILL_HPP
 #pragma once
 
-#include <cstddef>
+#include <cstddef> // import std::size_t
 
 namespace artccel::core::util {
 inline namespace literals {

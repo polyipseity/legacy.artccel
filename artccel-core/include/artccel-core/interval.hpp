@@ -2,12 +2,12 @@
 #define ARTCCEL_CORE_INTERVAL_HPP
 #pragma once
 
-#include <cassert>
-#include <compare>
-#include <concepts>
-#include <cstddef>
-#include <type_traits>
-#include <utility>
+#include <cassert>  // import assert
+#include <compare>  // import std::partial_ordering
+#include <concepts> // import std::constructible_from, std::copy_constructible, std::move_constructible, std::same_as, std::totally_ordered
+#include <cstddef>  // import std::nullptr_t
+#include <type_traits> // import std::is_base_of_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
+#include <utility>     // import std::move
 
 namespace artccel::core::util {
 template <std::totally_ordered T>

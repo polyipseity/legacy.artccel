@@ -1,10 +1,10 @@
-#include <algorithm>
-#include <clocale>
-#include <gsl/gsl>
-#include <iostream>
-#include <span>
-#include <string_view>
-#include <vector>
+#include <algorithm>   // import std::transform
+#include <clocale>     // import std::setlocale
+#include <gsl/gsl>     // import gsl::zstring
+#include <iostream>    // import std::ios_base
+#include <span>        // import std::span
+#include <string_view> // import std::string_view
+#include <vector>      // import std::vector
 
 namespace artccel::core {
 auto main(std::span<std::string_view const> arguments [[maybe_unused]]) {

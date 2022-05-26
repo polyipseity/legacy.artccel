@@ -1,18 +1,19 @@
-#include "artccel-core/encoding.hpp"
-#include "artccel-core/semantics.hpp"
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <cerrno>
-#include <climits>
-#include <codecvt>
-#include <cstring>
-#include <cuchar>
-#include <gsl/gsl>
-#include <locale>
-#include <stdexcept>
-#include <string>
-#include <string_view>
+#include "artccel-core/encoding.hpp" // interface
+#include "artccel-core/polyfill.hpp" // import literals::operator""_UZ
+#include <algorithm>                 // import std::min
+#include <array>                     // import std::array
+#include <cassert>                   // import assert
+#include <cerrno>                    // import errno
+#include <climits>                   // import MB_LEN_MAX
+#include <codecvt>                   // import std::codecvt_utf8_utf16
+#include <cstring>                   // import std::strerror
+#include <cuchar>                    // import std::c16rtomb, std::mbrtoc16
+#include <cwchar>                    // import std::mbrlen, std::mbstate_t, std::size_t
+#include <gsl/gsl>                   // import gsl::czstring
+#include <locale>                    // import std::wstring_convert
+#include <stdexcept>                 // import std::invalid_argument
+#include <string> // import std::string_view, std::u16string_view, std::u8string_view
+#include <string_view> // import std::string, std::u16string, std::u8string
 
 namespace artccel::core::util {
 auto c8s_compatrtoc8s(std::string_view c8s_compat) -> std::u8string {
