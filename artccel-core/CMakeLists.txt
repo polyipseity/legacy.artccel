@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(artccel-core VERSION 1.0.0 LANGUAGES C CXX)
 
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED true)
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(CMAKE_CXX_CLANG_TIDY clang-tidy "--config-file=${PROJECT_SOURCE_DIR}/../.clang-tidy")
 
 add_library(artccel-core SHARED
