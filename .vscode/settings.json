@@ -69,6 +69,9 @@
 		"codecvt": "cpp",
 		"ctime": "cpp",
 		"climits": "cpp",
-		"strstream": "cpp"
+		"strstream": "cpp",
+		"chrono": "cpp",
+		"iomanip": "cpp",
+		"variant": "cpp"
 	}
 }
