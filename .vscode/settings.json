@@ -72,6 +72,13 @@
 		"strstream": "cpp",
 		"chrono": "cpp",
 		"iomanip": "cpp",
-		"variant": "cpp"
+		"variant": "cpp",
+		"coroutine": "cpp",
+		"future": "cpp",
+		"condition_variable": "cpp",
+		"mutex": "cpp",
+		"stop_token": "cpp",
+		"thread": "cpp",
+		"locale": "cpp"
 	}
 }
