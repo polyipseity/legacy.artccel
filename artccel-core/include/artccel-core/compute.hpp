@@ -80,7 +80,7 @@ protected:
     }
   }
   template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, Args...>
+  requires std::invocable<std::function<signature_type>, ForwardArgs...>
   Compute_in([[maybe_unused]] std::nullptr_t /*unused */,
              std::function<signature_type> function, ForwardArgs &&...args)
       : function_{std::move(function)},
@@ -103,7 +103,7 @@ public:
     return std::shared_future{future_}.get();
   }
   template <bool Defer = true, typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, Args...>
+  requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(ForwardArgs &&...args) -> std::optional<return_type> {
     std::lock_guard<std::mutex> const guard{mutex_};
     task_ = [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
@@ -143,12 +143,12 @@ public:
 
   auto operator()() const -> return_type override { return invoke(); }
   template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, Args...>
+  requires std::invocable<std::function<signature_type>, ForwardArgs...>
   void operator<<(ForwardArgs &&...args) {
     bind<true>(std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, Args...>
+  requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto operator<<=(ForwardArgs &&...args) {
     return bind<false>(std::forward<ForwardArgs>(args)...).value();
   }
