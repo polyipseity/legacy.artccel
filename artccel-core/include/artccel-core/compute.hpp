@@ -9,12 +9,14 @@
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::shared_ptr, std::static_pointer_cast, std::weak_ptr
 #include <mutex>  // import std::lock_guard, std::mutex
 #include <optional>    // import std::optional
-#include <type_traits> // import std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
+#include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
 template <std::copyable R> class Compute_io;
-template <typename Signature> class Compute_in;
+template <typename Signature>
+requires std::is_function_v<Signature>
+class Compute_in;
 template <std::copyable R> class Compute_out;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_tag {
@@ -164,10 +166,10 @@ public:
   auto operator=(Compute_in<R(Args...)> &&) = delete;
 };
 
-template <typename R, typename... Args>
+template <std::copyable R, typename... Args>
 explicit Compute_in(std::function<R(Args...)> function, auto &&...args)
     -> Compute_in<R(Args...)>;
-template <typename R, typename... Args>
+template <std::copyable R, typename... Args>
 Compute_in(bool, std::function<R(Args...)> function, auto &&...args)
     -> Compute_in<R(Args...)>;
 
@@ -235,9 +237,9 @@ public:
   };
 };
 
-template <typename R, typename... Args>
+template <std::copyable R, typename... Args>
 explicit Compute_out(Compute_in<R(Args...)> const &in) -> Compute_out<R>;
-template <typename R>
+template <std::copyable R>
 void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
 }
