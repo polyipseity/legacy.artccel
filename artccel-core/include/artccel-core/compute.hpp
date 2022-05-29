@@ -17,19 +17,20 @@ namespace artccel::core::compute {
 struct reset_tag {
   consteval reset_tag() noexcept = default;
   constexpr ~reset_tag() noexcept = default;
-  constexpr reset_tag(reset_tag const &) = default;
-  constexpr auto operator=(reset_tag const &) -> reset_tag & = default;
-  constexpr reset_tag(reset_tag &&) = default;
-  constexpr auto operator=(reset_tag &&) -> reset_tag & = default;
+  constexpr reset_tag(reset_tag const &) noexcept = default;
+  constexpr auto operator=(reset_tag const &) noexcept -> reset_tag & = default;
+  constexpr reset_tag(reset_tag &&) noexcept = default;
+  constexpr auto operator=(reset_tag &&) noexcept -> reset_tag & = default;
 };
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct extract_tag {
   consteval extract_tag() noexcept = default;
   constexpr ~extract_tag() noexcept = default;
-  constexpr extract_tag(extract_tag const &) = default;
-  constexpr auto operator=(extract_tag const &) -> extract_tag & = default;
-  constexpr extract_tag(extract_tag &&) = default;
-  constexpr auto operator=(extract_tag &&) -> extract_tag & = default;
+  constexpr extract_tag(extract_tag const &) noexcept = default;
+  constexpr auto operator=(extract_tag const &) noexcept
+      -> extract_tag & = default;
+  constexpr extract_tag(extract_tag &&) noexcept = default;
+  constexpr auto operator=(extract_tag &&) noexcept -> extract_tag & = default;
 };
 template <std::copyable R> class Compute_io;
 template <typename Signature> class Compute_in;
