@@ -73,10 +73,10 @@ public:
 
 private:
   std::function<signature_type> const function_;
-  std::mutex mutable mutex_{};
-  std::packaged_task<return_type()> mutable task_;
-  std::shared_future<return_type> mutable future_;
-  bool mutable invoked_{false};
+  std::mutex mutex_{};
+  std::packaged_task<return_type()> task_;
+  std::shared_future<return_type> future_;
+  bool invoked_;
 
 protected:
   template <typename... ForwardArgs>
@@ -89,21 +89,31 @@ protected:
   Compute_in(bool defer, std::function<signature_type> function,
              ForwardArgs &&...args)
       : function_{std::move(function)},
-        task_{[this, ... args = std::forward<ForwardArgs>(args)]() mutable {
-          return function_(std::forward<ForwardArgs>(args)...);
-        }},
-        future_{task_.get_future()} {
-    if (!defer) {
-      invoke();
-    }
-  }
+        task_{[this, defer,
+               ... args = std::forward<ForwardArgs>(args)]() mutable {
+          std::packaged_task<return_type()> init{
+              [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
+                return function_(std::forward<ForwardArgs>(args)...);
+              }};
+          if (!defer) {
+            init();
+          }
+          return init;
+        }()},
+        future_{task_.get_future()}, invoked_{!defer} {}
 
 public:
-  template <typename... ForwardArgs> static auto create(ForwardArgs &&...args) {
+  template <typename... ForwardArgs>
+  static auto create [[nodiscard]] (ForwardArgs &&...args) {
     return std::shared_ptr<Compute_in<signature_type>>{
         new Compute_in{std::forward<ForwardArgs>(args)...}};
   }
-  auto invoke() const {
+  template <typename... ForwardArgs>
+  static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+    return std::shared_ptr<Compute_in<signature_type> const>{
+        new Compute_in{false, std::forward<ForwardArgs>(args)...}};
+  }
+  auto invoke() {
     std::lock_guard<std::mutex> const guard{mutex_};
     if (!invoked_) {
       task_();
@@ -111,6 +121,7 @@ public:
     }
     return std::shared_future{future_}.get();
   }
+  auto invoke() const { return std::shared_future{future_}.get(); }
   template <bool Defer = true, typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(ForwardArgs &&...args) -> std::optional<return_type> {
@@ -186,11 +197,18 @@ public:
   using return_type = typename Compute_io<R>::return_type;
   constexpr static auto value_{V};
   template <typename... ForwardArgs>
-  constexpr static auto create(ForwardArgs &&...args) {
+  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
     return std::shared_ptr<Compute_constant<return_type, value_>>{
         new Compute_constant{std::forward<ForwardArgs>(args)...}};
   }
-  constexpr auto operator()() const -> return_type override { return value_; }
+  template <typename... ForwardArgs>
+  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+    return std::shared_ptr<Compute_constant<return_type, value_> const>{
+        new Compute_constant{std::forward<ForwardArgs>(args)...}};
+  }
+  constexpr auto operator() [[nodiscard]] () const -> return_type override {
+    return value_;
+  }
 
   constexpr ~Compute_constant() noexcept override = default;
   Compute_constant(Compute_constant<R, V> const &) = delete;
