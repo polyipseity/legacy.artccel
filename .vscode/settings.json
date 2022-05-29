@@ -79,6 +79,7 @@
 		"mutex": "cpp",
 		"stop_token": "cpp",
 		"thread": "cpp",
-		"locale": "cpp"
+		"locale": "cpp",
+		"bitset": "cpp"
 	}
 }
