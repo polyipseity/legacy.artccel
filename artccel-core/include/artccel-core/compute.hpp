@@ -13,28 +13,28 @@
 #include <utility>     // import std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct reset_tag {
-  consteval reset_tag() noexcept = default;
-  constexpr ~reset_tag() noexcept = default;
-  constexpr reset_tag(reset_tag const &) noexcept = default;
-  constexpr auto operator=(reset_tag const &) noexcept -> reset_tag & = default;
-  constexpr reset_tag(reset_tag &&) noexcept = default;
-  constexpr auto operator=(reset_tag &&) noexcept -> reset_tag & = default;
-};
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct extract_tag {
-  consteval extract_tag() noexcept = default;
-  constexpr ~extract_tag() noexcept = default;
-  constexpr extract_tag(extract_tag const &) noexcept = default;
-  constexpr auto operator=(extract_tag const &) noexcept
-      -> extract_tag & = default;
-  constexpr extract_tag(extract_tag &&) noexcept = default;
-  constexpr auto operator=(extract_tag &&) noexcept -> extract_tag & = default;
-};
 template <std::copyable R> class Compute_io;
 template <typename Signature> class Compute_in;
 template <std::copyable R> class Compute_out;
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Reset_tag {
+  consteval Reset_tag() noexcept = default;
+  constexpr ~Reset_tag() noexcept = default;
+  constexpr Reset_tag(Reset_tag const &) noexcept = default;
+  constexpr auto operator=(Reset_tag const &) noexcept -> Reset_tag & = default;
+  constexpr Reset_tag(Reset_tag &&) noexcept = default;
+  constexpr auto operator=(Reset_tag &&) noexcept -> Reset_tag & = default;
+};
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Extract_tag {
+  consteval Extract_tag() noexcept = default;
+  constexpr ~Extract_tag() noexcept = default;
+  constexpr Extract_tag(Extract_tag const &) noexcept = default;
+  constexpr auto operator=(Extract_tag const &) noexcept
+      -> Extract_tag & = default;
+  constexpr Extract_tag(Extract_tag &&) noexcept = default;
+  constexpr auto operator=(Extract_tag &&) noexcept -> Extract_tag & = default;
+};
 
 template <std::copyable R> class Compute_io {
 public:
@@ -152,8 +152,8 @@ public:
   auto operator<<=(ForwardArgs &&...args) {
     return bind<false>(std::forward<ForwardArgs>(args)...).value();
   }
-  void operator<<([[maybe_unused]] reset_tag /*unused*/) { reset<true>(); }
-  auto operator<<=([[maybe_unused]] reset_tag /*unused*/) {
+  void operator<<([[maybe_unused]] Reset_tag /*unused*/) { reset<true>(); }
+  auto operator<<=([[maybe_unused]] Reset_tag /*unused*/) {
     return reset<false>().value();
   }
 
@@ -204,7 +204,7 @@ public:
           -> return_type override {
     return get();
   }
-  auto operator()([[maybe_unused]] extract_tag /*unused*/) { return extract(); }
+  auto operator()([[maybe_unused]] Extract_tag /*unused*/) { return extract(); }
   auto operator>>(return_type &right) noexcept(
       noexcept(right = get()) &&
       std::is_nothrow_move_constructible_v<return_type>) {
