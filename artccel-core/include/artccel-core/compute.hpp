@@ -2,11 +2,11 @@
 #define ARTCCEL_CORE_COMPUTE_HPP
 #pragma once
 
-#include <concepts>   // import std::copyable, std::invocable
+#include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <cstddef>    // import std::nullptr_t
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
-#include <memory> // import std::enable_shared_from_this, std::make_shared, std::shared_ptr, std::static_pointer_cast, std::weak_ptr
+#include <memory> // import std::enable_shared_from_this, std::shared_ptr, std::static_pointer_cast, std::weak_ptr
 #include <mutex>  // import std::lock_guard, std::mutex
 #include <optional>    // import std::optional
 #include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
@@ -17,6 +17,7 @@ template <std::copyable R> class Compute_io;
 template <typename Signature>
 requires std::is_function_v<Signature>
 class Compute_in;
+template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R> class Compute_out;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_tag {
@@ -37,11 +38,21 @@ struct Extract_tag {
   constexpr Extract_tag(Extract_tag &&) noexcept = default;
   constexpr auto operator=(Extract_tag &&) noexcept -> Extract_tag & = default;
 };
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Out_tag {
+  consteval Out_tag() noexcept = default;
+  constexpr ~Out_tag() noexcept = default;
+  constexpr Out_tag(Out_tag const &) noexcept = default;
+  constexpr auto operator=(Out_tag const &) noexcept -> Out_tag & = default;
+  constexpr Out_tag(Out_tag &&) noexcept = default;
+  constexpr auto operator=(Out_tag &&) noexcept -> Out_tag & = default;
+};
 
 template <std::copyable R> class Compute_io {
 public:
   using return_type = R;
   virtual auto operator()() const -> return_type = 0;
+
   virtual ~Compute_io() noexcept = default;
   Compute_io(Compute_io<R> const &) = delete;
   auto operator=(Compute_io<R> const &) = delete;
@@ -59,10 +70,6 @@ class Compute_in<R(Args...)>
 public:
   using return_type = typename Compute_io<R>::return_type;
   using signature_type = return_type(Args...);
-  using std::enable_shared_from_this<
-      Compute_in<signature_type>>::shared_from_this;
-  using std::enable_shared_from_this<
-      Compute_in<signature_type>>::weak_from_this;
 
 private:
   std::function<signature_type> const function_;
@@ -141,7 +148,6 @@ public:
     }
   }
   auto reset(bool defer) { return defer ? reset<true>() : reset<false>(); }
-  auto out [[nodiscard]] () const { return Compute_out{*this}; }
 
   auto operator()() const -> return_type override { return invoke(); }
   template <typename... ForwardArgs>
@@ -165,7 +171,6 @@ public:
   Compute_in(Compute_in<R(Args...)> &&) = delete;
   auto operator=(Compute_in<R(Args...)> &&) = delete;
 };
-
 template <std::copyable R, typename... Args>
 explicit Compute_in(std::function<R(Args...)> function, auto &&...args)
     -> Compute_in<R(Args...)>;
@@ -173,19 +178,45 @@ template <std::copyable R, typename... Args>
 Compute_in(bool, std::function<R(Args...)> function, auto &&...args)
     -> Compute_in<R(Args...)>;
 
+template <std::copyable R, R V>
+class Compute_constant
+    : public Compute_io<R>,
+      public std::enable_shared_from_this<Compute_constant<R, V>> {
+public:
+  using return_type = typename Compute_io<R>::return_type;
+  constexpr static auto value_{V};
+  template <typename... ForwardArgs>
+  constexpr static auto create(ForwardArgs &&...args) {
+    return std::shared_ptr<Compute_constant<return_type, value_>>{
+        new Compute_constant{std::forward<ForwardArgs>(args)...}};
+  }
+  constexpr auto operator()() const -> return_type override { return value_; }
+
+  constexpr ~Compute_constant() noexcept override = default;
+  Compute_constant(Compute_constant<R, V> const &) = delete;
+  auto operator=(Compute_constant<R, V> const &) = delete;
+  Compute_constant(Compute_constant<R, V> &&) = delete;
+  auto operator=(Compute_constant<R, V> &&) = delete;
+
+protected:
+  constexpr Compute_constant() noexcept = default;
+};
+
 template <std::copyable R> class Compute_out : private Compute_io<R> {
 public:
   using return_type = typename Compute_io<R>::return_type;
 
 private:
-  std::weak_ptr<Compute_io<R> const> in_;
+  std::weak_ptr<Compute_io<return_type> const> in_;
   return_type return_;
 
 public:
-  template <typename... Args>
-  explicit Compute_out(Compute_in<return_type(Args...)> const &in)
+  template <std::derived_from<Compute_io<return_type>> In>
+  requires std::derived_from<In, std::enable_shared_from_this<In>>
+  explicit Compute_out(In const &in)
       : in_{std::static_pointer_cast<Compute_io<return_type> const>(
-            in.shared_from_this())},
+            static_cast<std::enable_shared_from_this<In> const &>(in)
+                .shared_from_this())},
         return_{in()} {}
 
   auto get [[nodiscard]] () const
@@ -236,12 +267,15 @@ public:
     return *this;
   };
 };
-
-template <std::copyable R, typename... Args>
-explicit Compute_out(Compute_in<R(Args...)> const &in) -> Compute_out<R>;
+template <std::copyable R>
+explicit Compute_out(Compute_io<R> const &in) -> Compute_out<R>;
 template <std::copyable R>
 void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
+}
+
+auto operator<<([[maybe_unused]] Out_tag /*unused*/, auto const &right) {
+  return Compute_out{right};
 }
 } // namespace artccel::core::compute
 
