@@ -23,40 +23,41 @@ struct Null_lockable {
 
   // named requirement: BasicLockable <- Lockable
 
-  constexpr auto try_lock() noexcept -> bool;
+  constexpr auto try_lock [[nodiscard]] () noexcept -> bool;
 
   // named requirement: BasicLockable <- Lockable <- TimedLockable
 
   template <typename Rep, typename Period>
-  constexpr auto try_lock_for(std::chrono::duration<Rep, Period> const &rel_time
-                              [[maybe_unused]]) noexcept {
+  constexpr auto try_lock_for
+      [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time
+                     [[maybe_unused]]) noexcept {
     return true;
   }
   template <typename Clock, typename Duration>
-  constexpr auto
-  try_lock_until(std::chrono::time_point<Clock, Duration> const &abs_time
-                 [[maybe_unused]]) noexcept {
+  constexpr auto try_lock_until
+      [[nodiscard]] (std::chrono::time_point<Clock, Duration> const &abs_time
+                     [[maybe_unused]]) noexcept {
     return true;
   }
 
   // named requirement: SharedLockable
 
   constexpr void lock_shared() noexcept;
-  constexpr auto try_lock_shared() noexcept -> bool;
+  constexpr auto try_lock_shared [[nodiscard]] () noexcept -> bool;
   constexpr void unlock_shared() noexcept;
 
   // named requirement: SharedLockable <- SharedTimedLockable
 
   template <typename Rep, typename Period>
-  constexpr auto
-  try_lock_shared_for(std::chrono::duration<Rep, Period> const &rel_time
-                      [[maybe_unused]]) noexcept {
+  constexpr auto try_lock_shared_for
+      [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time
+                     [[maybe_unused]]) noexcept {
     return true;
   }
   template <typename Clock, typename Duration>
-  constexpr auto
-  try_lock_shared_until(std::chrono::time_point<Clock, Duration> const &abs_time
-                        [[maybe_unused]]) noexcept {
+  constexpr auto try_lock_shared_until
+      [[nodiscard]] (std::chrono::time_point<Clock, Duration> const &abs_time
+                     [[maybe_unused]]) noexcept {
     return true;
   }
 };
