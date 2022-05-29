@@ -23,6 +23,8 @@ auto main(std::span<std::string_view const> args) {
     return init;
   }()};
   std::locale::global(std::locale{"C.UTF-8"});
+  std::cout.flush();
+  std::clog.flush();
   return 0;
 }
 } // namespace artccel::core
