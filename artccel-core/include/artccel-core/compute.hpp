@@ -72,22 +72,22 @@ private:
 protected:
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  Compute_in(bool defer, std::function<signature_type> function,
-             ForwardArgs &&...args)
-      : Compute_in{nullptr, function, std::forward<ForwardArgs>(args)...} {
-    if (!defer) {
-      invoke();
-    }
-  }
+  explicit Compute_in(std::function<signature_type> function,
+                      ForwardArgs &&...args)
+      : Compute_in{true, function, std::forward<ForwardArgs>(args)...} {}
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  Compute_in([[maybe_unused]] std::nullptr_t /*unused */,
-             std::function<signature_type> function, ForwardArgs &&...args)
+  Compute_in(bool defer, std::function<signature_type> function,
+             ForwardArgs &&...args)
       : function_{std::move(function)},
         task_{[this, ... args = std::forward<ForwardArgs>(args)]() mutable {
           return function_(std::forward<ForwardArgs>(args)...);
         }},
-        future_{task_.get_future()} {}
+        future_{task_.get_future()} {
+    if (!defer) {
+      invoke();
+    }
+  }
 
 public:
   template <typename... ForwardArgs> static auto create(ForwardArgs &&...args) {
@@ -164,6 +164,9 @@ public:
   auto operator=(Compute_in<R(Args...)> &&) = delete;
 };
 
+template <typename R, typename... Args>
+explicit Compute_in(std::function<R(Args...)> function, auto &&...args)
+    -> Compute_in<R(Args...)>;
 template <typename R, typename... Args>
 Compute_in(bool, std::function<R(Args...)> function, auto &&...args)
     -> Compute_in<R(Args...)>;
