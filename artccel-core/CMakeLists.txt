@@ -11,7 +11,7 @@ add_library(artccel-core SHARED
 	"sources/encoding.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
-target_link_libraries(artccel-core PUBLIC artccel PRIVATE Microsoft.GSL::GSL)
+target_link_libraries(artccel-core PUBLIC artccel PRIVATE Threads::Threads Microsoft.GSL::GSL)
 
 add_executable(artccel-core-exe "sources/exe/main.cpp")
 target_link_libraries(artccel-core-exe artccel-core)
