@@ -6,8 +6,8 @@
 #include <cstddef>    // import std::nullptr_t
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
-#include <memory> // import std::enable_shared_from_this, std::shared_ptr, std::static_pointer_cast, std::weak_ptr
-#include <mutex>  // import std::lock_guard, std::mutex
+#include <memory> // import std::enable_shared_from_this, std::make_unique, std::shared_ptr, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
+#include <mutex>  // import std::lock_guard, std::mutex, std::unique_lock
 #include <optional>    // import std::optional
 #include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::forward, std::move, std::swap
@@ -18,6 +18,7 @@ template <typename Signature>
 requires std::is_function_v<Signature>
 class Compute_in;
 template <std::copyable R, R V> class Compute_constant;
+template <std::copyable R> class Compute_value;
 template <std::copyable R> class Compute_out;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_tag {
@@ -81,8 +82,10 @@ private:
 protected:
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  explicit Compute_in(std::function<signature_type> function,
-                      ForwardArgs &&...args)
+  // clang-format off
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init): false positive?
+  /* clang-format on */ explicit Compute_in(
+      std::function<signature_type> function, ForwardArgs &&...args)
       : Compute_in{true, function, std::forward<ForwardArgs>(args)...} {}
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
@@ -218,6 +221,65 @@ public:
 
 protected:
   constexpr Compute_constant() noexcept = default;
+};
+
+template <std::copyable R>
+class Compute_value : public Compute_io<R>,
+                      public std::enable_shared_from_this<Compute_value<R>> {
+public:
+  using return_type = typename Compute_io<R>::return_type;
+
+private:
+  std::unique_ptr<std::mutex> const mutex_;
+  return_type value_;
+
+protected:
+  explicit Compute_value(return_type const &value) noexcept(
+      noexcept(Compute_value{true, value}))
+      : Compute_value{true, value} {}
+  Compute_value(bool concurrent, return_type const &value) noexcept(
+      noexcept(std::unique_ptr{concurrent ? std::make_unique<std::mutex>()
+                                          : std::unique_ptr<std::mutex>{}}) &&
+      std::is_nothrow_copy_constructible_v<return_type>)
+      : mutex_{concurrent ? std::make_unique<std::mutex>()
+                          : std::unique_ptr<std::mutex>{}},
+        value_{value} {}
+
+public:
+  template <typename... ForwardArgs>
+  static auto create [[nodiscard]] (ForwardArgs &&...args) {
+    return std::shared_ptr<Compute_value<return_type>>{
+        new Compute_value{std::forward<ForwardArgs>(args)...}};
+  }
+  template <typename... ForwardArgs>
+  static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+    return std::shared_ptr<Compute_value<return_type> const>{
+        new Compute_value{false, std::forward<ForwardArgs>(args)...}};
+  }
+  auto get [[nodiscard]] () const {
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
+    return value_;
+  }
+  auto set(return_type const &value) {
+    auto value_copy{value};
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
+    using std::swap;
+    swap(value_, value_copy);
+    return value_copy;
+  }
+
+  auto operator() [[nodiscard]] () const -> return_type override {
+    return get();
+  }
+  auto operator<<(return_type const &value) { return set(value); }
+
+  ~Compute_value() noexcept override = default;
+  Compute_value(Compute_value<R> const &) = delete;
+  auto operator=(Compute_value<R> const &) = delete;
+  Compute_value(Compute_value<R> &&) = delete;
+  auto operator=(Compute_value<R> &&) = delete;
 };
 
 template <std::copyable R> class Compute_out : private Compute_io<R> {
