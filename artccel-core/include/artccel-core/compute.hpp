@@ -141,7 +141,7 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_1(util::As_enum_bitset{} << Compute_option::defer,
+    return create_const_1(util::Enum_bitset{} | Compute_option::defer,
                           std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
@@ -173,8 +173,7 @@ public:
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
       -> std::optional<return_type> {
-    constexpr auto valid_options{util::As_enum_bitset{}
-                                 << Compute_option::defer};
+    constexpr auto valid_options{util::Enum_bitset{} | Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
@@ -193,8 +192,7 @@ public:
     return std::shared_future{future_}.get();
   }
   auto reset(Compute_options const &options) -> std::optional<return_type> {
-    constexpr auto valid_options{util::As_enum_bitset{}
-                                 << Compute_option::defer};
+    constexpr auto valid_options{util::Enum_bitset{} | Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
@@ -215,21 +213,21 @@ public:
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   void operator<<(ForwardArgs &&...args) {
-    bind(util::As_enum_bitset{} << Compute_option::defer,
+    bind(util::Enum_bitset{} | Compute_option::defer,
          std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto operator<<=(ForwardArgs &&...args) {
-    return bind(util::As_enum_bitset{} << Compute_option::none,
+    return bind(util::Enum_bitset{} | Compute_option::none,
                 std::forward<ForwardArgs>(args)...)
         .value();
   }
   void operator<<([[maybe_unused]] Reset_tag /*unused*/) {
-    reset(util::As_enum_bitset{} << Compute_option::defer);
+    reset(util::Enum_bitset{} | Compute_option::defer);
   }
   auto operator<<=([[maybe_unused]] Reset_tag /*unused*/) {
-    return reset(util::As_enum_bitset{} << Compute_option::none).value();
+    return reset(util::Enum_bitset{} | Compute_option::none).value();
   }
 
   ~Compute_in() noexcept override = default;
@@ -288,15 +286,15 @@ private:
 
 protected:
   explicit Compute_value(return_type const &value)
-      : Compute_value{util::As_enum_bitset{} << Compute_option::concurrent,
-                      value} {}
+      : Compute_value{util::Enum_bitset{} | Compute_option::concurrent, value} {
+  }
   Compute_value(Compute_options const &options, return_type const &value)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
         value_{value} {
-    constexpr auto valid_options{util::As_enum_bitset{}
-                                 << Compute_option::concurrent};
+    constexpr auto valid_options{util::Enum_bitset{} |
+                                 Compute_option::concurrent};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
@@ -314,7 +312,7 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_1(util::As_enum_bitset{} << Compute_option::none,
+    return create_const_1(util::Enum_bitset{} | Compute_option::none,
                           std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
