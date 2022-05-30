@@ -8,6 +8,9 @@
 #include <string_view> // import std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 
 namespace artccel::core::util {
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace literals;
+
 constexpr auto cwchar_mbrlen_null{0_UZ};
 constexpr auto cwchar_mbrlen_error{-1_UZ};
 constexpr auto cwchar_mbrlen_incomplete{-2_UZ};

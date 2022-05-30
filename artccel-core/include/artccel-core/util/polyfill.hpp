@@ -12,7 +12,7 @@ constexpr auto to_underlying
   return static_cast<std::underlying_type_t<decltype(e)>>(e);
 }
 
-inline namespace literals {
+namespace literals {
   consteval auto operator""_UZ
       // NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
       [[nodiscard]](unsigned long long value) noexcept {

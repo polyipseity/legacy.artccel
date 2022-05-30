@@ -57,7 +57,7 @@ struct Enum_bitset {
   constexpr auto operator=(Enum_bitset &&) noexcept -> Enum_bitset & = default;
 };
 
-inline namespace bitset_operators {
+namespace bitset_operators {
 template <typename E>
 requires std::is_enum_v<E>
 constexpr auto operator& [[nodiscard]](E left, E right) noexcept {
