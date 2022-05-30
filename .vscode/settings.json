@@ -80,6 +80,7 @@
 		"stop_token": "cpp",
 		"thread": "cpp",
 		"locale": "cpp",
-		"bitset": "cpp"
+		"bitset": "cpp",
+		"propagate_const": "cpp"
 	}
 }
