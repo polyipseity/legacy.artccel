@@ -287,19 +287,10 @@ private:
   return_type value_;
 
 protected:
-  explicit Compute_value(return_type const &value) noexcept(
-      noexcept(Compute_value{
-          util::As_enum_bitset{} << Compute_option::concurrent, value}))
+  explicit Compute_value(return_type const &value)
       : Compute_value{util::As_enum_bitset{} << Compute_option::concurrent,
                       value} {}
-  Compute_value(
-      Compute_options const &options,
-      return_type const
-          &value) noexcept(noexcept(std::unique_ptr{
-                               (options & Compute_option::concurrent).any()
-                                   ? std::make_unique<std::mutex>()
-                                   : std::unique_ptr<std::mutex>{}}) &&
-                           std::is_nothrow_copy_constructible_v<return_type>)
+  Compute_value(Compute_options const &options, return_type const &value)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
