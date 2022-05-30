@@ -127,13 +127,11 @@ private:
       [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
     assert((options & Compute_option::concurrent).none() &&
            u8"Unnecessary concurrent");
-    assert((options & Compute_option::defer).none() && u8"Ignored defer");
-    return create_const_1(options & ~Compute_option::defer,
-                          std::forward<ForwardArgs>(args)...);
+    return create_const_1(options, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_1(util::As_enum_bitset{} << Compute_option::none,
+    return create_const_1(util::As_enum_bitset{} << Compute_option::defer,
                           std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
