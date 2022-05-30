@@ -3,7 +3,7 @@
 #pragma once
 
 #include "enum_bitset.hpp" // import util::As_enum_bitset, util::bitset_of, util::bitset_operators, util::bitset_value
-#include <cassert>         // import assert
+#include "reflect.hpp"     // import util::type_name
 #include <cinttypes>       // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function
@@ -11,10 +11,12 @@
 #include <memory> // import std::enable_shared_from_this, std::make_unique, std::shared_ptr, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
 #include <mutex>  // std::mutex, std::unique_lock
 #include <optional>    // import std::optional
+#include <string>      // import std::literals::string_literals
 #include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
+using namespace std::literals::string_literals;
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace util::bitset_operators;
 
@@ -119,14 +121,22 @@ protected:
           return init;
         }()},
         future_{task_.get_future()},
-        invoked_{(options & Compute_option::defer).none()} {}
+        invoked_{(options & Compute_option::defer).none()} {
+    constexpr auto valid_options{Compute_option::concurrent |
+                                 Compute_option::defer};
+    util::check_bitset(valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+  }
 
 private:
   template <typename... ForwardArgs>
   static auto create_const_0
       [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
-    assert((options & Compute_option::concurrent).none() &&
-           u8"Unnecessary concurrent");
+    constexpr auto valid_options{~Compute_option::concurrent};
+    util::check_bitset(valid_options,
+                       u8"Unnecessary "s + util::type_name<Compute_option>(),
+                       options);
     return create_const_1(options, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
@@ -163,6 +173,11 @@ public:
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
       -> std::optional<return_type> {
+    constexpr auto valid_options{util::As_enum_bitset{}
+                                 << Compute_option::defer};
+    util::check_bitset(valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
     task_ = [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
@@ -178,6 +193,11 @@ public:
     return std::shared_future{future_}.get();
   }
   auto reset(Compute_options const &options) -> std::optional<return_type> {
+    constexpr auto valid_options{util::As_enum_bitset{}
+                                 << Compute_option::defer};
+    util::check_bitset(valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
     task_.reset();
@@ -283,14 +303,22 @@ protected:
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
-        value_{value} {}
+        value_{value} {
+    constexpr auto valid_options{util::As_enum_bitset{}
+                                 << Compute_option::concurrent};
+    util::check_bitset(valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+  }
 
 private:
   template <typename... ForwardArgs>
   static auto create_const_0
       [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
-    assert((options & Compute_option::concurrent).none() &&
-           u8"Unnecessary concurrent");
+    constexpr auto valid_options{~Compute_option::concurrent};
+    util::check_bitset(valid_options,
+                       u8"Unnecessary "s + util::type_name<Compute_option>(),
+                       options);
     return create_const_1(options, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
