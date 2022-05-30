@@ -9,7 +9,7 @@
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_unique, std::shared_ptr, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
-#include <mutex>  // import std::lock_guard, std::mutex, std::unique_lock
+#include <mutex>  // std::mutex, std::unique_lock
 #include <optional>    // import std::optional
 #include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::forward, std::move, std::swap
@@ -85,7 +85,7 @@ public:
 
 private:
   std::function<signature_type> const function_;
-  std::mutex mutex_{};
+  std::unique_ptr<std::mutex> const mutex_;
   std::packaged_task<return_type()> task_;
   std::shared_future<return_type> future_;
   bool invoked_;
@@ -104,6 +104,9 @@ protected:
   Compute_in(Compute_options const &options,
              std::function<signature_type> function, ForwardArgs &&...args)
       : function_{std::move(function)},
+        mutex_{(options & Compute_option::concurrent).any()
+                   ? std::make_unique<std::mutex>()
+                   : std::unique_ptr<std::mutex>{}},
         task_{[this, &options,
                ... args = std::forward<ForwardArgs>(args)]() mutable {
           std::packaged_task<return_type()> init{
@@ -150,7 +153,8 @@ public:
     return create_const_0(std::forward<ForwardArgs>(args)...);
   }
   auto invoke() {
-    std::lock_guard<std::mutex> const guard{mutex_};
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
     if (!invoked_) {
       task_();
       invoked_ = true;
@@ -162,7 +166,8 @@ public:
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
       -> std::optional<return_type> {
-    std::lock_guard<std::mutex> const guard{mutex_};
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
     task_ = [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
       return function_(std::forward<ForwardArgs>(args)...);
     };
@@ -176,7 +181,8 @@ public:
     return std::shared_future{future_}.get();
   }
   auto reset(Compute_options const &options) -> std::optional<return_type> {
-    std::lock_guard<std::mutex> const guard{mutex_};
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
     task_.reset();
     future_ = task_.get_future();
     if ((options & Compute_option::defer).any()) {
