@@ -3,6 +3,7 @@
 #pragma once
 
 #include "enum_bitset.hpp" // import util::As_enum_bitset, util::bitset_of, util::bitset_operators, util::bitset_value
+#include <cassert>         // import assert
 #include <cinttypes>       // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function
@@ -117,6 +118,27 @@ protected:
         future_{task_.get_future()},
         invoked_{(options & Compute_option::defer).none()} {}
 
+private:
+  template <typename... ForwardArgs>
+  static auto create_const_0
+      [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
+    assert((options & Compute_option::concurrent).none() &&
+           u8"Unnecessary concurrent");
+    assert((options & Compute_option::defer).none() && u8"Ignored defer");
+    return create_const_1(options & ~Compute_option::defer,
+                          std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
+    return create_const_1(util::As_enum_bitset{} << Compute_option::none,
+                          std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
+    return std::shared_ptr<Compute_in<signature_type> const>{
+        new Compute_in{std::forward<ForwardArgs>(args)...}};
+  }
+
 public:
   template <typename... ForwardArgs>
   static auto create [[nodiscard]] (ForwardArgs &&...args) {
@@ -125,9 +147,7 @@ public:
   }
   template <typename... ForwardArgs>
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_in<signature_type> const>{
-        new Compute_in{util::As_enum_bitset{} << Compute_options::none,
-                       std::forward<ForwardArgs>(args)...}};
+    return create_const_0(std::forward<ForwardArgs>(args)...);
   }
   auto invoke() {
     std::lock_guard<std::mutex> const guard{mutex_};
@@ -262,6 +282,25 @@ protected:
                    : std::unique_ptr<std::mutex>{}},
         value_{value} {}
 
+private:
+  template <typename... ForwardArgs>
+  static auto create_const_0
+      [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
+    assert((options & Compute_option::concurrent).none() &&
+           u8"Unnecessary concurrent");
+    return create_const_1(options, std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
+    return create_const_1(util::As_enum_bitset{} << Compute_option::none,
+                          std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
+    return std::shared_ptr<Compute_value<return_type> const>{
+        new Compute_value{std::forward<ForwardArgs>(args)...}};
+  }
+
 public:
   template <typename... ForwardArgs>
   static auto create [[nodiscard]] (ForwardArgs &&...args) {
@@ -270,9 +309,7 @@ public:
   }
   template <typename... ForwardArgs>
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_value<return_type> const>{
-        new Compute_value{util::As_enum_bitset{} << Compute_option::none,
-                          std::forward<ForwardArgs>(args)...}};
+    return create_const_0(std::forward<ForwardArgs>(args)...);
   }
   auto get [[nodiscard]] () const {
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
