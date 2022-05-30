@@ -60,6 +60,12 @@ constexpr auto operator^ [[nodiscard]](E left, E right) noexcept {
   return bitset_of<E>{static_cast<unsigned long long>(to_underlying(left) ^
                                                       to_underlying(right))};
 }
+constexpr auto operator~[[nodiscard]](
+    auto operand) noexcept requires std::is_enum_v<decltype(operand)> {
+  return bitset_of<decltype(operand)>{
+      // NOLINTNEXTLINE(google-runtime-int): library argument type
+      static_cast<unsigned long long>(~to_underlying(operand))};
+}
 
 template <typename E>
 requires std::is_enum_v<E>
