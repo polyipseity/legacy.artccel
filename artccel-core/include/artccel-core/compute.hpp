@@ -86,9 +86,9 @@ public:
 private:
   std::function<signature_type> const function_;
   std::unique_ptr<std::mutex> const mutex_;
-  std::packaged_task<return_type()> task_;
+  mutable std::packaged_task<return_type()> task_;
   std::shared_future<return_type> future_;
-  bool invoked_;
+  mutable bool invoked_;
 
 protected:
   template <typename... ForwardArgs>
@@ -152,7 +152,7 @@ public:
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
     return create_const_0(std::forward<ForwardArgs>(args)...);
   }
-  auto invoke() {
+  auto invoke() const {
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
     if (!invoked_) {
@@ -161,7 +161,6 @@ public:
     }
     return std::shared_future{future_}.get();
   }
-  auto invoke() const { return std::shared_future{future_}.get(); }
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
