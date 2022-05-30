@@ -60,8 +60,7 @@ auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
           throw std::invalid_argument{std::strerror(errno)};
       [[unlikely]] case cuchar_mbrtoc_incomplete
           : throw std::invalid_argument{
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                reinterpret_cast<gsl::czstring>(u8"Incomplete byte sequence")};
+                c8srtombs(u8"Incomplete byte sequence")};
     case cuchar_mbrtoc_surrogate:
       break;
       [[unlikely]] case cuchar_mbrtoc_null
