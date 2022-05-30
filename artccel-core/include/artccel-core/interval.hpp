@@ -102,18 +102,18 @@ struct Open_bound : Bound<T> {
   friend constexpr auto operator<=>(
       Open_bound<type, value_> const &left [[maybe_unused]],
       type const &right) noexcept(noexcept(value_ < right) &&noexcept(value_ >
-                                                                     right)) {
+                                                                      right)) {
     return value_ < right   ? std::partial_ordering::less
            : value_ > right ? std::partial_ordering::greater
-                           : std::partial_ordering::unordered;
+                            : std::partial_ordering::unordered;
   }
   friend constexpr auto operator<=>(
       type const &left, Open_bound<type, value_> const &right
       [[maybe_unused]]) noexcept(noexcept(left < value_) &&noexcept(left >
-                                                                   value_)) {
+                                                                    value_)) {
     return left < value_   ? std::partial_ordering::less
            : left > value_ ? std::partial_ordering::greater
-                          : std::partial_ordering::unordered;
+                           : std::partial_ordering::unordered;
   }
 };
 
@@ -193,21 +193,22 @@ struct Closed_bound : Bound<T> {
   friend constexpr auto operator<=>(
       Closed_bound<type, value_> const &left [[maybe_unused]],
       type const &right) noexcept(noexcept(value_ < right) &&noexcept(value_ >
-                                                                     right)
+                                                                      right)
                                       &&noexcept(value_ == right)) {
     return value_ < right    ? std::partial_ordering::less
            : value_ > right  ? std::partial_ordering::greater
            : value_ == right ? std::partial_ordering::equivalent
-                            : std::partial_ordering::unordered;
+                             : std::partial_ordering::unordered;
   }
   friend constexpr auto operator<=>(
       type const &left, Closed_bound<type, value_> const &right
-      [[maybe_unused]]) noexcept(noexcept(left < value_) &&noexcept(left > value_)
+      [[maybe_unused]]) noexcept(noexcept(left < value_) &&noexcept(left >
+                                                                    value_)
                                      &&noexcept(left == value_)) {
     return left < value_    ? std::partial_ordering::less
            : left > value_  ? std::partial_ordering::greater
            : left == value_ ? std::partial_ordering::equivalent
-                           : std::partial_ordering::unordered;
+                            : std::partial_ordering::unordered;
   }
 };
 
@@ -369,18 +370,46 @@ private:
   }
 };
 
+// mathematical classifications
+
+template <std::totally_ordered T, T L, T R>
+using Open_interval = Interval<Open_bound<T, L>, Open_bound<T, R>>; // (L,R)
+template <std::totally_ordered T, T L, T R>
+using Closed_interval =
+    Interval<Closed_bound<T, L>, Closed_bound<T, R>>; // [L,R]
+template <std::totally_ordered T, T L, T R>
+using LC_RO_interval = Interval<Closed_bound<T, L>, Open_bound<T, R>>; // [L,R)
+template <std::totally_ordered T, T L, T R>
+using LO_RC_interval = Interval<Open_bound<T, L>, Closed_bound<T, R>>; // (L,R]
+template <std::totally_ordered T, T L>
+using LC_RU_interval = Interval<Closed_bound<T, L>, Unbounded<T>>; // [L,+∞)
+template <std::totally_ordered T, T L>
+using LO_RU_interval = Interval<Open_bound<T, L>, Unbounded<T>>; // (L,+∞)
+template <std::totally_ordered T, T R>
+using LU_RC_interval = Interval<Unbounded<T>, Closed_bound<T, R>>; // (-∞,R]
+template <std::totally_ordered T, T R>
+using LU_RO_interval = Interval<Unbounded<T>, Open_bound<T, R>>; // (-∞,R)
+template <std::totally_ordered T>
+using Unbounded_interval = Interval<Unbounded<T>, Unbounded<T>>; // (-∞,+∞)
+template <std::totally_ordered T, T V = T{}>
+using Empty_interval = Open_interval<T, V, V>; // (V,V) = {}
+template <std::totally_ordered T, T V>
+using Degenerate_interval = Closed_interval<T, V, V>; // [V,V] = {V}
+
+// common uses
+
 template <std::totally_ordered T>
 requires std::constructible_from<T, decltype(0)>
-using Nonnegative_interval = Interval<Closed_bound<T, T{0}>, Unbounded<T>>;
+using Nonnegative_interval = LC_RU_interval<T, T{0}>; // [0,+∞)
 template <std::totally_ordered T>
 requires std::constructible_from<T, decltype(0)>
-using Nonpositive_interval = Interval<Unbounded<T>, Closed_bound<T, T{0}>>;
+using Nonpositive_interval = LU_RC_interval<T, T{0}>; // (-∞,0]
 template <std::totally_ordered T>
 requires std::constructible_from<T, decltype(0)>
-using Positive_interval = Interval<Open_bound<T, T{0}>, Unbounded<T>>;
+using Positive_interval = LO_RU_interval<T, T{0}>; // (0,+∞)
 template <std::totally_ordered T>
 requires std::constructible_from<T, decltype(0)>
-using Negative_interval = Interval<Unbounded<T>, Open_bound<T, T{0}>>;
+using Negative_interval = LU_RO_interval<T, T{0}>; // (-∞,0)
 } // namespace artccel::core::util
 
 #endif
