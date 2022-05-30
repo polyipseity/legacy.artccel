@@ -3,19 +3,21 @@
 #pragma once
 
 #include <cstddef>     // import std::size_t
-#include <type_traits> // import std::underlying_type_t
+#include <type_traits> // import std::is_enum_v, std::underlying_type_t
 
 namespace artccel::core::util {
-constexpr auto to_underlying [[nodiscard]] (auto e) noexcept {
+constexpr auto to_underlying
+    [[nodiscard]] (auto e) noexcept requires std::is_enum_v<decltype(e)> {
   // TODO: C++23: std::to_underlying
   return static_cast<std::underlying_type_t<decltype(e)>>(e);
 }
 
 inline namespace literals {
-// NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
-consteval auto operator""_UZ [[nodiscard]](unsigned long long value) noexcept {
-  return static_cast<std::size_t>(value); // TODO: C++23: UZ
-}
+  consteval auto operator""_UZ
+      // NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
+      [[nodiscard]](unsigned long long value) noexcept {
+    return std::size_t{value}; // TODO: C++23: UZ
+  }
 } // namespace literals
 } // namespace artccel::core::util
 
