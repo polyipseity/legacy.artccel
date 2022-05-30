@@ -2,11 +2,16 @@
 #define ARTCCEL_CORE_ENUM_BITSET_HPP
 #pragma once
 
+#include "encoding.hpp" // import c8srtombs
 #include "interval.hpp" // import Closed_interval
 #include "polyfill.hpp" // import to_underlying
 #include <bitset>       // import std::bitset
+#include <cassert>      // import assert
 #include <cinttypes>    // import std::uint8_t, std::uint64_t
 #include <climits>      // import CHAR_BIT
+#include <cstddef>      // import std::size_t
+#include <iostream>     // import std::cerr
+#include <string_view>  // import std::u8string_view
 #include <type_traits>  // import std::is_enum_v
 
 namespace artccel::core::util {
@@ -19,6 +24,21 @@ consteval auto bitset_value [[nodiscard]] (
         position) noexcept {
   return position == 0U ? std::uint64_t{0}
                         : std::uint64_t{0b1} << (position - 1U);
+}
+template <std::size_t N>
+constexpr void check_bitset(std::bitset<N> const &valid,
+                            std::u8string_view msg_prefix,
+                            std::bitset<N> const &value) noexcept {
+#ifndef NDEBUG
+  [[unlikely]] if (auto const valid_value{valid & value};
+                   valid_value != value) {
+    std::cerr << c8srtombs(msg_prefix) << c8srtombs(u8": ")
+              << (value ^ valid_value) << '\n';
+    // clang-format off
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+    /* clang-format on */ assert(false);
+  }
+#endif
 }
 
 // NOLINTNEXTLINE(altera-struct-pack-align)
