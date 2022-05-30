@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_CONCURRENT_HPP
-#define ARTCCEL_CORE_CONCURRENT_HPP
+#ifndef ARTCCEL_CORE_UTIL_CONCURRENT_HPP
+#define ARTCCEL_CORE_UTIL_CONCURRENT_HPP
 #pragma once
 
 #include <chrono> // import std::chrono::duration, std::chrono::time_point

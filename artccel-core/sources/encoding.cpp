@@ -1,12 +1,12 @@
-#include "artccel-core/encoding.hpp" // interface
-#include "artccel-core/polyfill.hpp" // import literals::operator""_UZ
-#include <algorithm>                 // import std::min
-#include <array>                     // import std::array
-#include <cassert>                   // import assert
-#include <cerrno>                    // import errno
-#include <climits>                   // import MB_LEN_MAX
-#include <codecvt>                   // import std::codecvt_utf8_utf16
-#include <cstring>                   // import std::strerror
+#include "artccel-core/util/encoding.hpp" // interface
+#include "artccel-core/util/polyfill.hpp" // import literals::operator""_UZ
+#include <algorithm>                      // import std::min
+#include <array>                          // import std::array
+#include <cassert>                        // import assert
+#include <cerrno>                         // import errno
+#include <climits>                        // import MB_LEN_MAX
+#include <codecvt>                        // import std::codecvt_utf8_utf16
+#include <cstring>                        // import std::strerror
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
 #include <gsl/gsl>   // import gsl::czstring

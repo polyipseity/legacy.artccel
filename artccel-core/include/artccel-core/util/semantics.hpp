@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_SEMANTICS_HPP
-#define ARTCCEL_CORE_SEMANTICS_HPP
+#ifndef ARTCCEL_CORE_UTIL_SEMANTICS_HPP
+#define ARTCCEL_CORE_UTIL_SEMANTICS_HPP
 #pragma once
 
 #include <gsl/gsl> // import gsl::basic_zstring, gsl::dynamic_extent

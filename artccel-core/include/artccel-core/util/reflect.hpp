@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_REFLECT_HPP
-#define ARTCCEL_CORE_REFLECT_HPP
+#ifndef ARTCCEL_CORE_UTIL_REFLECT_HPP
+#define ARTCCEL_CORE_UTIL_REFLECT_HPP
 #pragma once
 
 #include "encoding.hpp" // import mbsrtoc8s

@@ -1,10 +1,10 @@
-#ifndef ARTCCEL_CORE_COMPUTE_HPP
-#define ARTCCEL_CORE_COMPUTE_HPP
+#ifndef ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
+#define ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
 #pragma once
 
-#include "enum_bitset.hpp" // import util::As_enum_bitset, util::bitset_of, util::bitset_operators, util::bitset_value
-#include "reflect.hpp"     // import util::type_name
-#include <cinttypes>       // import std::uint8_t
+#include "../util/enum_bitset.hpp" // import util::Enum_bitset, util::bitset_of, util::bitset_operators, util::bitset_value
+#include "../util/reflect.hpp"     // import util::type_name
+#include <cinttypes>               // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future

@@ -1,13 +1,13 @@
-#include <algorithm>                 // import std::transform
-#include <artccel-core/encoding.hpp> // import util::mbsrtoc8s
-#include <gsl/gsl>                   // import gsl::zstring
-#include <iostream>                  // import std::ios_base::sync_with_stdio
-#include <locale>                    // import std::locale, std::locale::global
-#include <span>                      // import std::span
-#include <string>                    // import std::u8string
-#include <string_view>               // import std::string_view
-#include <utility>                   // import std::pair
-#include <vector>                    // import std::vector
+#include <algorithm>                      // import std::transform
+#include <artccel-core/util/encoding.hpp> // import util::mbsrtoc8s
+#include <gsl/gsl>                        // import gsl::zstring
+#include <iostream>    // import std::ios_base::sync_with_stdio
+#include <locale>      // import std::locale, std::locale::global
+#include <span>        // import std::span
+#include <string>      // import std::u8string
+#include <string_view> // import std::string_view
+#include <utility>     // import std::pair
+#include <vector>      // import std::vector
 
 namespace artccel::core {
 auto main(std::span<std::string_view const> args) {

@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_POLYFILL_HPP
-#define ARTCCEL_CORE_POLYFILL_HPP
+#ifndef ARTCCEL_CORE_UTIL_POLYFILL_HPP
+#define ARTCCEL_CORE_UTIL_POLYFILL_HPP
 #pragma once
 
 #include <cstddef>     // import std::size_t

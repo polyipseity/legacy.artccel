@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_ENUM_BITSET_HPP
-#define ARTCCEL_CORE_ENUM_BITSET_HPP
+#ifndef ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
+#define ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
 #pragma once
 
 #include "encoding.hpp" // import c8srtombs

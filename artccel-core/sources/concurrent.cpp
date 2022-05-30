@@ -1,5 +1,4 @@
-#include "artccel-core/concurrent.hpp" // interface
-#include <chrono> // import std::chrono::duration, std::chrono::time_point
+#include "artccel-core/util/concurrent.hpp" // interface
 
 namespace artccel::core::util {
 constexpr void Null_lockable::lock() noexcept {}

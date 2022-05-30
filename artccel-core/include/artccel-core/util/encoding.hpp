@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_ENCODING_HPP
-#define ARTCCEL_CORE_ENCODING_HPP
+#ifndef ARTCCEL_CORE_UTIL_ENCODING_HPP
+#define ARTCCEL_CORE_UTIL_ENCODING_HPP
 #pragma once
 
 #include "polyfill.hpp" // import literals::operator""_UZ
