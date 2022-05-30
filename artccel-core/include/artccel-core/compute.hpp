@@ -2,8 +2,9 @@
 #define ARTCCEL_CORE_COMPUTE_HPP
 #pragma once
 
+#include "enum_bitset.hpp" // import util::As_enum_bitset, util::bitset_of, util::bitset_operators, util::bitset_value
+#include <cinttypes>       // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
-#include <cstddef>    // import std::nullptr_t
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_unique, std::shared_ptr, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
@@ -13,6 +14,9 @@
 #include <utility>     // import std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace util::bitset_operators;
+
 template <std::copyable R> class Compute_io;
 template <typename Signature>
 requires std::is_function_v<Signature>
@@ -20,6 +24,12 @@ class Compute_in;
 template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R> class Compute_value;
 template <std::copyable R> class Compute_out;
+enum struct Compute_option : std::uint8_t {
+  none = util::bitset_value(0U),
+  concurrent = util::bitset_value(1U),
+  defer = util::bitset_value(2U),
+};
+using Compute_options = util::bitset_of<Compute_option>;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_tag {
   consteval Reset_tag() noexcept = default;
@@ -86,24 +96,26 @@ protected:
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init): false positive?
   /* clang-format on */ explicit Compute_in(
       std::function<signature_type> function, ForwardArgs &&...args)
-      : Compute_in{true, function, std::forward<ForwardArgs>(args)...} {}
+      : Compute_in{Compute_option::concurrent | Compute_option::defer, function,
+                   std::forward<ForwardArgs>(args)...} {}
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  Compute_in(bool defer, std::function<signature_type> function,
-             ForwardArgs &&...args)
+  Compute_in(Compute_options const &options,
+             std::function<signature_type> function, ForwardArgs &&...args)
       : function_{std::move(function)},
-        task_{[this, defer,
+        task_{[this, &options,
                ... args = std::forward<ForwardArgs>(args)]() mutable {
           std::packaged_task<return_type()> init{
               [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
                 return function_(std::forward<ForwardArgs>(args)...);
               }};
-          if (!defer) {
+          if ((options & Compute_option::defer).none()) {
             init();
           }
           return init;
         }()},
-        future_{task_.get_future()}, invoked_{!defer} {}
+        future_{task_.get_future()},
+        invoked_{(options & Compute_option::defer).none()} {}
 
 public:
   template <typename... ForwardArgs>
@@ -114,7 +126,8 @@ public:
   template <typename... ForwardArgs>
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
     return std::shared_ptr<Compute_in<signature_type> const>{
-        new Compute_in{false, std::forward<ForwardArgs>(args)...}};
+        new Compute_in{util::As_enum_bitset{} << Compute_options::none,
+                       std::forward<ForwardArgs>(args)...}};
   }
   auto invoke() {
     std::lock_guard<std::mutex> const guard{mutex_};
@@ -125,58 +138,55 @@ public:
     return std::shared_future{future_}.get();
   }
   auto invoke() const { return std::shared_future{future_}.get(); }
-  template <bool Defer = true, typename... ForwardArgs>
+  template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  auto bind(ForwardArgs &&...args) -> std::optional<return_type> {
+  auto bind(Compute_options const &options, ForwardArgs &&...args)
+      -> std::optional<return_type> {
     std::lock_guard<std::mutex> const guard{mutex_};
     task_ = [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
       return function_(std::forward<ForwardArgs>(args)...);
     };
     future_ = task_.get_future();
-    if constexpr (Defer) {
+    if ((options & Compute_option::defer).any()) {
       invoked_ = false;
       return {};
-    } else {
-      task_();
-      invoked_ = true;
-      return std::shared_future{future_}.get();
     }
+    task_();
+    invoked_ = true;
+    return std::shared_future{future_}.get();
   }
-  template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  auto bind(bool defer, ForwardArgs &&...args) {
-    return defer ? bind<true>(std::forward<ForwardArgs>(args)...)
-                 : bind<false>(std::forward<ForwardArgs>(args)...);
-  }
-  template <bool Defer = true> auto reset() -> std::optional<return_type> {
+  auto reset(Compute_options const &options) -> std::optional<return_type> {
     std::lock_guard<std::mutex> const guard{mutex_};
     task_.reset();
     future_ = task_.get_future();
-    if constexpr (Defer) {
+    if ((options & Compute_option::defer).any()) {
       invoked_ = false;
       return {};
-    } else {
-      task_();
-      invoked_ = true;
-      return std::shared_future{future_}.get();
     }
+    task_();
+    invoked_ = true;
+    return std::shared_future{future_}.get();
   }
-  auto reset(bool defer) { return defer ? reset<true>() : reset<false>(); }
 
   auto operator()() const -> return_type override { return invoke(); }
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   void operator<<(ForwardArgs &&...args) {
-    bind<true>(std::forward<ForwardArgs>(args)...);
+    bind(util::As_enum_bitset{} << Compute_option::defer,
+         std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto operator<<=(ForwardArgs &&...args) {
-    return bind<false>(std::forward<ForwardArgs>(args)...).value();
+    return bind(util::As_enum_bitset{} << Compute_option::none,
+                std::forward<ForwardArgs>(args)...)
+        .value();
   }
-  void operator<<([[maybe_unused]] Reset_tag /*unused*/) { reset<true>(); }
+  void operator<<([[maybe_unused]] Reset_tag /*unused*/) {
+    reset(util::As_enum_bitset{} << Compute_option::defer);
+  }
   auto operator<<=([[maybe_unused]] Reset_tag /*unused*/) {
-    return reset<false>().value();
+    return reset(util::As_enum_bitset{} << Compute_option::none).value();
   }
 
   ~Compute_in() noexcept override = default;
@@ -189,8 +199,8 @@ template <std::copyable R, typename... Args>
 explicit Compute_in(std::function<R(Args...)> function, auto &&...args)
     -> Compute_in<R(Args...)>;
 template <std::copyable R, typename... Args>
-Compute_in(bool, std::function<R(Args...)> function, auto &&...args)
-    -> Compute_in<R(Args...)>;
+Compute_in(Compute_options const &, std::function<R(Args...)> function,
+           auto &&...args) -> Compute_in<R(Args...)>;
 
 template <std::copyable R, R V>
 class Compute_constant
@@ -235,14 +245,21 @@ private:
 
 protected:
   explicit Compute_value(return_type const &value) noexcept(
-      noexcept(Compute_value{true, value}))
-      : Compute_value{true, value} {}
-  Compute_value(bool concurrent, return_type const &value) noexcept(
-      noexcept(std::unique_ptr{concurrent ? std::make_unique<std::mutex>()
-                                          : std::unique_ptr<std::mutex>{}}) &&
-      std::is_nothrow_copy_constructible_v<return_type>)
-      : mutex_{concurrent ? std::make_unique<std::mutex>()
-                          : std::unique_ptr<std::mutex>{}},
+      noexcept(Compute_value{
+          util::As_enum_bitset{} << Compute_option::concurrent, value}))
+      : Compute_value{util::As_enum_bitset{} << Compute_option::concurrent,
+                      value} {}
+  Compute_value(
+      Compute_options const &options,
+      return_type const
+          &value) noexcept(noexcept(std::unique_ptr{
+                               (options & Compute_option::concurrent).any()
+                                   ? std::make_unique<std::mutex>()
+                                   : std::unique_ptr<std::mutex>{}}) &&
+                           std::is_nothrow_copy_constructible_v<return_type>)
+      : mutex_{(options & Compute_option::concurrent).any()
+                   ? std::make_unique<std::mutex>()
+                   : std::unique_ptr<std::mutex>{}},
         value_{value} {}
 
 public:
@@ -254,7 +271,8 @@ public:
   template <typename... ForwardArgs>
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
     return std::shared_ptr<Compute_value<return_type> const>{
-        new Compute_value{false, std::forward<ForwardArgs>(args)...}};
+        new Compute_value{util::As_enum_bitset{} << Compute_option::none,
+                          std::forward<ForwardArgs>(args)...}};
   }
   auto get [[nodiscard]] () const {
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
