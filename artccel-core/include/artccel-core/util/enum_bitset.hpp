@@ -30,10 +30,10 @@ constexpr void check_bitset(std::bitset<N> const &valid,
                             std::u8string_view msg_prefix,
                             std::bitset<N> const &value) noexcept {
 #ifndef NDEBUG
-  if (auto const valid_value{valid & value}; valid_value != value)
+  if (auto const valid_value{valid & value};
       // clang-format off
       // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
-      /* clang-format on */ [[unlikely]] {
+      /* clang-format on */ valid_value != value) [[unlikely]] {
     std::cerr << c8srtombs(msg_prefix) << c8srtombs(u8": ")
               << (value ^ valid_value) << '\n';
     // clang-format off
