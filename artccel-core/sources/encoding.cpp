@@ -65,9 +65,9 @@ auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
       break;
       [[unlikely]] case cuchar_mbrtoc_null
           : switch (processed = mbrlen_null(mbs, old_state)) {
-        [[unlikely]] case cwchar_mbrlen_null
-            : [[unlikely]] case cwchar_mbrlen_error
-            : [[unlikely]] case cwchar_mbrlen_incomplete :
+        [[unlikely]] case cwchar_mbrlen_null : [[fallthrough]];
+        [[unlikely]] case cwchar_mbrlen_error : [[fallthrough]];
+        [[unlikely]] case cwchar_mbrlen_incomplete :
             // clang-format off
             // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
             /* clang-format on */ assert(
@@ -98,6 +98,7 @@ auto csrtombs(std::basic_string_view<CharT> cs) -> std::string {
           // NOLINTNEXTLINE(concurrency-mt-unsafe)
           throw std::invalid_argument{std::strerror(errno)};
     case cuchar_crtomb_surrogate:
+      [[fallthrough]];
     default:
       result.append(mb.data(), processed);
       break;
@@ -154,7 +155,9 @@ auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
   auto const old_state{state};
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
   auto const result{std::mbrlen(mbs.begin(), mbs.size(), &state)};
-  [[unlikely]] if (result == cwchar_mbrlen_null) {
+  // clang-format off
+  // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
+  /* clang-format on */ if (result == cwchar_mbrlen_null) [[unlikely]] {
     auto const null_len_max{std::min(std::size_t{MB_LEN_MAX}, mbs.size())};
     for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
       auto state_copy{old_state};
