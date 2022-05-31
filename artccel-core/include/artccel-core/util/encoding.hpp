@@ -25,14 +25,22 @@ auto c8s_compatrtoc8s(std::string_view c8s_compat) -> std::u8string;
 auto c8srtoc8s_compat(std::u8string_view c8s) -> std::string;
 
 auto c8srtoc16s(std::u8string_view c8s) -> std::u16string;
+auto c8srtoc16s(char8_t c8s) -> std::u16string;
 auto c16srtoc8s(std::u16string_view c16s) -> std::u8string;
+auto c16srtoc8s(char16_t c16s) -> std::u8string;
 
 auto mbsrtoc8s(std::string_view mbs) -> std::u8string;
+auto mbsrtoc8s(char mbs) -> std::u8string;
 auto mbsrtoc16s(std::string_view mbs) -> std::u16string;
+auto mbsrtoc16s(char mbs) -> std::u16string;
 auto mbsrtoc32s(std::string_view mbs) -> std::u32string;
+auto mbsrtoc32s(char mbs) -> std::u32string;
 auto c8srtombs(std::u8string_view c8s) -> std::string;
+auto c8srtombs(char8_t c8s) -> std::string;
 auto c16srtombs(std::u16string_view c16s) -> std::string;
+auto c16srtombs(char16_t c16s) -> std::string;
 auto c32srtombs(std::u32string_view c32s) -> std::string;
+auto c32srtombs(char32_t c32s) -> std::string;
 
 auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t;
 } // namespace artccel::core::util

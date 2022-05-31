@@ -123,32 +123,48 @@ auto c8srtoc16s(std::u8string_view c8s) -> std::u16string {
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           reinterpret_cast<char const *>(c8s.end())); // defined behavior
 }
+auto c8srtoc16s(char8_t c8s) -> std::u16string {
+  return c8srtoc16s({&c8s, 1_UZ});
+}
 auto c16srtoc8s(std::u16string_view c16s) -> std::u8string {
   return c8s_compatrtoc8s(
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
           .to_bytes(c16s.begin(), c16s.end()));
+}
+auto c16srtoc8s(char16_t c16s) -> std::u8string {
+  return c16srtoc8s({&c16s, 1_UZ});
 }
 
 auto mbsrtoc8s(std::string_view mbs) -> std::u8string {
   // TODO: use std::mbrtoc8
   return c16srtoc8s(mbsrtoc16s(mbs));
 }
+auto mbsrtoc8s(char mbs) -> std::u8string { return mbsrtoc8s({&mbs, 1_UZ}); }
 auto mbsrtoc16s(std::string_view mbs) -> std::u16string {
   return detail::mbsrtocs<char16_t>(mbs);
 }
+auto mbsrtoc16s(char mbs) -> std::u16string { return mbsrtoc16s({&mbs, 1_UZ}); }
 auto mbsrtoc32s(std::string_view mbs) -> std::u32string {
   return detail::mbsrtocs<char32_t>(mbs);
 }
+auto mbsrtoc32s(char mbs) -> std::u32string { return mbsrtoc32s({&mbs, 1_UZ}); }
 
 auto c8srtombs(std::u8string_view c8s) -> std::string {
   // TODO: use std::c8rtomb
   return c16srtombs(c8srtoc16s(c8s));
 }
+auto c8srtombs(char8_t c8s) -> std::string { return c8srtombs({&c8s, 1_UZ}); }
 auto c16srtombs(std::u16string_view c16s) -> std::string {
   return detail::csrtombs(c16s);
 }
+auto c16srtombs(char16_t c16s) -> std::string {
+  return c16srtombs({&c16s, 1_UZ});
+}
 auto c32srtombs(std::u32string_view c32s) -> std::string {
   return detail::csrtombs(c32s);
+}
+auto c32srtombs(char32_t c32s) -> std::string {
+  return c32srtombs({&c32s, 1_UZ});
 }
 
 auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
