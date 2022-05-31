@@ -9,7 +9,7 @@
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_unique, std::shared_ptr, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
-#include <mutex>  // std::mutex, std::unique_lock
+#include <mutex>  // import std::mutex, std::unique_lock
 #include <optional>    // import std::optional
 #include <string>      // import std::literals::string_literals
 #include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
