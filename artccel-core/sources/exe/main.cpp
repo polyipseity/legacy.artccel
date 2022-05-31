@@ -13,7 +13,7 @@ namespace artccel::core {
 auto main(std::span<std::string_view const> args) {
   std::ios_base::sync_with_stdio(false);
   std::locale::global(
-      std::locale{""}); // use user-preferred locale to convert args
+      std::locale{/*u8*/ ""}); // use user-preferred locale to convert args
   auto const norm_args{[args] {
     std::vector<std::pair<std::u8string const, std::string_view const>> init{};
     init.reserve(args.size());
@@ -22,7 +22,7 @@ auto main(std::span<std::string_view const> args) {
     }
     return init;
   }()};
-  std::locale::global(std::locale{"C.UTF-8"});
+  std::locale::global(std::locale{/*u8*/ "C.UTF-8"});
   std::cout.flush();
   std::clog.flush();
   return 0;

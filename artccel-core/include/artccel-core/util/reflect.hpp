@@ -24,7 +24,7 @@ constexpr auto raw_type_name [[nodiscard]] () -> std::string_view {
 }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 constexpr struct alignas(64) {
-  std::string_view const control_type_name{"int"};
+  std::string_view const control_type_name{/*u8*/ "int"};
   std::string_view const control{raw_type_name<int>()};
   std::size_t const junk_prefix{control.find(control_type_name)};
   std::size_t const junk_suffix{control.size() - junk_prefix -
@@ -33,7 +33,7 @@ constexpr struct alignas(64) {
 template <typename T>
 static constexpr auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix == std::string_view::npos) {
-    return std::to_array("<type name unavailable>");
+    return std::to_array(/*u8*/ "<type name unavailable>");
   }
   constexpr std::string_view type_name{
       raw_type_name<T>().cbegin() + type_name_format.junk_prefix,
