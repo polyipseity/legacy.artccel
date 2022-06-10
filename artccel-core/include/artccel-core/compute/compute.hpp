@@ -362,10 +362,11 @@ public:
   using return_type = typename Compute_io<R>::return_type;
 
 private:
-  std::weak_ptr<Compute_io<return_type> const> in_;
-  return_type return_;
+  std::weak_ptr<Compute_io<return_type> const> in_{};
+  return_type return_{};
 
 public:
+  constexpr Compute_out() noexcept = default;
   template <std::derived_from<Compute_io<return_type>> In>
   requires std::derived_from<In, std::enable_shared_from_this<In>>
   explicit Compute_out(In const &in)
