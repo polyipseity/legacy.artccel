@@ -245,7 +245,7 @@ protected:
     auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
                            : std::unique_lock<std::mutex>{}};
     auto other_guard{other.mutex_
-                         ? std::unique_lock{*(other.mutex_), std::defer_lock}
+                         ? std::unique_lock{other.*mutex_, std::defer_lock}
                          : std::unique_lock<std::mutex>{}};
     if (this_guard.mutex() && other_guard.mutex()) {
       std::lock(this_guard, other_guard);
@@ -426,7 +426,7 @@ protected:
     auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
                            : std::unique_lock<std::mutex>{}};
     auto other_guard{other.mutex_
-                         ? std::unique_lock{*(other.mutex_), std::defer_lock}
+                         ? std::unique_lock{other.*mutex_, std::defer_lock}
                          : std::unique_lock<std::mutex>{}};
     if (this_guard.mutex() && other_guard.mutex()) {
       std::lock(this_guard, other_guard);
