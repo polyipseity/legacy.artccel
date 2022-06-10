@@ -29,38 +29,37 @@ template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R> class Compute_value;
 template <std::copyable R> class Compute_out;
 enum struct Compute_option : std::uint8_t {
-  none = util::bitset_value(0U),
+  identity = util::bitset_value(0U),
   concurrent = util::bitset_value(1U),
   defer = util::bitset_value(2U),
 };
 using Compute_options = util::bitset_of<Compute_option>;
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Reset_tag {
-  consteval Reset_tag() noexcept = default;
-  constexpr ~Reset_tag() noexcept = default;
-  constexpr Reset_tag(Reset_tag const &) noexcept = default;
-  constexpr auto operator=(Reset_tag const &) noexcept -> Reset_tag & = default;
-  constexpr Reset_tag(Reset_tag &&) noexcept = default;
-  constexpr auto operator=(Reset_tag &&) noexcept -> Reset_tag & = default;
+struct Reset_t {
+  consteval Reset_t() noexcept = default;
+  constexpr ~Reset_t() noexcept = default;
+  constexpr Reset_t(Reset_t const &) noexcept = default;
+  constexpr auto operator=(Reset_t const &) noexcept -> Reset_t & = default;
+  constexpr Reset_t(Reset_t &&) noexcept = default;
+  constexpr auto operator=(Reset_t &&) noexcept -> Reset_t & = default;
 };
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Extract_tag {
-  consteval Extract_tag() noexcept = default;
-  constexpr ~Extract_tag() noexcept = default;
-  constexpr Extract_tag(Extract_tag const &) noexcept = default;
-  constexpr auto operator=(Extract_tag const &) noexcept
-      -> Extract_tag & = default;
-  constexpr Extract_tag(Extract_tag &&) noexcept = default;
-  constexpr auto operator=(Extract_tag &&) noexcept -> Extract_tag & = default;
+struct Extract_t {
+  consteval Extract_t() noexcept = default;
+  constexpr ~Extract_t() noexcept = default;
+  constexpr Extract_t(Extract_t const &) noexcept = default;
+  constexpr auto operator=(Extract_t const &) noexcept -> Extract_t & = default;
+  constexpr Extract_t(Extract_t &&) noexcept = default;
+  constexpr auto operator=(Extract_t &&) noexcept -> Extract_t & = default;
 };
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Out_tag {
-  consteval Out_tag() noexcept = default;
-  constexpr ~Out_tag() noexcept = default;
-  constexpr Out_tag(Out_tag const &) noexcept = default;
-  constexpr auto operator=(Out_tag const &) noexcept -> Out_tag & = default;
-  constexpr Out_tag(Out_tag &&) noexcept = default;
-  constexpr auto operator=(Out_tag &&) noexcept -> Out_tag & = default;
+struct Out_t {
+  consteval Out_t() noexcept = default;
+  constexpr ~Out_t() noexcept = default;
+  constexpr Out_t(Out_t const &) noexcept = default;
+  constexpr auto operator=(Out_t const &) noexcept -> Out_t & = default;
+  constexpr Out_t(Out_t &&) noexcept = default;
+  constexpr auto operator=(Out_t &&) noexcept -> Out_t & = default;
 };
 
 template <std::copyable R> class Compute_io {
@@ -224,15 +223,15 @@ public:
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto operator<<=(ForwardArgs &&...args) {
-    return bind(util::Enum_bitset{} | Compute_option::none,
+    return bind(util::Enum_bitset{} | Compute_option::identity,
                 std::forward<ForwardArgs>(args)...)
         .value();
   }
-  void operator<<([[maybe_unused]] Reset_tag /*unused*/) {
+  void operator<<([[maybe_unused]] Reset_t /*unused*/) {
     reset(util::Enum_bitset{} | Compute_option::defer);
   }
-  auto operator<<=([[maybe_unused]] Reset_tag /*unused*/) {
-    return reset(util::Enum_bitset{} | Compute_option::none).value();
+  auto operator<<=([[maybe_unused]] Reset_t /*unused*/) {
+    return reset(util::Enum_bitset{} | Compute_option::identity).value();
   }
 
   auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
@@ -378,7 +377,7 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_1(util::Enum_bitset{} | Compute_option::none,
+    return create_const_1(util::Enum_bitset{} | Compute_option::identity,
                           std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
@@ -498,7 +497,7 @@ public:
           -> return_type override {
     return get();
   }
-  auto operator()([[maybe_unused]] Extract_tag /*unused*/) { return extract(); }
+  auto operator()([[maybe_unused]] Extract_t /*unused*/) { return extract(); }
   auto operator>>(return_type &right) noexcept(
       noexcept(right = get()) &&
       std::is_nothrow_move_constructible_v<return_type>) {
@@ -539,7 +538,7 @@ void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
 }
 
-auto operator<<([[maybe_unused]] Out_tag /*unused*/, auto const &right) {
+auto operator<<([[maybe_unused]] Out_t /*unused*/, auto const &right) {
   return Compute_out{right};
 }
 } // namespace artccel::core::compute
