@@ -1,6 +1,6 @@
 #include <algorithm>                      // import std::transform
 #include <artccel-core/util/encoding.hpp> // import util::mbsrtoc8s
-#include <gsl/gsl>                        // import gsl::zstring
+#include <gsl/gsl>                        // import gsl::not_null, gsl::zstring
 #include <iostream>    // import std::ios_base::sync_with_stdio
 #include <locale>      // import std::locale, std::locale::global
 #include <span>        // import std::span
@@ -34,8 +34,9 @@ auto main(int argc, gsl::zstring argv[]) -> int {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
   /* clang-format on */ return artccel::core::main([argc, argv] {
     std::vector<std::string_view> init(argc);
-    std::transform(argv, argv + argc, init.begin(),
-                   [](gsl::zstring arg) { return std::string_view{arg}; });
+    std::transform(
+        argv, argv + argc, init.begin(),
+        [](gsl::not_null<gsl::zstring> arg) { return std::string_view{arg}; });
     return init;
   }());
 }
