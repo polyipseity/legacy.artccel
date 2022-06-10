@@ -9,7 +9,6 @@
 #include <cstring>                        // import std::strerror
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
-#include <gsl/gsl>   // import gsl::czstring
 #include <locale>    // import std::wstring_convert
 #include <span>      // import std::span
 #include <stdexcept> // import std::invalid_argument
