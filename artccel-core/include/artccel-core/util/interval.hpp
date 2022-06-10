@@ -343,9 +343,23 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
     check(value_);
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  [[nodiscard]] constexpr operator type() const
-      noexcept(noexcept(value_) && std::is_nothrow_move_constructible_v<type>) {
+  [[nodiscard]] constexpr operator type &() &noexcept(noexcept(value_)) {
     return value_;
+  }
+  [[nodiscard]] constexpr
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  operator type const &() const &noexcept(noexcept(value_)) {
+    return value_;
+  }
+  [[nodiscard]] constexpr
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  operator type &&() &&noexcept(noexcept(std::move(value_))) {
+    return std::move(value_);
+  }
+  [[nodiscard]] constexpr
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  operator type const &&() const &&noexcept(noexcept(std::move(value_))) {
+    return std::move(value_);
   }
   constexpr Interval(Interval<L, R, T> const &) = default;
   constexpr auto operator=(Interval<L, R, T> const &)
