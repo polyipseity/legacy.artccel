@@ -4,12 +4,13 @@
 
 #include "../util/enum_bitset.hpp" // import util::Enum_bitset, util::bitset_of, util::bitset_operators, util::bitset_value
 #include "../util/reflect.hpp"     // import util::type_name
+#include "../util/semantics.hpp"   // import util::Owner
 #include <cinttypes>               // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_unique, std::shared_ptr, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
-#include <mutex>  // import std::mutex, std::unique_lock
+#include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
 #include <optional>    // import std::optional
 #include <string>      // import std::literals::string_literals
 #include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
@@ -65,6 +66,8 @@ struct Out_tag {
 template <std::copyable R> class Compute_io {
 public:
   using return_type = R;
+  virtual auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_io<return_type> &> = 0;
   virtual auto operator()() const -> return_type = 0;
 
   virtual ~Compute_io() noexcept = default;
@@ -86,11 +89,12 @@ public:
   using signature_type = return_type(Args...);
 
 private:
-  std::function<signature_type> const function_;
   std::unique_ptr<std::mutex> const mutex_;
+  std::function<signature_type> function_;
+  std::function<return_type()> bound_;
+  mutable bool invoked_;
   mutable std::packaged_task<return_type()> task_;
   std::shared_future<return_type> future_;
-  mutable bool invoked_;
 
 protected:
   template <typename... ForwardArgs>
@@ -105,28 +109,34 @@ protected:
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   Compute_in(Compute_options const &options,
              std::function<signature_type> function, ForwardArgs &&...args)
-      : function_{std::move(function)},
-        mutex_{(options & Compute_option::concurrent).any()
+      : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
-        task_{[this, &options,
-               ... args = std::forward<ForwardArgs>(args)]() mutable {
-          std::packaged_task<return_type()> init{
-              [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
-                return function_(std::forward<ForwardArgs>(args)...);
-              }};
-          if ((options & Compute_option::defer).none()) {
-            init();
-          }
-          return init;
-        }()},
-        future_{task_.get_future()},
-        invoked_{(options & Compute_option::defer).none()} {
+        function_{std::move(function)}, bound_{bind(function_,
+                                                    std::forward<ForwardArgs>(
+                                                        args)...)},
+        invoked_{(options & Compute_option::defer).none()},
+        task_{package(invoked_, bound_)}, future_{task_.get_future()} {
     constexpr auto valid_options{Compute_option::concurrent |
                                  Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
+  }
+  template <typename... ForwardArgs>
+  requires std::invocable<std::function<signature_type>, ForwardArgs...>
+  static auto bind(std::function<signature_type> function,
+                   ForwardArgs &&...args) {
+    return [function, ... args = std::forward<ForwardArgs>(args)]() mutable {
+      return function(std::forward<ForwardArgs>(args)...);
+    };
+  }
+  static auto package(bool invoke, std::function<return_type()> bound) {
+    std::packaged_task<return_type()> ret{bound};
+    if (invoke) {
+      ret();
+    }
+    return ret;
   }
 
 private:
@@ -179,17 +189,14 @@ public:
                        options);
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
-    task_ = [this, ... args = std::forward<ForwardArgs>(args)]() mutable {
-      return function_(std::forward<ForwardArgs>(args)...);
-    };
+    bound_ = bind(function_, std::forward<ForwardArgs>(args)...);
+    invoked_ = (options & Compute_option::defer).none();
+    task_ = package(invoked_, bound_);
     future_ = task_.get_future();
-    if ((options & Compute_option::defer).any()) {
-      invoked_ = false;
-      return {};
+    if (invoked_) {
+      return std::shared_future{future_}.get();
     }
-    task_();
-    invoked_ = true;
-    return std::shared_future{future_}.get();
+    return {};
   }
   auto reset(Compute_options const &options) -> std::optional<return_type> {
     constexpr auto valid_options{util::Enum_bitset{} | Compute_option::defer};
@@ -200,13 +207,11 @@ public:
                             : std::unique_lock<std::mutex>{}};
     task_.reset();
     future_ = task_.get_future();
-    if ((options & Compute_option::defer).any()) {
-      invoked_ = false;
-      return {};
+    if ((invoked_ = (options & Compute_option::defer).none())) {
+      task_();
+      return std::shared_future{future_}.get();
     }
-    task_();
-    invoked_ = true;
-    return std::shared_future{future_}.get();
+    return {};
   }
 
   auto operator()() const -> return_type override { return invoke(); }
@@ -230,11 +235,68 @@ public:
     return reset(util::Enum_bitset{} | Compute_option::none).value();
   }
 
+  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_in<signature_type> &> override {
+    return *new Compute_in{*this};
+  };
   ~Compute_in() noexcept override = default;
-  Compute_in(Compute_in<R(Args...)> const &) = delete;
-  auto operator=(Compute_in<R(Args...)> const &) = delete;
-  Compute_in(Compute_in<R(Args...)> &&) = delete;
-  auto operator=(Compute_in<R(Args...)> &&) = delete;
+
+protected:
+  void swap(Compute_in<signature_type> &other) noexcept {
+    auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
+                           : std::unique_lock<std::mutex>{}};
+    auto other_guard{other.mutex_
+                         ? std::unique_lock{*(other.mutex_), std::defer_lock}
+                         : std::unique_lock<std::mutex>{}};
+    if (this_guard.mutex() && other_guard.mutex()) {
+      std::lock(this_guard, other_guard);
+    } else if (this_guard.mutex() != nullptr) {
+      this_guard.lock();
+    } else if (other_guard.mutex()) {
+      other_guard.lock();
+    }
+    using std::swap;
+    swap(function_, other.function_);
+    swap(bound_, other.bound_);
+    swap(invoked_, other.invoked_);
+    swap(task_, other.task_);
+    swap(future_, other.future_);
+  }
+  Compute_in(Compute_in<R(Args...)> const &other) noexcept(
+      noexcept(other.mutex_ ? std::make_unique<std::mutex>()
+                            : std::unique_ptr<std::mutex>{}) &&
+      std::is_nothrow_copy_constructible_v<decltype(function_)> &&
+      std::is_nothrow_copy_constructible_v<decltype(bound_)> &&
+      std::is_nothrow_copy_constructible_v<decltype(invoked_)> &&noexcept(
+          decltype(task_){
+              package(invoked_, bound_)}) &&noexcept(decltype(future_){
+          task_.get_future()}))
+      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
+                            : std::unique_ptr<std::mutex>{}},
+        function_{other.function_}, bound_{other.bound_},
+        invoked_{other.invoked_}, task_{package(invoked_, bound_)},
+        future_{task_.get_future()} {}
+  auto operator=(Compute_in<R(Args...)> const &right) noexcept(
+      noexcept(Compute_in{right}.swap(*this)) &&noexcept(*this))
+      -> Compute_in<R(Args...)> & {
+    if (this == &right) {
+      // copy constructor cannot handle self-assignment
+      return *this;
+    }
+    swap(right);
+    return *this;
+  };
+  Compute_in(Compute_in<R(Args...)> &&other) noexcept
+      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
+                            : std::unique_ptr<std::mutex>{}},
+        function_{std::move(other.function_)}, bound_{std::move(other.bound_)},
+        invoked_{std::move(other.invoked_)}, task_{std::move(other.task_)},
+        future_{std::move(other.future_)} {}
+  auto operator=(Compute_in<R(Args...)> &&right) noexcept
+      -> Compute_in<R(Args...)> & {
+    Compute_in{std::move(right)}.swap(*this);
+    return *this;
+  };
 };
 template <std::copyable R, typename... Args>
 explicit Compute_in(std::function<R(Args...)> function, auto &&...args)
@@ -264,6 +326,10 @@ public:
     return value_;
   }
 
+  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_constant<return_type, value_> &> override {
+    return *new Compute_constant{/* *this */};
+  };
   constexpr ~Compute_constant() noexcept override = default;
   Compute_constant(Compute_constant<R, V> const &) = delete;
   auto operator=(Compute_constant<R, V> const &) = delete;
@@ -350,11 +416,50 @@ public:
   }
   auto operator<<(return_type const &value) { return set(value); }
 
+  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_value<return_type> &> override {
+    return *new Compute_value{*this};
+  };
   ~Compute_value() noexcept override = default;
-  Compute_value(Compute_value<R> const &) = delete;
-  auto operator=(Compute_value<R> const &) = delete;
-  Compute_value(Compute_value<R> &&) = delete;
-  auto operator=(Compute_value<R> &&) = delete;
+
+protected:
+  void swap(Compute_value<return_type> &other) noexcept {
+    auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
+                           : std::unique_lock<std::mutex>{}};
+    auto other_guard{other.mutex_
+                         ? std::unique_lock{*(other.mutex_), std::defer_lock}
+                         : std::unique_lock<std::mutex>{}};
+    if (this_guard.mutex() && other_guard.mutex()) {
+      std::lock(this_guard, other_guard);
+    } else if (this_guard.mutex() != nullptr) {
+      this_guard.lock();
+    } else if (other_guard.mutex()) {
+      other_guard.lock();
+    }
+    using std::swap;
+    swap(value_, other.value_);
+  }
+  Compute_value(Compute_value<R> const &other) noexcept(
+      noexcept(other.mutex_ ? std::make_unique<std::mutex>()
+                            : std::unique_ptr<std::mutex>{}) &&
+      std::is_nothrow_copy_constructible_v<decltype(value_)>)
+      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
+                            : std::unique_ptr<std::mutex>{}},
+        value_{other.value_} {}
+  auto operator=(Compute_value<R> const &right) noexcept(
+      noexcept(Compute_value{right}.swap(*this)) &&noexcept(*this))
+      -> Compute_value<R> & {
+    Compute_value{right}.swap(*this);
+    return *this;
+  };
+  Compute_value(Compute_value<R> &&other) noexcept
+      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
+                            : std::unique_ptr<std::mutex>{}},
+        value_{std::move(other.value_)} {}
+  auto operator=(Compute_value<R> &&right) noexcept -> Compute_value<R> & {
+    Compute_value{std::move(right)}.swap(*this);
+    return *this;
+  };
 };
 
 template <std::copyable R> class Compute_out : private Compute_io<R> {
@@ -401,6 +506,10 @@ public:
   }
   auto operator>>=(return_type &right) { return right = extract(); }
 
+  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_out &> override {
+    return *new Compute_out{*this};
+  };
   ~Compute_out() noexcept override = default;
   void swap(Compute_out<return_type> &other) noexcept {
     using std::swap;
