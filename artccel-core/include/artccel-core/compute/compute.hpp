@@ -9,7 +9,7 @@
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
-#include <memory> // import std::enable_shared_from_this, std::make_unique, std::shared_ptr, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
+#include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
 #include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
 #include <optional>    // import std::optional
 #include <string>      // import std::literals::string_literals
@@ -83,25 +83,32 @@ template <std::copyable R, typename... Args>
 class Compute_in<R(Args...)>
     : public Compute_io<R>,
       public std::enable_shared_from_this<Compute_in<R(Args...)>> {
+private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
+  struct Friend {
+    consteval Friend() noexcept = default;
+  };
+
 public:
   using return_type = typename Compute_io<R>::return_type;
   using signature_type = return_type(Args...);
+  template <typename... ForwardArgs>
+  explicit Compute_in([[maybe_unused]] Friend /*unused*/, ForwardArgs &&...args)
+      : Compute_in{std::forward<ForwardArgs>(args)...} {}
 
 private:
   std::unique_ptr<std::mutex> const mutex_;
   std::function<signature_type> function_;
   std::function<return_type()> bound_;
-  mutable bool invoked_;
+  mutable bool invoked_{};
   mutable std::packaged_task<return_type()> task_{package(invoked_, bound_)};
   std::shared_future<return_type> future_{task_.get_future()};
 
 protected:
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  // clang-format off
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init): false positive?
-  /* clang-format on */ explicit Compute_in(
-      std::function<signature_type> function, ForwardArgs &&...args)
+  explicit Compute_in(std::function<signature_type> function,
+                      ForwardArgs &&...args)
       : Compute_in{Compute_option::concurrent | Compute_option::defer, function,
                    std::forward<ForwardArgs>(args)...} {}
   template <typename... ForwardArgs>
@@ -154,15 +161,15 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_in<signature_type> const>{
-        new Compute_in{std::forward<ForwardArgs>(args)...}};
+    return std::make_shared<Compute_in<signature_type> const>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
   }
 
 public:
   template <typename... ForwardArgs>
   static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_in<signature_type>>{
-        new Compute_in{std::forward<ForwardArgs>(args)...}};
+    return std::make_shared<Compute_in<signature_type>>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
@@ -306,18 +313,29 @@ template <std::copyable R, R V>
 class Compute_constant
     : public Compute_io<R>,
       public std::enable_shared_from_this<Compute_constant<R, V>> {
+private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
+  struct Friend {
+    consteval Friend() noexcept = default;
+  };
+
 public:
   using return_type = typename Compute_io<R>::return_type;
   constexpr static auto value_{V};
   template <typename... ForwardArgs>
+  constexpr explicit Compute_constant([[maybe_unused]] Friend /*unused*/,
+                                      ForwardArgs &&...args)
+      : Compute_constant{std::forward<ForwardArgs>(args)...} {}
+
+  template <typename... ForwardArgs>
   constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_constant<return_type, value_>>{
-        new Compute_constant{std::forward<ForwardArgs>(args)...}};
+    return std::make_shared<Compute_constant<return_type, value_>>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_constant<return_type, value_> const>{
-        new Compute_constant{std::forward<ForwardArgs>(args)...}};
+    return std::make_shared<Compute_constant<return_type, value_> const>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
   }
   constexpr auto operator() [[nodiscard]] () const -> return_type override {
     return value_;
@@ -340,8 +358,18 @@ protected:
 template <std::copyable R>
 class Compute_value : public Compute_io<R>,
                       public std::enable_shared_from_this<Compute_value<R>> {
+private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
+  struct Friend {
+    consteval Friend() noexcept = default;
+  };
+
 public:
   using return_type = typename Compute_io<R>::return_type;
+  template <typename... ForwardArgs>
+  explicit Compute_value([[maybe_unused]] Friend /*unused*/,
+                         ForwardArgs &&...args)
+      : Compute_value{std::forward<ForwardArgs>(args)...} {}
 
 private:
   std::unique_ptr<std::mutex> const mutex_;
@@ -380,15 +408,15 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_value<return_type> const>{
-        new Compute_value{std::forward<ForwardArgs>(args)...}};
+    return std::make_shared<Compute_value<return_type> const>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
   }
 
 public:
   template <typename... ForwardArgs>
   static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::shared_ptr<Compute_value<return_type>>{
-        new Compute_value{std::forward<ForwardArgs>(args)...}};
+    return std::make_shared<Compute_value<return_type>>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
