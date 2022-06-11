@@ -92,8 +92,8 @@ private:
   std::function<signature_type> function_;
   std::function<return_type()> bound_;
   mutable bool invoked_;
-  mutable std::packaged_task<return_type()> task_;
-  std::shared_future<return_type> future_;
+  mutable std::packaged_task<return_type()> task_{package(invoked_, bound_)};
+  std::shared_future<return_type> future_{task_.get_future()};
 
 protected:
   template <typename... ForwardArgs>
@@ -114,8 +114,7 @@ protected:
         function_{std::move(function)}, bound_{bind(function_,
                                                     std::forward<ForwardArgs>(
                                                         args)...)},
-        invoked_{(options & Compute_option::defer).none()},
-        task_{package(invoked_, bound_)}, future_{task_.get_future()} {
+        invoked_{(options & Compute_option::defer).none()} {
     constexpr auto valid_options{Compute_option::concurrent |
                                  Compute_option::defer};
     util::check_bitset(valid_options,
@@ -272,9 +271,8 @@ protected:
           task_.get_future()}))
       : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
                             : std::unique_ptr<std::mutex>{}},
-        function_{other.function_}, bound_{other.bound_},
-        invoked_{other.invoked_}, task_{package(invoked_, bound_)},
-        future_{task_.get_future()} {}
+        function_{other.function_}, bound_{other.bound_}, invoked_{
+                                                              other.invoked_} {}
   auto operator=(Compute_in<R(Args...)> const &right) noexcept(
       noexcept(Compute_in{right}.swap(*this)) &&noexcept(*this))
       -> Compute_in<R(Args...)> & {
