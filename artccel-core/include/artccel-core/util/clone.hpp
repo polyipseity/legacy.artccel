@@ -13,37 +13,37 @@
 
 namespace artccel::core::util {
 template <typename P>
-concept cloneable = requires(Remove_cvptr_t<P> const &p) {
+concept cloneable = requires(Remove_cvptr_t<P> const &ptr) {
   requires std::convertible_to < Remove_cvptr_t<P>
-  &, Remove_cvptr_t<decltype(p.clone())> & > ;
+  &, Remove_cvptr_t<decltype(ptr.clone())> & > ;
 };
 
 namespace detail {
-  template <cloneable P>
-  constexpr auto clone_raw [[deprecated, nodiscard]] (P && ptr)->auto & {
-    if constexpr (std::is_reference_v<P>) {
-      using return_type = decltype(ptr.clone());
-      if constexpr (std::is_pointer_v<return_type>) {
-        return *(ptr.clone());
-      } else if constexpr (std::is_reference_v<return_type>) {
-        return ptr.clone();
-      } else {
-        return ptr.clone().release();
-      }
+template <cloneable P>
+constexpr auto clone_raw [[deprecated, nodiscard]] (P &&ptr) -> auto & {
+  if constexpr (std::is_reference_v<P>) {
+    using return_type = decltype(ptr.clone());
+    if constexpr (std::is_pointer_v<return_type>) {
+      return *(ptr.clone());
+    } else if constexpr (std::is_reference_v<return_type>) {
+      return ptr.clone();
     } else {
-      // clang-format off
+      return ptr.clone().release();
+    }
+  } else {
+    // clang-format off
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-      /* clang-format on */ assert(ptr && u8"ptr == nullptr");
-      using return_type = decltype(ptr->clone());
-      if constexpr (std::is_pointer_v<return_type>) {
-        return *(ptr->clone());
-      } else if constexpr (std::is_reference_v<return_type>) {
-        return ptr->clone();
-      } else {
-        return ptr->clone().release();
-      }
+    /* clang-format on */ assert(ptr && u8"ptr == nullptr");
+    using return_type = decltype(ptr->clone());
+    if constexpr (std::is_pointer_v<return_type>) {
+      return *(ptr->clone());
+    } else if constexpr (std::is_reference_v<return_type>) {
+      return ptr->clone();
+    } else {
+      return ptr->clone().release();
     }
   }
+}
 } // namespace detail
 
 template <

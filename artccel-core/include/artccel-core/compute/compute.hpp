@@ -477,18 +477,18 @@ public:
   using return_type = typename Compute_io<R>::return_type;
 
 private:
-  std::weak_ptr<Compute_io<return_type> const> in_{};
+  std::weak_ptr<Compute_io<return_type> const> c_in_{};
   return_type return_{};
 
 public:
   constexpr Compute_out() noexcept = default;
   template <std::derived_from<Compute_io<return_type>> In>
   requires std::derived_from<In, std::enable_shared_from_this<In>>
-  explicit Compute_out(In const &in)
-      : in_{std::static_pointer_cast<Compute_io<return_type> const>(
-            static_cast<std::enable_shared_from_this<In> const &>(in)
+  explicit Compute_out(In const &c_in)
+      : c_in_{std::static_pointer_cast<Compute_io<return_type> const>(
+            static_cast<std::enable_shared_from_this<In> const &>(c_in)
                 .shared_from_this())},
-        return_{in()} {}
+        return_{c_in()} {}
 
   auto get [[nodiscard]] () const
       noexcept(noexcept(return_) &&
@@ -496,8 +496,8 @@ public:
     return return_;
   }
   auto extract() {
-    if (auto const in{in_.lock()}) {
-      return_ = (*in)();
+    if (auto const c_in{c_in_.lock()}) {
+      return_ = (*c_in)();
     }
     return return_;
   }
@@ -523,27 +523,27 @@ public:
   ~Compute_out() noexcept override = default;
   void swap(Compute_out<return_type> &other) noexcept {
     using std::swap;
-    swap(in_, other.in_);
+    swap(c_in_, other.c_in_);
     swap(return_, other.return_);
   }
   Compute_out(Compute_out<R> const &other) noexcept(
-      std::is_nothrow_copy_constructible_v<decltype(in_)>
+      std::is_nothrow_copy_constructible_v<decltype(c_in_)>
           &&std::is_nothrow_copy_constructible_v<decltype(return_)>)
-      : in_{other.in_}, return_{other.return_} {}
+      : c_in_{other.c_in_}, return_{other.return_} {}
   auto operator=(Compute_out<R> const &right) noexcept(noexcept(
       Compute_out{right}.swap(*this)) &&noexcept(*this)) -> Compute_out<R> & {
     Compute_out{right}.swap(*this);
     return *this;
   };
   Compute_out(Compute_out<R> &&other) noexcept
-      : in_{std::move(other.in_)}, return_{std::move(other.return_)} {}
+      : c_in_{std::move(other.c_in_)}, return_{std::move(other.return_)} {}
   auto operator=(Compute_out<R> &&right) noexcept -> Compute_out<R> & {
     Compute_out{std::move(right)}.swap(*this);
     return *this;
   };
 };
 template <std::copyable R>
-explicit Compute_out(Compute_io<R> const &in) -> Compute_out<R>;
+explicit Compute_out(Compute_io<R> const &) -> Compute_out<R>;
 template <std::copyable R>
 void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
