@@ -8,13 +8,6 @@ namespace artccel::core::util {
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Null_lockable {
   consteval Null_lockable() noexcept = default;
-  constexpr ~Null_lockable() noexcept = default;
-  constexpr Null_lockable(Null_lockable const &) noexcept = default;
-  constexpr auto operator=(Null_lockable const &) noexcept
-      -> Null_lockable & = default;
-  constexpr Null_lockable(Null_lockable &&) noexcept = default;
-  constexpr auto operator=(Null_lockable &&) noexcept
-      -> Null_lockable & = default;
 
   // named requirement: BasicLockable
 

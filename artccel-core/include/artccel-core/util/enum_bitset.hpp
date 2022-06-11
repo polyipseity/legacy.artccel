@@ -45,43 +45,36 @@ constexpr void check_bitset(std::bitset<N> const &valid,
 
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Enum_bitset {
-  constexpr auto operator| [[nodiscard]](
+  consteval Enum_bitset() noexcept = default;
+  constexpr auto operator| [[nodiscard]] (
       auto right) noexcept requires std::is_enum_v<decltype(right)> {
     return bitset_of<decltype(right)>{to_underlying(right)};
   }
-
-  consteval Enum_bitset() noexcept = default;
-  constexpr ~Enum_bitset() noexcept = default;
-  constexpr Enum_bitset(Enum_bitset const &) noexcept = default;
-  constexpr auto operator=(Enum_bitset const &) noexcept
-      -> Enum_bitset & = default;
-  constexpr Enum_bitset(Enum_bitset &&) noexcept = default;
-  constexpr auto operator=(Enum_bitset &&) noexcept -> Enum_bitset & = default;
 };
 
 namespace bitset_operators {
 template <typename E>
 requires std::is_enum_v<E>
-constexpr auto operator& [[nodiscard]](E left, E right) noexcept {
+constexpr auto operator& [[nodiscard]] (E left, E right) noexcept {
   // NOLINTNEXTLINE(google-runtime-int): library argument type
   return bitset_of<E>{static_cast<unsigned long long>(to_underlying(left) &
                                                       to_underlying(right))};
 }
 template <typename E>
 requires std::is_enum_v<E>
-constexpr auto operator| [[nodiscard]](E left, E right) noexcept {
+constexpr auto operator| [[nodiscard]] (E left, E right) noexcept {
   // NOLINTNEXTLINE(google-runtime-int): library argument type
   return bitset_of<E>{static_cast<unsigned long long>(to_underlying(left) |
                                                       to_underlying(right))};
 }
 template <typename E>
 requires std::is_enum_v<E>
-constexpr auto operator^ [[nodiscard]](E left, E right) noexcept {
+constexpr auto operator^ [[nodiscard]] (E left, E right) noexcept {
   // NOLINTNEXTLINE(google-runtime-int): library argument type
   return bitset_of<E>{static_cast<unsigned long long>(to_underlying(left) ^
                                                       to_underlying(right))};
 }
-constexpr auto operator~[[nodiscard]](
+constexpr auto operator~[[nodiscard]] (
     auto operand) noexcept requires std::is_enum_v<decltype(operand)> {
   return bitset_of<decltype(operand)>{
       // NOLINTNEXTLINE(google-runtime-int): library argument type
@@ -90,48 +83,48 @@ constexpr auto operator~[[nodiscard]](
 
 template <typename E>
 requires std::is_enum_v<E>
-auto operator& [[nodiscard]](bitset_of<E> const &left, E right) noexcept {
+auto operator& [[nodiscard]] (bitset_of<E> const &left, E right) noexcept {
   return left & bitset_of<E>{to_underlying(right)};
 }
 template <typename E>
 requires std::is_enum_v<E>
-auto operator& [[nodiscard]](E left, bitset_of<E> const &right) noexcept {
+auto operator& [[nodiscard]] (E left, bitset_of<E> const &right) noexcept {
   return bitset_of<E>{to_underlying(left)} & right;
 }
 template <typename E>
 requires std::is_enum_v<E>
-auto operator| [[nodiscard]](bitset_of<E> const &left, E right) noexcept {
+auto operator| [[nodiscard]] (bitset_of<E> const &left, E right) noexcept {
   return left | bitset_of<E>{to_underlying(right)};
 }
 template <typename E>
 requires std::is_enum_v<E>
-auto operator| [[nodiscard]](E left, bitset_of<E> const &right) noexcept {
+auto operator| [[nodiscard]] (E left, bitset_of<E> const &right) noexcept {
   return bitset_of<E>{to_underlying(left)} | right;
 }
 template <typename E>
 requires std::is_enum_v<E>
-auto operator^ [[nodiscard]](bitset_of<E> const &left, E right) noexcept {
+auto operator^ [[nodiscard]] (bitset_of<E> const &left, E right) noexcept {
   return left ^ bitset_of<E>{to_underlying(right)};
 }
 template <typename E>
 requires std::is_enum_v<E>
-auto operator^ [[nodiscard]](E left, bitset_of<E> const &right) noexcept {
+auto operator^ [[nodiscard]] (E left, bitset_of<E> const &right) noexcept {
   return bitset_of<E>{to_underlying(left)} ^ right;
 }
 
 template <typename E>
 requires std::is_enum_v<E>
-auto operator&= [[nodiscard]](bitset_of<E> &left, E right) noexcept {
+auto operator&= [[nodiscard]] (bitset_of<E> &left, E right) noexcept {
   return left &= bitset_of<E>{to_underlying(right)};
 }
 template <typename E>
 requires std::is_enum_v<E>
-auto operator|= [[nodiscard]](bitset_of<E> &left, E right) noexcept {
+auto operator|= [[nodiscard]] (bitset_of<E> &left, E right) noexcept {
   return left |= bitset_of<E>{to_underlying(right)};
 }
 template <typename E>
 requires std::is_enum_v<E>
-auto operator^= [[nodiscard]](bitset_of<E> &left, E right) noexcept {
+auto operator^= [[nodiscard]] (bitset_of<E> &left, E right) noexcept {
   return left ^= bitset_of<E>{to_underlying(right)};
 }
 } // namespace bitset_operators

@@ -37,29 +37,14 @@ using Compute_options = util::bitset_of<Compute_option>;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_t {
   consteval Reset_t() noexcept = default;
-  constexpr ~Reset_t() noexcept = default;
-  constexpr Reset_t(Reset_t const &) noexcept = default;
-  constexpr auto operator=(Reset_t const &) noexcept -> Reset_t & = default;
-  constexpr Reset_t(Reset_t &&) noexcept = default;
-  constexpr auto operator=(Reset_t &&) noexcept -> Reset_t & = default;
 };
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Extract_t {
   consteval Extract_t() noexcept = default;
-  constexpr ~Extract_t() noexcept = default;
-  constexpr Extract_t(Extract_t const &) noexcept = default;
-  constexpr auto operator=(Extract_t const &) noexcept -> Extract_t & = default;
-  constexpr Extract_t(Extract_t &&) noexcept = default;
-  constexpr auto operator=(Extract_t &&) noexcept -> Extract_t & = default;
 };
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Out_t {
   consteval Out_t() noexcept = default;
-  constexpr ~Out_t() noexcept = default;
-  constexpr Out_t(Out_t const &) noexcept = default;
-  constexpr auto operator=(Out_t const &) noexcept -> Out_t & = default;
-  constexpr Out_t(Out_t &&) noexcept = default;
-  constexpr auto operator=(Out_t &&) noexcept -> Out_t & = default;
 };
 
 template <std::copyable R> class Compute_io {
@@ -76,7 +61,7 @@ public:
   auto operator=(Compute_io<R> &&) = delete;
 
 protected:
-  Compute_io() noexcept = default;
+  constexpr Compute_io() noexcept = default;
 };
 
 template <std::copyable R, typename... Args>

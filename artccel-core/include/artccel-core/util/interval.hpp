@@ -361,16 +361,6 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   operator type const &&() const &&noexcept(noexcept(std::move(value_))) {
     return std::move(value_);
   }
-  constexpr Interval(Interval<L, R, T> const &) = default;
-  constexpr auto operator=(Interval<L, R, T> const &)
-      -> Interval<L, R, T> & = default;
-  // NOLINTNEXTLINE(hicpp-noexcept-move, performance-noexcept-move-constructor)
-  constexpr Interval(Interval<L, R, T> &&) =
-      default; // automatic noexcept depending on 'type'
-  // NOLINTNEXTLINE(hicpp-noexcept-move, performance-noexcept-move-constructor)
-  constexpr auto operator=(Interval<L, R, T> &&) -> Interval<L, R, T> & =
-      default; // automatic noexcept depending on 'type'
-  constexpr ~Interval() = default;
 
 private:
   constexpr static void check(type const &value) noexcept(
