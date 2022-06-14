@@ -5,7 +5,8 @@
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::bitset_value, util::enum_bitset_operators
 #include "../util/reflect.hpp"     // import util::type_name
 #include "../util/semantics.hpp"   // import util::Owner
-#include <cinttypes>               // import std::uint8_t
+#include "../util/utility_extras.hpp" // import util::forward_apply
+#include <cinttypes>                  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
@@ -215,18 +216,26 @@ public:
   }
 
   auto operator()() const -> return_type override { return invoke(); }
-  template <typename... ForwardArgs>
+  template <template <typename...> typename Tuple, typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  void operator<<(ForwardArgs &&...args) {
-    bind(util::Enum_bitset{} | Compute_option::defer,
-         std::forward<ForwardArgs>(args)...);
+  void operator<<(Tuple<ForwardArgs...> &&t_args) {
+    util::forward_apply(
+        [this](ForwardArgs &&...args) mutable {
+          bind(util::Enum_bitset{} | Compute_option::defer,
+               std::forward<ForwardArgs>(args)...);
+        },
+        std::forward<Tuple<ForwardArgs...>>(t_args));
   }
-  template <typename... ForwardArgs>
+  template <template <typename...> typename Tuple, typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  auto operator<<=(ForwardArgs &&...args) {
-    return bind(util::Enum_bitset{} | Compute_option::identity,
-                std::forward<ForwardArgs>(args)...)
-        .value();
+  auto operator<<=(Tuple<ForwardArgs...> &&t_args) {
+    return util::forward_apply(
+        [this](ForwardArgs &&...args) mutable {
+          return bind(util::Enum_bitset{} | Compute_option::identity,
+                      std::forward<ForwardArgs>(args)...)
+              .value();
+        },
+        std::forward<Tuple<ForwardArgs...>>(t_args));
   }
   void operator<<([[maybe_unused]] Reset_t /*unused*/) {
     reset(util::Enum_bitset{} | Compute_option::defer);
