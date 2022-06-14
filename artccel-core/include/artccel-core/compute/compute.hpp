@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
 #pragma once
 
-#include "../util/enum_bitset.hpp" // import util::Enum_bitset, util::bitset_of, util::bitset_operators, util::bitset_value
+#include "../util/enum_bitset.hpp" // import util::Enum_bitset, util::bitset_of, util::bitset_value, util::enum_bitset_operators
 #include "../util/reflect.hpp"     // import util::type_name
 #include "../util/semantics.hpp"   // import util::Owner
 #include <cinttypes>               // import std::uint8_t
@@ -19,7 +19,7 @@
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;
 // NOLINTNEXTLINE(google-build-using-namespace)
-using namespace util::bitset_operators;
+using namespace util::enum_bitset_operators;
 
 template <std::copyable R> class Compute_io;
 template <typename Signature>
