@@ -117,43 +117,29 @@ struct Open_bound : Bound<T> {
   }
   friend constexpr auto operator<=>(
       Open_bound<type, value_> const &left [[maybe_unused]],
-      type const
-          &right) noexcept(noexcept(value_<right ? std::partial_ordering::less
-                                                 : value_>
-                                            right
-                                        ? std::partial_ordering::greater
-                                        : std::partial_ordering::unordered) &&
-                           std::is_nothrow_move_constructible_v<
-                               decltype(value_ < right
-                                            ? std::partial_ordering::less
-                                        : value_ > right
-                                            ? std::partial_ordering::greater
-                                            : std::partial_ordering::
-                                                  unordered)>) {
-    return value_ < right   ? std::partial_ordering::less
-           : value_ > right ? std::partial_ordering::greater
-                            : std::partial_ordering::unordered;
+      type const &right) noexcept(noexcept(compare(value_, right)) &&
+                                  std::is_nothrow_move_constructible_v<
+                                      decltype(compare(value_, right))>) {
+    return compare(value_, right);
   }
-  friend constexpr auto operator<=>(
-      type const &left, Open_bound<type, value_> const &right
-      [[maybe_unused]]) noexcept(noexcept(left<value_
-                                                   ? std::partial_ordering::less
-                                                   : left>
-                                                  value_
-                                              ? std::partial_ordering::greater
-                                              : std::partial_ordering::
-                                                    unordered) &&
-                                 std::is_nothrow_move_constructible_v<
-                                     decltype(left < value_
-                                                  ? std::partial_ordering::less
-                                              : left > value_
-                                                  ? std::partial_ordering::
-                                                        greater
-                                                  : std::partial_ordering::
-                                                        unordered)>) {
-    return left < value_   ? std::partial_ordering::less
-           : left > value_ ? std::partial_ordering::greater
-                           : std::partial_ordering::unordered;
+  friend constexpr auto
+  operator<=>(type const &left, Open_bound<type, value_> const &right
+              [[maybe_unused]]) noexcept(noexcept(compare(left, value_)) &&
+                                         std::is_nothrow_move_constructible_v<
+                                             decltype(compare(left, value_))>) {
+    return compare(left, value_);
+  }
+
+private:
+  static constexpr auto compare(type const &left, type const &right) noexcept(
+      noexcept(left<right ? std::partial_ordering::less : left> right
+                   ? std::partial_ordering::greater
+                   : std::partial_ordering::unordered) &&
+      std::is_nothrow_move_constructible_v<std::partial_ordering>)
+      -> std::partial_ordering {
+    return left < right   ? std::partial_ordering::less
+           : left > right ? std::partial_ordering::greater
+                          : std::partial_ordering::unordered;
   }
 };
 
@@ -256,55 +242,31 @@ struct Closed_bound : Bound<T> {
   }
   friend constexpr auto operator<=>(
       Closed_bound<type, value_> const &left [[maybe_unused]],
-      type const
-          &right) noexcept(noexcept(value_<right ? std::partial_ordering::less
-                                                 : value_>
-                                            right
-                                        ? std::partial_ordering::greater
-                                    : value_ == right
-                                        ? std::partial_ordering::equivalent
-                                        : std::partial_ordering::unordered) &&
-                           std::is_nothrow_move_constructible_v<
-                               decltype(value_ < right
-                                            ? std::partial_ordering::less
-                                        : value_ > right
-                                            ? std::partial_ordering::greater
-                                        : value_ == right
-                                            ? std::partial_ordering::equivalent
-                                            : std::partial_ordering::
-                                                  unordered)>) {
-    return value_ < right    ? std::partial_ordering::less
-           : value_ > right  ? std::partial_ordering::greater
-           : value_ == right ? std::partial_ordering::equivalent
-                             : std::partial_ordering::unordered;
+      type const &right) noexcept(noexcept(compare(value_, right)) &&
+                                  std::is_nothrow_move_constructible_v<
+                                      decltype(compare(value_, right))>) {
+    return compare(value_, right);
   }
-  friend constexpr auto operator<=>(
-      type const &left, Closed_bound<type, value_> const &right
-      [[maybe_unused]]) noexcept(noexcept(left<value_
-                                                   ? std::partial_ordering::less
-                                                   : left>
-                                                  value_
-                                              ? std::partial_ordering::greater
-                                          : left == value_
-                                              ? std::partial_ordering::
-                                                    equivalent
-                                              : std::partial_ordering::
-                                                    unordered) &&
-                                 std::is_nothrow_move_constructible_v<
-                                     decltype(left < value_
-                                                  ? std::partial_ordering::less
-                                              : left > value_
-                                                  ? std::partial_ordering::
-                                                        greater
-                                              : left == value_
-                                                  ? std::partial_ordering::
-                                                        equivalent
-                                                  : std::partial_ordering::
-                                                        unordered)>) {
-    return left < value_    ? std::partial_ordering::less
-           : left > value_  ? std::partial_ordering::greater
-           : left == value_ ? std::partial_ordering::equivalent
-                            : std::partial_ordering::unordered;
+  friend constexpr auto
+  operator<=>(type const &left, Closed_bound<type, value_> const &right
+              [[maybe_unused]]) noexcept(noexcept(compare(left, value_)) &&
+                                         std::is_nothrow_move_constructible_v<
+                                             decltype(compare(left, value_))>) {
+    return compare(left, value_);
+  }
+
+private:
+  static constexpr auto compare(type const &left, type const &right) noexcept(
+      noexcept(left<right ? std::partial_ordering::less : left> right
+                   ? std::partial_ordering::greater
+               : left == right ? std::partial_ordering::equivalent
+                               : std::partial_ordering::unordered) &&
+      std::is_nothrow_move_constructible_v<std::partial_ordering>)
+      -> std::partial_ordering {
+    return left < right    ? std::partial_ordering::less
+           : left > right  ? std::partial_ordering::greater
+           : left == right ? std::partial_ordering::equivalent
+                           : std::partial_ordering::unordered;
   }
 };
 
