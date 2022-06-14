@@ -117,9 +117,19 @@ protected:
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   static auto bind(std::function<signature_type> function,
                    ForwardArgs &&...args) {
-    return [function, ... args = std::forward<ForwardArgs>(args)]() mutable {
-      return function(std::forward<ForwardArgs>(args)...);
-    };
+    return
+        [function,
+         ... args = std::forward<ForwardArgs>(
+             args)]() mutable noexcept(noexcept(function(std::
+                                                             forward<
+                                                                 ForwardArgs>(
+                                                                 args)...)) &&
+                                       std::is_nothrow_move_constructible_v<
+                                           decltype(function(
+                                               std::forward<ForwardArgs>(
+                                                   args)...))>) {
+          return function(std::forward<ForwardArgs>(args)...);
+        };
   }
   static auto package(bool invoke, std::function<return_type()> bound) {
     std::packaged_task<return_type()> ret{bound};
