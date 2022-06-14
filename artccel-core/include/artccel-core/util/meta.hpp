@@ -30,7 +30,7 @@ constexpr struct alignas(64) {
   std::size_t const junk_prefix{control.find(control_type_name)};
   std::size_t const junk_suffix{control.size() - junk_prefix -
                                 control_type_name.size()};
-} type_name_format;
+} type_name_format{};
 template <typename T>
 static constexpr auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix == std::string_view::npos) {
