@@ -48,7 +48,7 @@ template <typename T>
 constexpr auto type_name_mbs_data [[nodiscard]] () noexcept {
   return detail::type_name_storage<T>;
 }
-template <typename T> constexpr auto type_name_mbs [[nodiscard]] () {
+template <typename T> constexpr auto type_name_mbs [[nodiscard]] () noexcept {
   constexpr std::string_view ret{detail::type_name_storage<T>.cbegin(),
                                  detail::type_name_storage<T>.cend() - 1};
   return ret;
