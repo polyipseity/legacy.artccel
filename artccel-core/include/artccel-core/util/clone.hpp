@@ -5,20 +5,17 @@
 #include "encoding.hpp" // import c8srtombs
 #include "meta.hpp"     // import Remove_cvptr_t, Replace_ptr_value_type_t
 #include <cassert>      // import assert
-#include <concepts> // import std::convertible_to, std::derived_from, std::invocable
-#include <exception>  // import std::invalid_argument
-#include <functional> // import std::invoke
+#include <concepts>     // import std::convertible_to, std::derived_from
+#include <exception>    // import std::invalid_argument
+#include <functional>   // import std::invoke
 #include <memory> // import std::enable_shared_from_this, std::shared_ptr, std::unique_ptr
 #include <type_traits> // import std::invoke_result_t, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
 #include <utility>     // import std::declval, std::forward
 
 namespace artccel::core::util {
 template <typename P, typename F>
-concept cloneable = requires(Remove_cvptr_t<P> const &ptr, F &&func) {
-  requires std::invocable<F, decltype(ptr)>;
-  requires std::convertible_to < Remove_cvptr_t<P>
-  &, Remove_cvptr_t<decltype(std::invoke(func, ptr))> & > ;
-};
+concept cloneable = std::convertible_to < Remove_cvptr_t<P>
+&, Remove_cvptr_t<std::invoke_result_t<F, Remove_cvptr_t<P> const &>> & > ;
 template <typename P>
 constexpr auto default_clone_function{[]() noexcept {
   constexpr struct {
