@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
 #pragma once
 
-#include "../util/enum_bitset.hpp" // import util::Enum_bitset, util::bitset_of, util::bitset_value, util::enum_bitset_operators
+#include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::bitset_value, util::enum_bitset_operators
 #include "../util/reflect.hpp"     // import util::type_name
 #include "../util/semantics.hpp"   // import util::Owner
 #include <cinttypes>               // import std::uint8_t
@@ -33,7 +33,7 @@ enum struct Compute_option : std::uint8_t {
   concurrent = util::bitset_value(1U),
   defer = util::bitset_value(2U),
 };
-using Compute_options = util::bitset_of<Compute_option>;
+using Compute_options = util::Bitset_of<Compute_option>;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_t {
   consteval Reset_t() noexcept = default;
