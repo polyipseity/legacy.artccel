@@ -18,31 +18,31 @@
 namespace artccel::core::util {
 namespace detail {
 template <typename CharT>
-auto mbrtoc(CharT &out, std::string_view in, std::mbstate_t &state)
+auto mbrtoc(CharT &output, std::string_view input, std::mbstate_t &state)
     -> std::size_t;
 template <>
-auto mbrtoc(char16_t &out, std::string_view in, std::mbstate_t &state)
+auto mbrtoc(char16_t &output, std::string_view input, std::mbstate_t &state)
     -> std::size_t {
-  return std::mbrtoc16(&out, in.data(), in.size(), &state);
+  return std::mbrtoc16(&output, input.data(), input.size(), &state);
 }
 template <>
-auto mbrtoc(char32_t &out, std::string_view in, std::mbstate_t &state)
+auto mbrtoc(char32_t &output, std::string_view input, std::mbstate_t &state)
     -> std::size_t {
-  return std::mbrtoc32(&out, in.data(), in.size(), &state);
+  return std::mbrtoc32(&output, input.data(), input.size(), &state);
 }
 
 template <typename CharT>
-auto crtomb(std::span<char, MB_LEN_MAX> out, CharT in, std::mbstate_t &state)
-    -> std::size_t;
+auto crtomb(std::span<char, MB_LEN_MAX> output, CharT input,
+            std::mbstate_t &state) -> std::size_t;
 template <>
-auto crtomb(std::span<char, MB_LEN_MAX> out, char16_t in, std::mbstate_t &state)
-    -> std::size_t {
-  return std::c16rtomb(out.data(), in, &state);
+auto crtomb(std::span<char, MB_LEN_MAX> output, char16_t input,
+            std::mbstate_t &state) -> std::size_t {
+  return std::c16rtomb(output.data(), input, &state);
 }
 template <>
-auto crtomb(std::span<char, MB_LEN_MAX> out, char32_t in, std::mbstate_t &state)
-    -> std::size_t {
-  return std::c32rtomb(out.data(), in, &state);
+auto crtomb(std::span<char, MB_LEN_MAX> output, char32_t input,
+            std::mbstate_t &state) -> std::size_t {
+  return std::c32rtomb(output.data(), input, &state);
 }
 
 template <typename CharT>
@@ -51,8 +51,8 @@ auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
   std::mbstate_t state{};
   while (!mbs.empty()) {
     auto old_state{state};
-    CharT c{u8'\0'}; // not written to if the next character is null
-    auto processed{mbrtoc(c, mbs, state)};
+    CharT out_c{u8'\0'}; // not written to if the next character is null
+    auto processed{mbrtoc(out_c, mbs, state)};
     switch (processed) {
       [[unlikely]] case cuchar_mbrtoc_error :
           // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -78,20 +78,20 @@ auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
       mbs.remove_prefix(processed);
       break;
     }
-    result.push_back(c);
+    result.push_back(out_c);
   }
-  for (CharT c{}; mbrtoc(c, mbs, state) == cuchar_mbrtoc_surrogate;) {
-    result.push_back(c); // complete surrogate pair of the last character
+  for (CharT out_c{}; mbrtoc(out_c, mbs, state) == cuchar_mbrtoc_surrogate;) {
+    result.push_back(out_c); // complete surrogate pair of the last character
   }
   return result;
 }
 template <typename CharT>
-auto csrtombs(std::basic_string_view<CharT> cs) -> std::string {
+auto csrtombs(std::basic_string_view<CharT> cs_) -> std::string {
   std::string result{};
   std::mbstate_t state{};
-  std::array<char, MB_LEN_MAX> mb{};
-  for (auto const c : cs) {
-    auto const processed{crtomb(mb, c, state)};
+  std::array<char, MB_LEN_MAX> out_mb{};
+  for (auto const in_c : cs_) {
+    auto const processed{crtomb(out_mb, in_c, state)};
     switch (processed) {
       [[unlikely]] case cuchar_crtomb_error :
           // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -99,7 +99,7 @@ auto csrtombs(std::basic_string_view<CharT> cs) -> std::string {
     case cuchar_crtomb_surrogate:
       [[fallthrough]];
     default:
-      result.append(mb.data(), processed);
+      result.append(out_mb.data(), processed);
       break;
     }
   }
