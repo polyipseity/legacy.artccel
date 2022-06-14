@@ -11,10 +11,10 @@
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
 #include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
-#include <optional>    // import std::optional
-#include <string>      // import std::literals::string_literals
-#include <type_traits> // import std::is_function_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v
-#include <utility>     // import std::forward, std::move, std::swap
+#include <optional> // import std::optional
+#include <string>   // import std::literals::string_literals
+#include <type_traits> // import std::is_function_v, std::is_nothrow_move_constructible_v
+#include <utility> // import std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;
@@ -253,20 +253,19 @@ protected:
     swap(future_, other.future_);
   }
   Compute_in(Compute_in<R(Args...)> const &other) noexcept(
-      noexcept(other.mutex_ ? std::make_unique<std::mutex>()
-                            : std::unique_ptr<std::mutex>{}) &&
-      std::is_nothrow_copy_constructible_v<decltype(function_)> &&
-      std::is_nothrow_copy_constructible_v<decltype(bound_)> &&
-      std::is_nothrow_copy_constructible_v<decltype(invoked_)> &&noexcept(
-          decltype(task_){
+      noexcept(decltype(mutex_){other.mutex_ ? std::make_unique<std::mutex>()
+                                             : std::unique_ptr<std::mutex>{}})
+          &&noexcept(decltype(function_){other.function_}) &&noexcept(
+              decltype(bound_){other.bound_}) &&noexcept(decltype(invoked_){
+              other.invoked_}) &&noexcept(decltype(task_){
               package(invoked_, bound_)}) &&noexcept(decltype(future_){
-          task_.get_future()}))
+              task_.get_future()}))
       : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
                             : std::unique_ptr<std::mutex>{}},
         function_{other.function_}, bound_{other.bound_}, invoked_{
                                                               other.invoked_} {}
   auto operator=(Compute_in<R(Args...)> const &right) noexcept(
-      noexcept(Compute_in{right}.swap(*this)) &&noexcept(*this))
+      noexcept(this == &right) &&noexcept(swap(right)) &&noexcept(*this))
       -> Compute_in<R(Args...)> & {
     if (this == &right) {
       // copy constructor cannot handle self-assignment
@@ -450,9 +449,9 @@ protected:
     swap(value_, other.value_);
   }
   Compute_value(Compute_value<R> const &other) noexcept(
-      noexcept(other.mutex_ ? std::make_unique<std::mutex>()
-                            : std::unique_ptr<std::mutex>{}) &&
-      std::is_nothrow_copy_constructible_v<decltype(value_)>)
+      noexcept(decltype(mutex_){other.mutex_ ? std::make_unique<std::mutex>()
+                                             : std::unique_ptr<std::mutex>{}})
+          &&noexcept(decltype(value_){other.value_}))
       : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
                             : std::unique_ptr<std::mutex>{}},
         value_{other.value_} {}
@@ -492,7 +491,7 @@ public:
 
   auto get [[nodiscard]] () const
       noexcept(noexcept(return_) &&
-               std::is_nothrow_move_constructible_v<return_type>) {
+               std::is_nothrow_move_constructible_v<decltype(return_)>) {
     return return_;
   }
   auto extract() {
@@ -503,7 +502,7 @@ public:
   }
 
   auto operator() [[nodiscard]] () const
-      noexcept(noexcept(get()) &&
+      noexcept(noexcept(return_type{get()}) &&
                std::is_nothrow_move_constructible_v<return_type>)
           -> return_type override {
     return get();
@@ -511,7 +510,7 @@ public:
   auto operator()([[maybe_unused]] Extract_t /*unused*/) { return extract(); }
   auto operator>>(return_type &right) noexcept(
       noexcept(right = get()) &&
-      std::is_nothrow_move_constructible_v<return_type>) {
+      std::is_nothrow_move_constructible_v<decltype(right = get())>) {
     return right = get();
   }
   auto operator>>=(return_type &right) { return right = extract(); }
@@ -526,9 +525,8 @@ public:
     swap(c_in_, other.c_in_);
     swap(return_, other.return_);
   }
-  Compute_out(Compute_out<R> const &other) noexcept(
-      std::is_nothrow_copy_constructible_v<decltype(c_in_)>
-          &&std::is_nothrow_copy_constructible_v<decltype(return_)>)
+  Compute_out(Compute_out<R> const &other) noexcept(noexcept(decltype(c_in_){
+      other.c_in_}) &&noexcept(decltype(return_){other.return_}))
       : c_in_{other.c_in_}, return_{other.return_} {}
   auto operator=(Compute_out<R> const &right) noexcept(noexcept(
       Compute_out{right}.swap(*this)) &&noexcept(*this)) -> Compute_out<R> & {
