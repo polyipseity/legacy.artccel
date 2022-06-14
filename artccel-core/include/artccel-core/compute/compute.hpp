@@ -12,10 +12,10 @@
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
 #include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
-#include <optional> // import std::optional
-#include <string>   // import std::literals::string_literals
-#include <type_traits> // import std::is_function_v, std::is_nothrow_move_constructible_v
-#include <utility> // import std::forward, std::move, std::swap
+#include <optional>    // import std::optional
+#include <string>      // import std::literals::string_literals
+#include <type_traits> // import std::is_nothrow_move_constructible_v
+#include <utility>     // import std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;
@@ -23,9 +23,7 @@ using namespace std::literals::string_literals;
 using namespace util::enum_bitset_operators;
 
 template <std::copyable R> class Compute_io;
-template <typename Signature>
-requires std::is_function_v<Signature>
-class Compute_in;
+template <typename Signature> class Compute_in;
 template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R> class Compute_value;
 template <std::copyable R> class Compute_out;
