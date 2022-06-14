@@ -508,9 +508,9 @@ public:
     return get();
   }
   auto operator()([[maybe_unused]] Extract_t /*unused*/) { return extract(); }
-  auto operator>>(return_type &right) noexcept(
-      noexcept(right = get()) &&
-      std::is_nothrow_move_constructible_v<decltype(right = get())>) {
+  auto operator>>(return_type &right) const
+      noexcept(noexcept(right = get()) &&
+               std::is_nothrow_move_constructible_v<decltype(right = get())>) {
     return right = get();
   }
   auto operator>>=(return_type &right) { return right = extract(); }
