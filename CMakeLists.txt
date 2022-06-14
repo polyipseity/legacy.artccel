@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(artccel VERSION 1.0.0 LANGUAGES C CXX)
 
+set(THREADS_PREFER_PTHREAD_FLAG true)
+find_package(Threads REQUIRED)
+find_package(Microsoft.GSL 4.0.0 EXACT REQUIRED CONFIG)
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED true)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(CMAKE_CXX_CLANG_TIDY clang-tidy "--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy")
-
-set(THREADS_PREFER_PTHREAD_FLAG true)
-find_package(Threads REQUIRED)
-find_package(Microsoft.GSL 4.0.0 EXACT REQUIRED CONFIG)
 
 add_library(artccel INTERFACE)
 configure_file("in/config.h" "include/artccel/config.h")
