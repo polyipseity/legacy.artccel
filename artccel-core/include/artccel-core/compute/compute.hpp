@@ -12,10 +12,10 @@
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
 #include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
-#include <optional>    // import std::optional
-#include <string>      // import std::literals::string_literals
-#include <type_traits> // import std::is_nothrow_move_constructible_v
-#include <utility>     // import std::forward, std::move, std::swap
+#include <optional> // import std::optional
+#include <string>   // import std::literals::string_literals
+#include <type_traits> // import std::is_nothrow_move_constructible_v, std::remove_cv_t
+#include <utility> // import std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;
@@ -49,8 +49,14 @@ struct Out_t {
 template <std::copyable R> class Compute_io {
 public:
   using return_type = R;
-  virtual auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  virtual auto clone_unmodified
+      [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> util::Owner<Compute_io<return_type> &> = 0;
+  virtual auto clone [[deprecated(/*u8*/ "Unsafe"),
+                       nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_io<return_type> &> = 0;
+  static constexpr auto clone_valid_options{Compute_option::concurrent |
+                                            Compute_option::defer};
   virtual auto operator()() const -> return_type = 0;
 
   virtual ~Compute_io() noexcept = default;
@@ -242,9 +248,21 @@ public:
     return reset(util::Enum_bitset{} | Compute_option::identity).value();
   }
 
-  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> util::Owner<Compute_in<signature_type> &> override {
     return *new Compute_in{*this};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_in<signature_type> &> override {
+    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+    return *new Compute_in{*this,
+                           (options | Compute_option::concurrent).any()
+                               ? std::make_unique<std::mutex>()
+                               : std::unique_ptr<std::mutex>{},
+                           (options | Compute_option::defer).none()};
   };
   ~Compute_in() noexcept override = default;
 
@@ -269,18 +287,15 @@ protected:
     swap(task_, other.task_);
     swap(future_, other.future_);
   }
-  Compute_in(Compute_in<R(Args...)> const &other) noexcept(
-      noexcept(decltype(mutex_){other.mutex_ ? std::make_unique<std::mutex>()
-                                             : std::unique_ptr<std::mutex>{}})
-          &&noexcept(decltype(function_){other.function_}) &&noexcept(
-              decltype(bound_){other.bound_}) &&noexcept(decltype(invoked_){
-              other.invoked_}) &&noexcept(decltype(task_){
-              package(invoked_, bound_)}) &&noexcept(decltype(future_){
-              task_.get_future()}))
-      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
-                            : std::unique_ptr<std::mutex>{}},
-        function_{other.function_}, bound_{other.bound_}, invoked_{
-                                                              other.invoked_} {}
+  Compute_in(Compute_in<R(Args...)> const &other) noexcept(noexcept(Compute_in{
+      other,
+      other.mutex_ ? std::make_unique<std::mutex>()
+                   : std::unique_ptr<std::mutex>{},
+      other.invoked_}))
+      : Compute_in{other,
+                   other.mutex_ ? std::make_unique<std::mutex>()
+                                : std::unique_ptr<std::mutex>{},
+                   other.invoked_} {}
   auto operator=(Compute_in<R(Args...)> const &right) noexcept(
       noexcept(this == &right) &&noexcept(swap(right)) &&noexcept(*this))
       -> Compute_in<R(Args...)> & {
@@ -302,6 +317,18 @@ protected:
     Compute_in{std::move(right)}.swap(*this);
     return *this;
   };
+
+  Compute_in(Compute_in<R(Args...)> const &other,
+             std::remove_cv_t<decltype(mutex_)> mutex,
+             decltype(invoked_) invoked) noexcept(noexcept(decltype(mutex_){
+      std::move(mutex)}) &&noexcept(decltype(function_){
+      other.function_}) &&noexcept(decltype(bound_){
+      other.bound_}) &&noexcept(decltype(invoked_){
+      invoked}) &&noexcept(decltype(task_){
+      package(invoked_, bound_)}) &&noexcept(decltype(future_){
+      task_.get_future()}))
+      : mutex_{std::move(mutex)}, function_{other.function_},
+        bound_{other.bound_}, invoked_{invoked} {}
 };
 template <std::copyable R, typename... Args>
 explicit Compute_in(std::function<R(Args...)> function, auto &&...args)
@@ -342,8 +369,16 @@ public:
     return value_;
   }
 
-  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> util::Owner<Compute_constant<return_type, value_> &> override {
+    return *new Compute_constant{/* *this */};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_constant<return_type, value_> &> override {
+    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
     return *new Compute_constant{/* *this */};
   };
   constexpr ~Compute_constant() noexcept override = default;
@@ -442,9 +477,20 @@ public:
   }
   auto operator<<(return_type const &value) { return set(value); }
 
-  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> util::Owner<Compute_value<return_type> &> override {
     return *new Compute_value{*this};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_value<return_type> &> override {
+    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+    return *new Compute_value{*this,
+                              (options | Compute_option::concurrent).any()
+                                  ? std::make_unique<std::mutex>()
+                                  : std::unique_ptr<std::mutex>{}};
   };
   ~Compute_value() noexcept override = default;
 
@@ -465,13 +511,11 @@ protected:
     using std::swap;
     swap(value_, other.value_);
   }
-  Compute_value(Compute_value<R> const &other) noexcept(
-      noexcept(decltype(mutex_){other.mutex_ ? std::make_unique<std::mutex>()
-                                             : std::unique_ptr<std::mutex>{}})
-          &&noexcept(decltype(value_){other.value_}))
-      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
-                            : std::unique_ptr<std::mutex>{}},
-        value_{other.value_} {}
+  Compute_value(Compute_value<R> const &other) noexcept(noexcept(Compute_value{
+      other, other.mutex_ ? std::make_unique<std::mutex>()
+                          : std::unique_ptr<std::mutex>{}}))
+      : Compute_value{other, other.mutex_ ? std::make_unique<std::mutex>()
+                                          : std::unique_ptr<std::mutex>{}} {}
   auto operator=(Compute_value<R> const &right) noexcept(
       noexcept(Compute_value{right}.swap(*this)) &&noexcept(*this))
       -> Compute_value<R> & {
@@ -486,6 +530,12 @@ protected:
     Compute_value{std::move(right)}.swap(*this);
     return *this;
   };
+
+  Compute_value(Compute_value<R> const &other,
+                std::remove_cv_t<decltype(mutex_)>
+                    mutex) noexcept(noexcept(decltype(mutex_){
+      std::move(mutex)}) &&noexcept(decltype(value_){other.value_}))
+      : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
 template <std::copyable R> class Compute_out : private Compute_io<R> {
@@ -532,8 +582,16 @@ public:
   }
   auto operator>>=(return_type &right) { return right = extract(); }
 
-  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> util::Owner<Compute_out &> override {
+    return *new Compute_out{*this};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_out &> override {
+    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
     return *new Compute_out{*this};
   };
   ~Compute_out() noexcept override = default;
