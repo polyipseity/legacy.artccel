@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_UTIL_ENCODING_HPP
 #pragma once
 
-#include "polyfill.hpp" // import literals::operator""_UZ
+#include "polyfill.hpp" // import literals, literals::operator""_UZ
 #include <cwchar>       // import std::mbstate_t, std::size_t
 #include <string> // import std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
