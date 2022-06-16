@@ -51,13 +51,13 @@ public:
   using return_type = R;
   virtual auto clone_unmodified
       [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_io<return_type> &> = 0;
+      -> util::Owner<Compute_io<R> &> = 0;
   virtual auto clone [[deprecated(/*u8*/ "Unsafe"),
                        nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_io<return_type> &> = 0;
+      -> util::Owner<Compute_io<R> &> = 0;
   static constexpr auto clone_valid_options{Compute_option::concurrent |
                                             Compute_option::defer};
-  virtual auto operator()() const -> return_type = 0;
+  virtual auto operator()() const -> R = 0;
 
   virtual ~Compute_io() noexcept = default;
   Compute_io(Compute_io<R> const &) = delete;
@@ -81,7 +81,7 @@ private:
 
 public:
   using return_type = typename Compute_io<R>::return_type;
-  using signature_type = return_type(Args...);
+  using signature_type = R(Args...);
   template <typename... ForwardArgs>
   explicit Compute_in([[maybe_unused]] Friend /*unused*/, ForwardArgs &&...args)
       : Compute_in{std::forward<ForwardArgs>(args)...} {}
@@ -89,10 +89,10 @@ public:
 private:
   std::unique_ptr<std::mutex> const mutex_;
   std::function<signature_type> function_;
-  std::function<return_type()> bound_;
+  std::function<R()> bound_;
   mutable bool invoked_{};
-  mutable std::packaged_task<return_type()> task_{package(invoked_, bound_)};
-  std::shared_future<return_type> future_{task_.get_future()};
+  mutable std::packaged_task<R()> task_{package(invoked_, bound_)};
+  std::shared_future<R> future_{task_.get_future()};
 
 protected:
   template <typename... ForwardArgs>
@@ -136,8 +136,8 @@ protected:
           return function(std::forward<ForwardArgs>(args)...);
         };
   }
-  static auto package(bool invoke, std::function<return_type()> bound) {
-    std::packaged_task<return_type()> ret{bound};
+  static auto package(bool invoke, std::function<R()> bound) {
+    std::packaged_task<R()> ret{bound};
     if (invoke) {
       ret();
     }
@@ -187,7 +187,7 @@ public:
   template <typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
-      -> std::optional<return_type> {
+      -> std::optional<R> {
     constexpr auto valid_options{util::Enum_bitset{} | Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
@@ -203,7 +203,7 @@ public:
     }
     return {};
   }
-  auto reset(Compute_options const &options) -> std::optional<return_type> {
+  auto reset(Compute_options const &options) -> std::optional<R> {
     constexpr auto valid_options{util::Enum_bitset{} | Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
@@ -219,7 +219,7 @@ public:
     return {};
   }
 
-  auto operator()() const -> return_type override { return invoke(); }
+  auto operator()() const -> R override { return invoke(); }
   template <template <typename...> typename Tuple, typename... ForwardArgs>
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   void operator<<(Tuple<ForwardArgs...> &&t_args) {
@@ -255,7 +255,7 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> util::Owner<Compute_in<signature_type> &> override {
-    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+    util::check_bitset(Compute_io<R>::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
     return *new Compute_in{*this,
@@ -357,26 +357,26 @@ public:
 
   template <typename... ForwardArgs>
   constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_constant<return_type, value_>>(
+    return std::make_shared<Compute_constant<R, V>>(
         Friend{}, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_constant<return_type, value_> const>(
+    return std::make_shared<Compute_constant<R, V> const>(
         Friend{}, std::forward<ForwardArgs>(args)...);
   }
-  constexpr auto operator() [[nodiscard]] () const -> return_type override {
+  constexpr auto operator() [[nodiscard]] () const -> R override {
     return value_;
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_constant<return_type, value_> &> override {
+      -> util::Owner<Compute_constant<R, V> &> override {
     return *new Compute_constant{/* *this */};
   };
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_constant<return_type, value_> &> override {
-    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+      -> util::Owner<Compute_constant<R, V> &> override {
+    util::check_bitset(Compute_io<R>::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
     return *new Compute_constant{/* *this */};
@@ -409,13 +409,13 @@ public:
 
 private:
   std::unique_ptr<std::mutex> const mutex_;
-  return_type value_;
+  R value_;
 
 protected:
-  explicit Compute_value(return_type const &value)
+  explicit Compute_value(R const &value)
       : Compute_value{util::Enum_bitset{} | Compute_option::concurrent, value} {
   }
-  Compute_value(Compute_options const &options, return_type const &value)
+  Compute_value(Compute_options const &options, R const &value)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
@@ -444,14 +444,14 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_value<return_type> const>(
+    return std::make_shared<Compute_value<R> const>(
         Friend{}, std::forward<ForwardArgs>(args)...);
   }
 
 public:
   template <typename... ForwardArgs>
   static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_value<return_type>>(
+    return std::make_shared<Compute_value<R>>(
         Friend{}, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
@@ -463,7 +463,7 @@ public:
                             : std::unique_lock<std::mutex>{}};
     return value_;
   }
-  auto set(return_type const &value) {
+  auto set(R const &value) {
     auto value_copy{value};
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
@@ -472,19 +472,17 @@ public:
     return value_copy;
   }
 
-  auto operator() [[nodiscard]] () const -> return_type override {
-    return get();
-  }
-  auto operator<<(return_type const &value) { return set(value); }
+  auto operator() [[nodiscard]] () const -> R override { return get(); }
+  auto operator<<(R const &value) { return set(value); }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_value<return_type> &> override {
+      -> util::Owner<Compute_value<R> &> override {
     return *new Compute_value{*this};
   };
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_value<return_type> &> override {
-    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+      -> util::Owner<Compute_value<R> &> override {
+    util::check_bitset(Compute_io<R>::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
     return *new Compute_value{*this,
@@ -495,7 +493,7 @@ public:
   ~Compute_value() noexcept override = default;
 
 protected:
-  void swap(Compute_value<return_type> &other) noexcept {
+  void swap(Compute_value<R> &other) noexcept {
     auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
                            : std::unique_lock<std::mutex>{}};
     auto other_guard{other.mutex_
@@ -543,15 +541,15 @@ public:
   using return_type = typename Compute_io<R>::return_type;
 
 private:
-  std::weak_ptr<Compute_io<return_type> const> c_in_{};
-  return_type return_{};
+  std::weak_ptr<Compute_io<R> const> c_in_{};
+  R return_{};
 
 public:
   constexpr Compute_out() noexcept = default;
-  template <std::derived_from<Compute_io<return_type>> In>
+  template <std::derived_from<Compute_io<R>> In>
   requires std::derived_from<In, std::enable_shared_from_this<In>>
   explicit Compute_out(In const &c_in)
-      : c_in_{std::static_pointer_cast<Compute_io<return_type> const>(
+      : c_in_{std::static_pointer_cast<Compute_io<R> const>(
             static_cast<std::enable_shared_from_this<In> const &>(c_in)
                 .shared_from_this())},
         return_{c_in()} {}
@@ -569,18 +567,17 @@ public:
   }
 
   auto operator() [[nodiscard]] () const
-      noexcept(noexcept(return_type{get()}) &&
-               std::is_nothrow_move_constructible_v<return_type>)
-          -> return_type override {
+      noexcept(noexcept(R{get()}) && std::is_nothrow_move_constructible_v<R>)
+          -> R override {
     return get();
   }
   auto operator()([[maybe_unused]] Extract_t /*unused*/) { return extract(); }
-  auto operator>>(return_type &right) const
+  auto operator>>(R &right) const
       noexcept(noexcept(right = get()) &&
                std::is_nothrow_move_constructible_v<decltype(right = get())>) {
     return right = get();
   }
-  auto operator>>=(return_type &right) { return right = extract(); }
+  auto operator>>=(R &right) { return right = extract(); }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> util::Owner<Compute_out &> override {
@@ -589,13 +586,13 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> util::Owner<Compute_out &> override {
-    util::check_bitset(Compute_io<return_type>::clone_valid_options,
+    util::check_bitset(Compute_io<R>::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
     return *new Compute_out{*this};
   };
   ~Compute_out() noexcept override = default;
-  void swap(Compute_out<return_type> &other) noexcept {
+  void swap(Compute_out<R> &other) noexcept {
     using std::swap;
     swap(c_in_, other.c_in_);
     swap(return_, other.return_);
