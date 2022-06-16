@@ -11,7 +11,7 @@
 #include <functional>   // import std::invoke
 #include <memory> // import std::enable_shared_from_this, std::shared_ptr, std::unique_ptr
 #include <type_traits> // import std::invoke_result_t, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
-#include <utility>     // import std::declval, std::forward
+#include <utility>     // import std::forward
 
 namespace artccel::core::util {
 template <typename P, typename F>
@@ -55,15 +55,15 @@ constexpr auto clone_raw [[deprecated, nodiscard]] (P &&ptr, F &&func)
     }
   }
 }
+template <typename F, cloneable<F> P>
+using clone_raw_result_t = std::remove_reference_t<
+    // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
+    std::invoke_result_t<decltype(clone_raw<F, P>), P, F>>;
 } // namespace detail
 
-template <
-    typename F, cloneable<F> P, typename RP = P,
-    typename R = Replace_ptr_value_type_t<
-        RP,
-        std::remove_reference_t<
-            // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-            decltype(detail::clone_raw(std::declval<P>(), std::declval<F>()))>>>
+template <typename F, cloneable<F> P, typename RP = P,
+          typename R =
+              Replace_ptr_value_type_t<RP, detail::clone_raw_result_t<F, P>>>
 requires(!std::derived_from<Remove_cvptr_t<P>,
                             std::enable_shared_from_this<Remove_cvptr_t<P>>> ||
          std::derived_from<Replace_ptr_value_type_t<RP, void>,
