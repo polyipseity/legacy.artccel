@@ -2,6 +2,7 @@
 #define ARTCCEL_CORE_UTIL_CLONE_HPP
 #pragma once
 
+#include "clone_macros.hpp" // import ARTCCEL_GENERATE_CLONE_FUNCTION_PR, ARTCCEL_GENERATE_CLONE_FUNCTION_R
 #include "encoding.hpp" // import c8srtombs
 #include "meta.hpp"     // import Remove_cvptr_t, Replace_ptr_value_type_t
 #include <cassert>      // import assert
