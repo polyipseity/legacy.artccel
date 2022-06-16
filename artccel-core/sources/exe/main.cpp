@@ -10,7 +10,7 @@
 #include <vector>      // import std::vector
 
 namespace artccel::core {
-auto main(std::span<std::string_view const> args) {
+auto main(std::span<std::string_view const> args) -> int {
   std::ios_base::sync_with_stdio(false);
   std::locale::global(
       std::locale{/*u8*/ ""}); // use user-preferred locale to convert args
