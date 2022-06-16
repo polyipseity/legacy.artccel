@@ -55,7 +55,7 @@ public:
   virtual auto clone [[deprecated(/*u8*/ "Unsafe"),
                        nodiscard]] (Compute_options const &options) const
       -> util::Owner<Compute_io<R> &> = 0;
-  static constexpr auto clone_valid_options{Compute_option::concurrent |
+  constexpr static auto clone_valid_options{Compute_option::concurrent |
                                             Compute_option::defer};
   virtual auto operator()() const -> R = 0;
 

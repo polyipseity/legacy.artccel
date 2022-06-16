@@ -129,7 +129,7 @@ struct Open_bound : Bound<T> {
   }
 
 private:
-  static constexpr auto compare(T const &left, T const &right) noexcept(
+  constexpr static auto compare(T const &left, T const &right) noexcept(
       noexcept(left<right ? std::partial_ordering::less : left> right
                    ? std::partial_ordering::greater
                    : std::partial_ordering::unordered) &&
@@ -254,7 +254,7 @@ struct Closed_bound : Bound<T> {
   }
 
 private:
-  static constexpr auto compare(T const &left, T const &right) noexcept(
+  constexpr static auto compare(T const &left, T const &right) noexcept(
       noexcept(left<right ? std::partial_ordering::less : left> right
                    ? std::partial_ordering::greater
                : left == right ? std::partial_ordering::equivalent
