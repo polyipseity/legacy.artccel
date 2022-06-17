@@ -5,11 +5,15 @@
 #include <cassert>  // import assert
 #include <compare>  // import std::partial_ordering
 #include <concepts> // import std::constructible_from, std::copy_constructible, std::move_constructible, std::same_as, std::totally_ordered
-#include <cstddef>  // import std::nullptr_t
 #include <type_traits> // import std::is_base_of_v, std::is_nothrow_move_constructible_v
 #include <utility> // import std::move
 
 namespace artccel::core::util {
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Dynamic_interval_t {
+  consteval Dynamic_interval_t() noexcept = default;
+};
+
 template <std::totally_ordered T>
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Bound {
@@ -346,14 +350,15 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   consteval Interval(T value) noexcept(noexcept(Interval{
-      std::move(value), nullptr})) requires std::move_constructible<T>
-      : Interval{std::move(value), nullptr} {
+      std::move(value),
+      Dynamic_interval_t{}})) requires std::move_constructible<T>
+      : Interval{std::move(value), Dynamic_interval_t{}} {
     /* the parameter is passed-by-value to not bound to a temporary for using
      * this type as non-type template parameters */
   }
   /*
   usage
-  `{(expression), nullptr}`
+  `{(expression), Dynamic_interval_t{}}`
   checking (debug ONLY)
   - compile-time checking requires constexpr/consteval context, causes
   (complicated) compile error @ assert
@@ -361,17 +366,15 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   */
   constexpr Interval(
       T const &value,
-      [[maybe_unused]] std::
-          nullptr_t /*unused*/) noexcept(noexcept(decltype(value_){
+      [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(noexcept(decltype(value_){
       value}) &&noexcept(check(value_))) requires std::copy_constructible<T>
       : value_{value} {
     check(value_);
   }
-  constexpr Interval(
-      T &&value, [[maybe_unused]] std::
-                     nullptr_t /*unused*/) noexcept(noexcept(decltype(value_){
-      std::move(value)}) &&noexcept(check(value_))) requires
-      std::move_constructible<T> : value_{std::move(value)} {
+  constexpr Interval(T &&value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
+      noexcept(decltype(value_){std::move(value)}) &&noexcept(
+          check(value_))) requires std::move_constructible<T>
+      : value_{std::move(value)} {
     check(value_);
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
