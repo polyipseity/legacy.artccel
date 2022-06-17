@@ -23,7 +23,7 @@ using namespace std::literals::string_literals;
 using namespace util::enum_bitset_operators;
 
 template <std::copyable R> class Compute_io;
-template <typename Signature> class Compute_in;
+template <typename Signature> class Compute_function;
 template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R> class Compute_value;
 template <std::copyable R> class Compute_out;
@@ -70,9 +70,9 @@ protected:
 };
 
 template <std::copyable R, typename... Args>
-class Compute_in<R(Args...)>
+class Compute_function<R(Args...)>
     : public Compute_io<R>,
-      public std::enable_shared_from_this<Compute_in<R(Args...)>> {
+      public std::enable_shared_from_this<Compute_function<R(Args...)>> {
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
@@ -80,11 +80,12 @@ private:
   };
 
 public:
-  using return_type = typename Compute_in::return_type;
+  using return_type = typename Compute_function::return_type;
   using signature_type = R(Args...);
   template <typename... ForwardArgs>
-  explicit Compute_in([[maybe_unused]] Friend /*unused*/, ForwardArgs &&...args)
-      : Compute_in{std::forward<ForwardArgs>(args)...} {}
+  explicit Compute_function([[maybe_unused]] Friend /*unused*/,
+                            ForwardArgs &&...args)
+      : Compute_function{std::forward<ForwardArgs>(args)...} {}
 
 private:
   std::unique_ptr<std::mutex> const mutex_;
@@ -97,14 +98,14 @@ private:
 protected:
   template <typename F, typename... ForwardArgs>
   requires std::invocable<F, ForwardArgs...>
-  explicit Compute_in(F &&function, ForwardArgs &&...args)
-      : Compute_in{Compute_option::concurrent | Compute_option::defer,
-                   std::forward<F>(function),
-                   std::forward<ForwardArgs>(args)...} {}
+  explicit Compute_function(F &&function, ForwardArgs &&...args)
+      : Compute_function{Compute_option::concurrent | Compute_option::defer,
+                         std::forward<F>(function),
+                         std::forward<ForwardArgs>(args)...} {}
   template <typename F, typename... ForwardArgs>
   requires std::invocable<F, ForwardArgs...>
-  Compute_in(Compute_options const &options, F &&function,
-             ForwardArgs &&...args)
+  Compute_function(Compute_options const &options, F &&function,
+                   ForwardArgs &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
@@ -159,15 +160,15 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_in const>(
+    return std::make_shared<Compute_function const>(
         Friend{}, std::forward<ForwardArgs>(args)...);
   }
 
 public:
   template <typename... ForwardArgs>
   static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_in>(Friend{},
-                                        std::forward<ForwardArgs>(args)...);
+    return std::make_shared<Compute_function>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
@@ -249,25 +250,25 @@ public:
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_in &> override {
-    return *new Compute_in{*this};
+      -> util::Owner<Compute_function &> override {
+    return *new Compute_function{*this};
   };
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_in &> override {
-    util::check_bitset(Compute_in::Compute_io::clone_valid_options,
+      -> util::Owner<Compute_function &> override {
+    util::check_bitset(Compute_function::Compute_io::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    return *new Compute_in{*this,
-                           (options | Compute_option::concurrent).any()
-                               ? std::make_unique<std::mutex>()
-                               : std::unique_ptr<std::mutex>{},
-                           (options | Compute_option::defer).none()};
+    return *new Compute_function{*this,
+                                 (options | Compute_option::concurrent).any()
+                                     ? std::make_unique<std::mutex>()
+                                     : std::unique_ptr<std::mutex>{},
+                                 (options | Compute_option::defer).none()};
   };
-  ~Compute_in() noexcept override = default;
+  ~Compute_function() noexcept override = default;
 
 protected:
-  void swap(Compute_in &other) noexcept {
+  void swap(Compute_function &other) noexcept {
     auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
                            : std::unique_lock<std::mutex>{}};
     auto other_guard{other.mutex_
@@ -287,18 +288,18 @@ protected:
     swap(task_, other.task_);
     swap(future_, other.future_);
   }
-  Compute_in(Compute_in const &other) noexcept(noexcept(Compute_in{
-      other,
-      other.mutex_ ? std::make_unique<std::mutex>()
-                   : std::unique_ptr<std::mutex>{},
-      other.invoked_}))
-      : Compute_in{other,
-                   other.mutex_ ? std::make_unique<std::mutex>()
-                                : std::unique_ptr<std::mutex>{},
-                   other.invoked_} {}
-  auto operator=(Compute_in const &right) noexcept(
+  Compute_function(Compute_function const &other) noexcept(
+      noexcept(Compute_function{other,
+                                other.mutex_ ? std::make_unique<std::mutex>()
+                                             : std::unique_ptr<std::mutex>{},
+                                other.invoked_}))
+      : Compute_function{other,
+                         other.mutex_ ? std::make_unique<std::mutex>()
+                                      : std::unique_ptr<std::mutex>{},
+                         other.invoked_} {}
+  auto operator=(Compute_function const &right) noexcept(
       noexcept(this == &right) &&noexcept(swap(right)) &&noexcept(*this))
-      -> Compute_in & {
+      -> Compute_function & {
     if (this == &right) {
       // copy constructor cannot handle self-assignment
       return *this;
@@ -306,19 +307,20 @@ protected:
     swap(right);
     return *this;
   };
-  Compute_in(Compute_in &&other) noexcept
+  Compute_function(Compute_function &&other) noexcept
       : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
                             : std::unique_ptr<std::mutex>{}},
         function_{std::move(other.function_)}, bound_{std::move(other.bound_)},
         invoked_{std::move(other.invoked_)}, task_{std::move(other.task_)},
         future_{std::move(other.future_)} {}
-  auto operator=(Compute_in &&right) noexcept -> Compute_in & {
-    Compute_in{std::move(right)}.swap(*this);
+  auto operator=(Compute_function &&right) noexcept -> Compute_function & {
+    Compute_function{std::move(right)}.swap(*this);
     return *this;
   };
 
-  Compute_in(Compute_in const &other, std::remove_cv_t<decltype(mutex_)> mutex,
-             decltype(invoked_) invoked) noexcept(noexcept(decltype(mutex_){
+  Compute_function(
+      Compute_function const &other, std::remove_cv_t<decltype(mutex_)> mutex,
+      decltype(invoked_) invoked) noexcept(noexcept(decltype(mutex_){
       std::move(mutex)}) &&noexcept(decltype(function_){
       other.function_}) &&noexcept(decltype(bound_){
       other.bound_}) &&noexcept(decltype(invoked_){
@@ -329,10 +331,10 @@ protected:
         bound_{other.bound_}, invoked_{invoked} {}
 };
 template <typename F>
-explicit Compute_in(F &&, auto &&...) -> Compute_in<
+explicit Compute_function(F &&, auto &&...) -> Compute_function<
     decltype(decltype(std::function{std::declval<F>()})::operator())>;
 template <typename F>
-Compute_in(Compute_options const &, F &&, auto &&...) -> Compute_in<
+Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
     decltype(decltype(std::function{std::declval<F>()})::operator())>;
 
 template <std::copyable R, R V>
