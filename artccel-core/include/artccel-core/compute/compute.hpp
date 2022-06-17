@@ -15,7 +15,7 @@
 #include <optional> // import std::optional
 #include <string>   // import std::literals::string_literals
 #include <type_traits> // import std::is_nothrow_move_constructible_v, std::remove_cv_t
-#include <utility> // import std::forward, std::move, std::swap
+#include <utility> // import std::declval, std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;
