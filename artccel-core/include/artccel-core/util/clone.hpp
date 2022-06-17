@@ -90,7 +90,7 @@ requires(!std::derived_from<Remove_cvptr_t<P>,
 }
 template <typename P>
 requires cloneable<P, decltype(default_clone_function<P>)>
-auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P &&ptr)
+constexpr auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P &&ptr)
 -> decltype(auto) {
   return clone(std::forward<P>(ptr), default_clone_function<P>);
 }
