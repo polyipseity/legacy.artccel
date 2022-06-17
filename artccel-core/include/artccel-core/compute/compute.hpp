@@ -122,15 +122,15 @@ protected:
   static auto bind(decltype(function_) const &function, ForwardArgs &&...args) {
     return
         [function,
-         ... args = std::forward<ForwardArgs>(
-             args)]() mutable noexcept(noexcept(function(std::
-                                                             forward<
-                                                                 ForwardArgs>(
-                                                                 args)...)) &&
-                                       std::is_nothrow_move_constructible_v<
-                                           decltype(function(
-                                               std::forward<ForwardArgs>(
-                                                   args)...))>) {
+         ... args{std::forward<ForwardArgs>(
+             args)}]() mutable noexcept(noexcept(function(std::
+                                                              forward<
+                                                                  ForwardArgs>(
+                                                                  args)...)) &&
+                                        std::is_nothrow_move_constructible_v<
+                                            decltype(function(
+                                                std::forward<ForwardArgs>(
+                                                    args)...))>) {
           return function(std::forward<ForwardArgs>(args)...);
         };
   }
