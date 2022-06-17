@@ -591,7 +591,7 @@ public:
     return *new Compute_out{*this};
   };
   ~Compute_out() noexcept override = default;
-  void swap(Compute_out &other) noexcept {
+  constexpr void swap(Compute_out &other) noexcept {
     using std::swap;
     swap(c_in_, other.c_in_);
     swap(return_, other.return_);
@@ -614,7 +614,7 @@ public:
 template <std::copyable R>
 explicit Compute_out(Compute_io<R> const &) -> Compute_out<R>;
 template <std::copyable R>
-void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
+constexpr void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
 }
 
