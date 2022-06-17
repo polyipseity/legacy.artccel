@@ -95,22 +95,21 @@ private:
   std::shared_future<R> future_{task_.get_future()};
 
 protected:
-  template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  explicit Compute_in(std::function<signature_type> function,
-                      ForwardArgs &&...args)
-      : Compute_in{Compute_option::concurrent | Compute_option::defer, function,
+  template <typename F, typename... ForwardArgs>
+  requires std::invocable<F, ForwardArgs...>
+  explicit Compute_in(F &&function, ForwardArgs &&...args)
+      : Compute_in{Compute_option::concurrent | Compute_option::defer,
+                   std::forward<F>(function),
                    std::forward<ForwardArgs>(args)...} {}
-  template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  Compute_in(Compute_options const &options,
-             std::function<signature_type> function, ForwardArgs &&...args)
+  template <typename F, typename... ForwardArgs>
+  requires std::invocable<F, ForwardArgs...>
+  Compute_in(Compute_options const &options, F &&function,
+             ForwardArgs &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
-        function_{std::move(function)}, bound_{bind(function_,
-                                                    std::forward<ForwardArgs>(
-                                                        args)...)},
+        function_{std::forward<F>(function)},
+        bound_{bind(function_, std::forward<ForwardArgs>(args)...)},
         invoked_{(options & Compute_option::defer).none()} {
     constexpr static auto valid_options{Compute_option::concurrent |
                                         Compute_option::defer};
@@ -119,9 +118,8 @@ protected:
                        options);
   }
   template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, ForwardArgs...>
-  static auto bind(std::function<signature_type> function,
-                   ForwardArgs &&...args) {
+  requires std::invocable<decltype(function_), ForwardArgs...>
+  static auto bind(decltype(function_) const &function, ForwardArgs &&...args) {
     return
         [function,
          ... args = std::forward<ForwardArgs>(
@@ -136,8 +134,8 @@ protected:
           return function(std::forward<ForwardArgs>(args)...);
         };
   }
-  static auto package(bool invoke, std::function<R()> bound) {
-    std::packaged_task<R()> ret{bound};
+  static auto package(bool invoke, decltype(bound_) const &bound) {
+    decltype(task_) ret{bound};
     if (invoke) {
       ret();
     }
@@ -185,7 +183,7 @@ public:
     return std::shared_future{future_}.get();
   }
   template <typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, ForwardArgs...>
+  requires std::invocable<decltype(function_), ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
       -> std::optional<R> {
     constexpr static auto valid_options{util::Enum_bitset{} |
@@ -223,7 +221,7 @@ public:
 
   auto operator()() const -> R override { return invoke(); }
   template <template <typename...> typename Tuple, typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, ForwardArgs...>
+  requires std::invocable<decltype(function_), ForwardArgs...>
   void operator<<(Tuple<ForwardArgs...> &&t_args) {
     util::forward_apply(
         [this](ForwardArgs &&...args) mutable {
@@ -233,7 +231,7 @@ public:
         std::forward<Tuple<ForwardArgs...>>(t_args));
   }
   template <template <typename...> typename Tuple, typename... ForwardArgs>
-  requires std::invocable<std::function<signature_type>, ForwardArgs...>
+  requires std::invocable<decltype(function_), ForwardArgs...>
   auto operator<<=(Tuple<ForwardArgs...> &&t_args) {
     return util::forward_apply(
         [this](ForwardArgs &&...args) mutable {
@@ -330,12 +328,12 @@ protected:
       : mutex_{std::move(mutex)}, function_{other.function_},
         bound_{other.bound_}, invoked_{invoked} {}
 };
-template <std::copyable R, typename... Args>
-explicit Compute_in(std::function<R(Args...)> function, auto &&...args)
-    -> Compute_in<R(Args...)>;
-template <std::copyable R, typename... Args>
-Compute_in(Compute_options const &, std::function<R(Args...)> function,
-           auto &&...args) -> Compute_in<R(Args...)>;
+template <typename F>
+explicit Compute_in(F &&, auto &&...) -> Compute_in<
+    decltype(decltype(std::function{std::declval<F>()})::operator())>;
+template <typename F>
+Compute_in(Compute_options const &, F &&, auto &&...) -> Compute_in<
+    decltype(decltype(std::function{std::declval<F>()})::operator())>;
 
 template <std::copyable R, R V>
 class Compute_constant
