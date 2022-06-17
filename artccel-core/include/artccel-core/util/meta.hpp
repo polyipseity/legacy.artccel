@@ -12,7 +12,7 @@
 namespace artccel::core::util {
 namespace detail {
 template <typename T>
-constexpr auto raw_type_name [[nodiscard]] () -> std::string_view {
+consteval auto raw_type_name [[nodiscard]] () -> std::string_view {
 #ifndef _MSC_VER
   // clang-format off
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
@@ -87,13 +87,12 @@ template <typename P, typename R>
 using Replace_ptr_value_type_t = typename Replace_ptr_value_type<P, R>::type;
 
 template <typename T>
-constexpr auto type_name_mbs_data [[nodiscard]] () noexcept {
+consteval auto type_name_mbs_data [[nodiscard]] () noexcept {
   return detail::type_name_storage<T>;
 }
-template <typename T> constexpr auto type_name_mbs [[nodiscard]] () noexcept {
-  constexpr std::string_view ret{detail::type_name_storage<T>.cbegin(),
-                                 detail::type_name_storage<T>.cend() - 1};
-  return ret;
+template <typename T> consteval auto type_name_mbs [[nodiscard]] () noexcept {
+  return std::string_view{detail::type_name_storage<T>.cbegin(),
+                          detail::type_name_storage<T>.cend() - 1};
 }
 template <typename T> auto type_name [[nodiscard]] () {
   return mbsrtoc8s(type_name_mbs<T>());
