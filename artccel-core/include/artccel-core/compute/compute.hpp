@@ -112,8 +112,8 @@ protected:
                                                     std::forward<ForwardArgs>(
                                                         args)...)},
         invoked_{(options & Compute_option::defer).none()} {
-    constexpr auto valid_options{Compute_option::concurrent |
-                                 Compute_option::defer};
+    constexpr static auto valid_options{Compute_option::concurrent |
+                                        Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
@@ -148,7 +148,7 @@ private:
   template <typename... ForwardArgs>
   static auto create_const_0
       [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
-    constexpr auto valid_options{~Compute_option::concurrent};
+    constexpr static auto valid_options{~Compute_option::concurrent};
     util::check_bitset(valid_options,
                        u8"Unnecessary "s + util::type_name<Compute_option>(),
                        options);
@@ -188,7 +188,8 @@ public:
   requires std::invocable<std::function<signature_type>, ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
       -> std::optional<R> {
-    constexpr auto valid_options{util::Enum_bitset{} | Compute_option::defer};
+    constexpr static auto valid_options{util::Enum_bitset{} |
+                                        Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
@@ -204,7 +205,8 @@ public:
     return {};
   }
   auto reset(Compute_options const &options) -> std::optional<R> {
-    constexpr auto valid_options{util::Enum_bitset{} | Compute_option::defer};
+    constexpr static auto valid_options{util::Enum_bitset{} |
+                                        Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
@@ -420,8 +422,8 @@ protected:
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
         value_{value} {
-    constexpr auto valid_options{util::Enum_bitset{} |
-                                 Compute_option::concurrent};
+    constexpr static auto valid_options{util::Enum_bitset{} |
+                                        Compute_option::concurrent};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
@@ -431,7 +433,7 @@ private:
   template <typename... ForwardArgs>
   static auto create_const_0
       [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
-    constexpr auto valid_options{~Compute_option::concurrent};
+    constexpr static auto valid_options{~Compute_option::concurrent};
     util::check_bitset(valid_options,
                        u8"Unnecessary "s + util::type_name<Compute_option>(),
                        options);

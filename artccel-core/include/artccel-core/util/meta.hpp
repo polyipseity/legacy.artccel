@@ -32,7 +32,7 @@ constexpr struct alignas(64) {
                                 control_type_name.size()};
 } type_name_format{};
 template <typename T>
-constexpr static auto type_name_storage{[] {
+constexpr auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix == std::string_view::npos) {
     return std::to_array(/*u8*/ "<type name unavailable>");
   }
