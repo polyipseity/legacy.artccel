@@ -10,7 +10,7 @@
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function
 #include <future>     // import std::packaged_task, std::shared_future
-#include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::static_pointer_cast, std::unique_ptr, std::weak_ptr
+#include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::unique_ptr, std::weak_ptr
 #include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
 #include <optional> // import std::optional
 #include <string>   // import std::literals::string_literals
@@ -23,6 +23,12 @@ using namespace std::literals::string_literals;
 using namespace util::enum_bitset_operators;
 
 template <std::copyable R> class Compute_io;
+template <typename Derived, std::copyable R> class Compute_in;
+template <typename T, typename R>
+concept Compute_in_c =
+    std::derived_from<T, Compute_in<T, R>> && std::copyable<R>;
+template <typename T>
+concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
 template <typename Signature> class Compute_function;
 template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R> class Compute_value;
@@ -49,14 +55,6 @@ struct Out_t {
 template <std::copyable R> class Compute_io {
 public:
   using return_type = R;
-  virtual auto clone_unmodified
-      [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_io &> = 0;
-  virtual auto clone [[deprecated(/*u8*/ "Unsafe"),
-                       nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_io &> = 0;
-  constexpr static auto clone_valid_options{Compute_option::concurrent |
-                                            Compute_option::defer};
   virtual auto operator()() const -> R = 0;
 
   virtual ~Compute_io() noexcept = default;
@@ -69,10 +67,27 @@ protected:
   constexpr Compute_io() noexcept = default;
 };
 
+template <typename Derived, std::copyable R>
+class Compute_in : public Compute_io<R>,
+                   public std::enable_shared_from_this<Derived> {
+public:
+  using return_type = typename Compute_in::return_type;
+  virtual auto clone_unmodified
+      [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_in &> = 0;
+  constexpr static auto clone_valid_options{Compute_option::concurrent |
+                                            Compute_option::defer};
+  virtual auto clone [[deprecated(/*u8*/ "Unsafe"),
+                       nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_in &> = 0;
+
+protected:
+  constexpr Compute_in() noexcept = default;
+};
+
 template <std::copyable R, typename... Args>
 class Compute_function<R(Args...)>
-    : public Compute_io<R>,
-      public std::enable_shared_from_this<Compute_function<R(Args...)>> {
+    : public Compute_in<Compute_function<R(Args...)>, R> {
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
@@ -256,7 +271,7 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> util::Owner<Compute_function &> override {
-    util::check_bitset(Compute_function::Compute_io::clone_valid_options,
+    util::check_bitset(Compute_function::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
     return *new Compute_function{*this,
@@ -338,9 +353,7 @@ Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
     decltype(decltype(std::function{std::declval<F>()})::operator())>;
 
 template <std::copyable R, R V>
-class Compute_constant
-    : public Compute_io<R>,
-      public std::enable_shared_from_this<Compute_constant<R, V>> {
+class Compute_constant : public Compute_in<Compute_constant<R, V>, R> {
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
@@ -376,7 +389,7 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> util::Owner<Compute_constant &> override {
-    util::check_bitset(Compute_constant::Compute_io::clone_valid_options,
+    util::check_bitset(Compute_constant::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
     return *new Compute_constant{/* *this */};
@@ -392,8 +405,7 @@ protected:
 };
 
 template <std::copyable R>
-class Compute_value : public Compute_io<R>,
-                      public std::enable_shared_from_this<Compute_value<R>> {
+class Compute_value : public Compute_in<Compute_value<R>, R> {
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
@@ -482,7 +494,7 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> util::Owner<Compute_value &> override {
-    util::check_bitset(Compute_value::Compute_io::clone_valid_options,
+    util::check_bitset(Compute_value::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
     return *new Compute_value{*this,
@@ -535,23 +547,19 @@ protected:
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
-template <std::copyable R> class Compute_out : private Compute_io<R> {
+template <std::copyable R> class Compute_out : public Compute_io<R> {
 public:
   using return_type = typename Compute_out::return_type;
+  using in_type = Compute_io<R>;
 
 private:
-  std::weak_ptr<Compute_io<R> const> c_in_{};
+  std::weak_ptr<in_type const> c_in_{};
   R return_{};
 
 public:
   constexpr Compute_out() noexcept = default;
-  template <std::derived_from<Compute_io<R>> In>
-  requires std::derived_from<In, std::enable_shared_from_this<In>>
-  explicit Compute_out(In const &c_in)
-      : c_in_{std::static_pointer_cast<Compute_io<R> const>(
-            static_cast<std::enable_shared_from_this<In> const &>(c_in)
-                .shared_from_this())},
-        return_{c_in()} {}
+  explicit Compute_out(Compute_in_c<R> auto const &c_in)
+      : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
 
   auto get [[nodiscard]] () const
       noexcept(noexcept(return_) &&
@@ -578,18 +586,6 @@ public:
   }
   auto operator>>=(R &right) { return right = extract(); }
 
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_out &> override {
-    return *new Compute_out{*this};
-  };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_out &> override {
-    util::check_bitset(Compute_out::Compute_io::clone_valid_options,
-                       u8"Ignored "s + util::type_name<Compute_option>(),
-                       options);
-    return *new Compute_out{*this};
-  };
   ~Compute_out() noexcept override = default;
   constexpr void swap(Compute_out &other) noexcept {
     using std::swap;
@@ -618,7 +614,8 @@ constexpr void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
 }
 
-auto operator<<([[maybe_unused]] Out_t /*unused*/, auto const &right) {
+auto operator<<([[maybe_unused]] Out_t /*unused*/,
+                Compute_in_any_c auto const &right) {
   return Compute_out{right};
 }
 } // namespace artccel::core::compute
