@@ -340,17 +340,20 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   T value_; // NOLINT(misc-non-private-member-variables-in-classes)
   /*
   usage
-  `return (constant expression);`
+  `(constant expression)`
   checking (debug ONLY)
   - compile-time checking, causes (complicated) compile error @ assert
   */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
   consteval Interval(T value) noexcept(noexcept(Interval{
-      value, nullptr})) requires std::copy_constructible<T>
-      : Interval{value, nullptr} {}
+      std::move(value), nullptr})) requires std::move_constructible<T>
+      : Interval{std::move(value), nullptr} {
+    /* the parameter is passed-by-value to not bound to a temporary for using
+     * this type as non-type template parameters */
+  }
   /*
   usage
-  `return {(expression), nullptr};`
+  `{(expression), nullptr}`
   checking (debug ONLY)
   - compile-time checking requires constexpr/consteval context, causes
   (complicated) compile error @ assert
