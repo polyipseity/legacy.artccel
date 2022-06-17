@@ -19,10 +19,10 @@ template <std::totally_ordered T>
 struct Bound {
   using type = T;
   constexpr Bound() noexcept = default;
-  constexpr Bound(Bound<T> const &) noexcept = default;
-  constexpr auto operator=(Bound<T> const &) noexcept -> Bound<T> & = default;
-  constexpr Bound(Bound<T> &&) noexcept = default;
-  constexpr auto operator=(Bound<T> &&) noexcept -> Bound<T> & = default;
+  constexpr Bound(Bound const &) noexcept = default;
+  constexpr auto operator=(Bound const &) noexcept -> Bound & = default;
+  constexpr Bound(Bound &&) noexcept = default;
+  constexpr auto operator=(Bound &&) noexcept -> Bound & = default;
 
 protected:
   constexpr ~Bound() noexcept = default;
@@ -34,94 +34,82 @@ struct Open_bound : private Bound<T> {
   using type = typename Open_bound::type;
   constexpr static auto value_{V};
   consteval Open_bound() noexcept = default;
-  friend constexpr auto operator==(Open_bound<T, V> const &left
-                                   [[maybe_unused]],
+  friend constexpr auto operator==(Open_bound const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return false;
   }
   friend constexpr auto operator==(T const &left [[maybe_unused]],
-                                   Open_bound<T, V> const &right
+                                   Open_bound const &right
                                    [[maybe_unused]]) noexcept {
     return false;
   }
-  friend constexpr auto operator!=(Open_bound<T, V> const &left
-                                   [[maybe_unused]],
+  friend constexpr auto operator!=(Open_bound const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto operator!=(T const &left [[maybe_unused]],
-                                   Open_bound<T, V> const &right
+                                   Open_bound const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto
-  operator<(Open_bound<T, V> const &left [[maybe_unused]],
-            T const &right) noexcept(noexcept(V < right) &&
-                                     std::is_nothrow_move_constructible_v<
-                                         decltype(V < right)>) {
+  operator<(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
+      noexcept(V < right) &&
+      std::is_nothrow_move_constructible_v<decltype(V < right)>) {
     return V < right;
   }
   friend constexpr auto
-  operator<(T const &left, Open_bound<T, V> const &right
-            [[maybe_unused]]) noexcept(noexcept(left < V) &&
-                                       std::is_nothrow_move_constructible_v<
-                                           decltype(left < V)>) {
+  operator<(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
+      noexcept(left < V) &&
+      std::is_nothrow_move_constructible_v<decltype(left < V)>) {
     return left < V;
   }
   friend constexpr auto
-  operator>(Open_bound<T, V> const &left [[maybe_unused]],
-            T const &right) noexcept(noexcept(V > right) &&
-                                     std::is_nothrow_move_constructible_v<
-                                         decltype(V > right)>) {
+  operator>(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
+      noexcept(V > right) &&
+      std::is_nothrow_move_constructible_v<decltype(V > right)>) {
     return V > right;
   }
   friend constexpr auto
-  operator>(T const &left, Open_bound<T, V> const &right
-            [[maybe_unused]]) noexcept(noexcept(left > V) &&
-                                       std::is_nothrow_move_constructible_v<
-                                           decltype(left > V)>) {
+  operator>(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
+      noexcept(left > V) &&
+      std::is_nothrow_move_constructible_v<decltype(left > V)>) {
     return left > V;
   }
   friend constexpr auto
-  operator<=(Open_bound<T, V> const &left [[maybe_unused]],
-             T const &right) noexcept(noexcept(V < right) &&
-                                      std::is_nothrow_move_constructible_v<
-                                          decltype(V < right)>) {
+  operator<=(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
+      noexcept(V < right) &&
+      std::is_nothrow_move_constructible_v<decltype(V < right)>) {
     return V < right;
   }
   friend constexpr auto
-  operator<=(T const &left, Open_bound<T, V> const &right
-             [[maybe_unused]]) noexcept(noexcept(left < V) &&
-                                        std::is_nothrow_move_constructible_v<
-                                            decltype(left < V)>) {
+  operator<=(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
+      noexcept(left < V) &&
+      std::is_nothrow_move_constructible_v<decltype(left < V)>) {
     return left < V;
   }
   friend constexpr auto
-  operator>=(Open_bound<T, V> const &left [[maybe_unused]],
-             T const &right) noexcept(noexcept(V > left) &&
-                                      std::is_nothrow_move_constructible_v<
-                                          decltype(V > right)>) {
+  operator>=(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
+      noexcept(V > left) &&
+      std::is_nothrow_move_constructible_v<decltype(V > right)>) {
     return V > right;
   }
   friend constexpr auto
-  operator>=(T const &left, Open_bound<T, V> const &right
-             [[maybe_unused]]) noexcept(noexcept(left > V) &&
-                                        std::is_nothrow_move_constructible_v<
-                                            decltype(left > V)>) {
+  operator>=(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
+      noexcept(left > V) &&
+      std::is_nothrow_move_constructible_v<decltype(left > V)>) {
     return left > V;
   }
   friend constexpr auto
-  operator<=>(Open_bound<T, V> const &left [[maybe_unused]],
-              T const &right) noexcept(noexcept(compare(V, right)) &&
-                                       std::is_nothrow_move_constructible_v<
-                                           decltype(compare(V, right))>) {
+  operator<=>(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
+      noexcept(compare(V, right)) &&
+      std::is_nothrow_move_constructible_v<decltype(compare(V, right))>) {
     return compare(V, right);
   }
   friend constexpr auto
-  operator<=>(T const &left, Open_bound<T, V> const &right
-              [[maybe_unused]]) noexcept(noexcept(compare(left, V)) &&
-                                         std::is_nothrow_move_constructible_v<
-                                             decltype(compare(left, V))>) {
+  operator<=>(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
+      noexcept(compare(left, V)) &&
+      std::is_nothrow_move_constructible_v<decltype(compare(left, V))>) {
     return compare(left, V);
   }
 
@@ -145,98 +133,94 @@ struct Closed_bound : private Bound<T> {
   constexpr static auto value_{V};
   consteval Closed_bound() noexcept = default;
   friend constexpr auto
-  operator==(Closed_bound<T, V> const &left [[maybe_unused]],
+  operator==(Closed_bound const &left [[maybe_unused]],
              T const &right) noexcept(noexcept(V == right) &&
                                       std::is_nothrow_move_constructible_v<
                                           decltype(V == right)>) {
     return V == right;
   }
   friend constexpr auto
-  operator==(T const &left, Closed_bound<T, V> const &right
+  operator==(T const &left, Closed_bound const &right
              [[maybe_unused]]) noexcept(noexcept(left == V) &&
                                         std::is_nothrow_move_constructible_v<
                                             decltype(left == V)>) {
     return left == V;
   }
   friend constexpr auto
-  operator!=(Closed_bound<T, V> const &left [[maybe_unused]],
+  operator!=(Closed_bound const &left [[maybe_unused]],
              T const &right) noexcept(noexcept(V != right) &&
                                       std::is_nothrow_move_constructible_v<
                                           decltype(V != right)>) {
     return V != right;
   }
   friend constexpr auto
-  operator!=(T const &left, Closed_bound<T, V> const &right
+  operator!=(T const &left, Closed_bound const &right
              [[maybe_unused]]) noexcept(noexcept(left != V) &&
                                         std::is_nothrow_move_constructible_v<
                                             decltype(left != V)>) {
     return left != V;
   }
   friend constexpr auto
-  operator<(Closed_bound<T, V> const &left [[maybe_unused]],
-            T const &right) noexcept(noexcept(V <= right) &&
-                                     std::is_nothrow_move_constructible_v<
-                                         decltype(V <= right)>) {
+  operator<(Closed_bound const &left [[maybe_unused]], T const &right) noexcept(
+      noexcept(V <= right) &&
+      std::is_nothrow_move_constructible_v<decltype(V <= right)>) {
     return V <= right;
   }
   friend constexpr auto
-  operator<(T const &left, Closed_bound<T, V> const &right
-            [[maybe_unused]]) noexcept(noexcept(left <= V) &&
-                                       std::is_nothrow_move_constructible_v<
-                                           decltype(left <= V)>) {
+  operator<(T const &left, Closed_bound const &right [[maybe_unused]]) noexcept(
+      noexcept(left <= V) &&
+      std::is_nothrow_move_constructible_v<decltype(left <= V)>) {
     return left <= V;
   }
   friend constexpr auto
-  operator>(Closed_bound<T, V> const &left [[maybe_unused]],
-            T const &right) noexcept(noexcept(V >= right) &&
-                                     std::is_nothrow_move_constructible_v<
-                                         decltype(V >= right)>) {
+  operator>(Closed_bound const &left [[maybe_unused]], T const &right) noexcept(
+      noexcept(V >= right) &&
+      std::is_nothrow_move_constructible_v<decltype(V >= right)>) {
     return V >= right;
   }
   friend constexpr auto
-  operator>(T const &left, Closed_bound<T, V> const &right
-            [[maybe_unused]]) noexcept(noexcept(left >= V) &&
-                                       std::is_nothrow_move_constructible_v<
-                                           decltype(left >= V)>) {
+  operator>(T const &left, Closed_bound const &right [[maybe_unused]]) noexcept(
+      noexcept(left >= V) &&
+      std::is_nothrow_move_constructible_v<decltype(left >= V)>) {
     return left >= V;
   }
   friend constexpr auto
-  operator<=(Closed_bound<T, V> const &left [[maybe_unused]],
+  operator<=(Closed_bound const &left [[maybe_unused]],
              T const &right) noexcept(noexcept(V <= right) &&
                                       std::is_nothrow_move_constructible_v<
                                           decltype(V <= right)>) {
     return V <= right;
   }
   friend constexpr auto
-  operator<=(T const &left, Closed_bound<T, V> const &right
+  operator<=(T const &left, Closed_bound const &right
              [[maybe_unused]]) noexcept(noexcept(left <= V) &&
                                         std::is_nothrow_move_constructible_v<
                                             decltype(left <= V)>) {
     return left <= V;
   }
   friend constexpr auto
-  operator>=(Closed_bound<T, V> const &left [[maybe_unused]],
+  operator>=(Closed_bound const &left [[maybe_unused]],
              T const &right) noexcept(noexcept(V >= right) &&
                                       std::is_nothrow_move_constructible_v<
                                           decltype(V >= right)>) {
     return V >= right;
   }
   friend constexpr auto
-  operator>=(T const &left, Closed_bound<T, V> const &right
+  operator>=(T const &left, Closed_bound const &right
              [[maybe_unused]]) noexcept(noexcept(left >= V) &&
                                         std::is_nothrow_move_constructible_v<
                                             decltype(left >= V)>) {
     return left >= V;
   }
   friend constexpr auto
-  operator<=>(Closed_bound<T, V> const &left [[maybe_unused]],
+  operator<=>(Closed_bound const &left [[maybe_unused]],
               T const &right) noexcept(noexcept(compare(V, right)) &&
                                        std::is_nothrow_move_constructible_v<
                                            decltype(compare(V, right))>) {
     return compare(V, right);
   }
   friend constexpr auto
-  operator<=>(T const &left, Closed_bound<T, V> const &right
+  operator<=>(T const &left, Closed_bound const &right
               [[maybe_unused]]) noexcept(noexcept(compare(left, V)) &&
                                          std::is_nothrow_move_constructible_v<
                                              decltype(compare(left, V))>) {
@@ -262,62 +246,62 @@ private:
 template <std::totally_ordered T> struct Unbounded : private Bound<T> {
   using type = typename Unbounded::type;
   consteval Unbounded() noexcept = default;
-  friend constexpr auto operator==(Unbounded<T> const &left [[maybe_unused]],
+  friend constexpr auto operator==(Unbounded const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return false;
   }
   friend constexpr auto operator==(T const &left [[maybe_unused]],
-                                   Unbounded<T> const &right
+                                   Unbounded const &right
                                    [[maybe_unused]]) noexcept {
     return false;
   }
-  friend constexpr auto operator!=(Unbounded<T> const &left [[maybe_unused]],
+  friend constexpr auto operator!=(Unbounded const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto operator!=(T const &left [[maybe_unused]],
-                                   Unbounded<T> const &right
+                                   Unbounded const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator<(Unbounded<T> const &left [[maybe_unused]],
+  friend constexpr auto operator<(Unbounded const &left [[maybe_unused]],
                                   T const &right [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto operator<(T const &left [[maybe_unused]],
-                                  Unbounded<T> const &right
+                                  Unbounded const &right
                                   [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator>(Unbounded<T> const &left [[maybe_unused]],
+  friend constexpr auto operator>(Unbounded const &left [[maybe_unused]],
                                   T const &right [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto operator>(T const &left [[maybe_unused]],
-                                  Unbounded<T> const &right
+                                  Unbounded const &right
                                   [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator<=(Unbounded<T> const &left [[maybe_unused]],
+  friend constexpr auto operator<=(Unbounded const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto operator<=(T const &left [[maybe_unused]],
-                                   Unbounded<T> const &right
+                                   Unbounded const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
-  friend constexpr auto operator>=(Unbounded<T> const &left [[maybe_unused]],
+  friend constexpr auto operator>=(Unbounded const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto operator>=(T const &left [[maybe_unused]],
-                                   Unbounded<T> const &right
+                                   Unbounded const &right
                                    [[maybe_unused]]) noexcept {
     return true;
   }
   friend constexpr auto operator<=>(
-      Unbounded<T> const &left [[maybe_unused]], T const &right
+      Unbounded const &left [[maybe_unused]], T const &right
       [[maybe_unused]]) noexcept(noexcept(std::partial_ordering::unordered) &&
                                  std::is_nothrow_constructible_v<
                                      decltype(std::partial_ordering::
@@ -325,7 +309,7 @@ template <std::totally_ordered T> struct Unbounded : private Bound<T> {
     return std::partial_ordering::unordered;
   }
   friend constexpr auto operator<=>(
-      T const &left [[maybe_unused]], Unbounded<T> const &right
+      T const &left [[maybe_unused]], Unbounded const &right
       [[maybe_unused]]) noexcept(noexcept(std::partial_ordering::unordered) &&
                                  std::is_nothrow_constructible_v<
                                      decltype(std::partial_ordering::
