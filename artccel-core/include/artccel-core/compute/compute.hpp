@@ -22,13 +22,10 @@ using namespace std::literals::string_literals;
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace util::enum_bitset_operators;
 
+enum struct Compute_option : std::uint8_t;
+using Compute_options = util::Bitset_of<Compute_option>;
 template <std::copyable R> class Compute_io;
 template <typename Derived, std::copyable R> class Compute_in;
-template <typename T, typename R>
-concept Compute_in_c =
-    std::derived_from<T, Compute_in<T, R>> && std::copyable<R>;
-template <typename T>
-concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
 template <std::copyable R> class Compute_out;
 template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R, auto F>
@@ -36,12 +33,6 @@ requires std::is_invocable_r_v<R, decltype(F)>
 class Compute_function_constant;
 template <std::copyable R> class Compute_value;
 template <typename Signature> class Compute_function;
-enum struct Compute_option : std::uint8_t {
-  identity = util::bitset_value(0U),
-  concurrent = util::bitset_value(1U),
-  defer = util::bitset_value(2U),
-};
-using Compute_options = util::Bitset_of<Compute_option>;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_t {
   consteval Reset_t() noexcept = default;
@@ -50,9 +41,18 @@ struct Reset_t {
 struct Extract_t {
   consteval Extract_t() noexcept = default;
 };
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct Out_t {
-  consteval Out_t() noexcept = default;
+struct Out_t;
+
+template <typename T, typename R>
+concept Compute_in_c =
+    std::derived_from<T, Compute_in<T, R>> && std::copyable<R>;
+template <typename T>
+concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
+
+enum struct Compute_option : std::uint8_t {
+  identity = util::bitset_value(0U),
+  concurrent = util::bitset_value(1U),
+  defer = util::bitset_value(2U),
 };
 
 template <std::copyable R> class Compute_io {
@@ -145,10 +145,6 @@ template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
 template <std::copyable R>
 constexpr void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
-}
-auto operator<<([[maybe_unused]] Out_t /*unused*/,
-                Compute_in_any_c auto const &right) {
-  return Compute_out{right};
 }
 
 template <std::copyable R, R V>
@@ -674,6 +670,14 @@ Compute_function(F &&, auto &&...) -> Compute_function<
 template <typename F>
 Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
     decltype(decltype(std::function{std::declval<F>()})::operator())>;
+
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Out_t {
+  consteval Out_t() noexcept = default;
+  auto operator<<(Compute_in_any_c auto const &right) {
+    return Compute_out{right};
+  }
+};
 } // namespace artccel::core::compute
 
 #endif

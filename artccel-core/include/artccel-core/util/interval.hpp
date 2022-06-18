@@ -9,10 +9,54 @@
 #include <utility> // import std::move
 
 namespace artccel::core::util {
+template <std::totally_ordered T> struct Bound;
+template <std::totally_ordered T, T V> struct Open_bound;
+template <std::totally_ordered T, T V> struct Closed_bound;
+template <std::totally_ordered T> struct Unbounded;
+template <typename L, typename R, std::totally_ordered T = typename L::type>
+requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
+    (!std::same_as<L, Bound<T>>)&&(!std::same_as<R, Bound<T>>)struct Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Dynamic_interval_t {
   consteval Dynamic_interval_t() noexcept = default;
 };
+
+// mathematical classifications
+
+template <std::totally_ordered T, T L, T R>
+using Open_interval = Interval<Open_bound<T, L>, Open_bound<T, R>>; // (L,R)
+template <std::totally_ordered T, T L, T R>
+using Closed_interval =
+    Interval<Closed_bound<T, L>, Closed_bound<T, R>>; // [L,R]
+template <std::totally_ordered T, T L, T R>
+using LC_RO_interval = Interval<Closed_bound<T, L>, Open_bound<T, R>>; // [L,R)
+template <std::totally_ordered T, T L, T R>
+using LO_RC_interval = Interval<Open_bound<T, L>, Closed_bound<T, R>>; // (L,R]
+template <std::totally_ordered T, T L>
+using LC_RU_interval = Interval<Closed_bound<T, L>, Unbounded<T>>; // [L,+∞)
+template <std::totally_ordered T, T L>
+using LO_RU_interval = Interval<Open_bound<T, L>, Unbounded<T>>; // (L,+∞)
+template <std::totally_ordered T, T R>
+using LU_RC_interval = Interval<Unbounded<T>, Closed_bound<T, R>>; // (-∞,R]
+template <std::totally_ordered T, T R>
+using LU_RO_interval = Interval<Unbounded<T>, Open_bound<T, R>>; // (-∞,R)
+template <std::totally_ordered T>
+using Unbounded_interval = Interval<Unbounded<T>, Unbounded<T>>; // (-∞,+∞)
+template <std::totally_ordered T, T V = T{}>
+using Empty_interval = Open_interval<T, V, V>; // (V,V) = {}
+template <std::totally_ordered T, T V>
+using Degenerate_interval = Closed_interval<T, V, V>; // [V,V] = {V}
+
+// common uses
+
+template <std::totally_ordered T, T Z = T{0}>
+using Nonnegative_interval = LC_RU_interval<T, Z>; // [0,+∞)
+template <std::totally_ordered T, T Z = T{0}>
+using Nonpositive_interval = LU_RC_interval<T, Z>; // (-∞,0]
+template <std::totally_ordered T, T Z = T{0}>
+using Positive_interval = LO_RU_interval<T, Z>; // (0,+∞)
+template <std::totally_ordered T, T Z = T{0}>
+using Negative_interval = LU_RO_interval<T, Z>; // (-∞,0)
 
 template <std::totally_ordered T>
 // NOLINTNEXTLINE(altera-struct-pack-align)
@@ -318,7 +362,7 @@ template <std::totally_ordered T> struct Unbounded : private Bound<T> {
   }
 };
 
-template <typename L, typename R, std::totally_ordered T = typename L::type>
+template <typename L, typename R, std::totally_ordered T>
 requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
     (!std::same_as<L, Bound<T>>)&&(!std::same_as<R, Bound<T>>)struct Interval {
   using left = L;
@@ -393,43 +437,6 @@ private:
     /* clang-format on */ assert(value < R{} && u8"value >(=) R");
   }
 };
-
-// mathematical classifications
-
-template <std::totally_ordered T, T L, T R>
-using Open_interval = Interval<Open_bound<T, L>, Open_bound<T, R>>; // (L,R)
-template <std::totally_ordered T, T L, T R>
-using Closed_interval =
-    Interval<Closed_bound<T, L>, Closed_bound<T, R>>; // [L,R]
-template <std::totally_ordered T, T L, T R>
-using LC_RO_interval = Interval<Closed_bound<T, L>, Open_bound<T, R>>; // [L,R)
-template <std::totally_ordered T, T L, T R>
-using LO_RC_interval = Interval<Open_bound<T, L>, Closed_bound<T, R>>; // (L,R]
-template <std::totally_ordered T, T L>
-using LC_RU_interval = Interval<Closed_bound<T, L>, Unbounded<T>>; // [L,+∞)
-template <std::totally_ordered T, T L>
-using LO_RU_interval = Interval<Open_bound<T, L>, Unbounded<T>>; // (L,+∞)
-template <std::totally_ordered T, T R>
-using LU_RC_interval = Interval<Unbounded<T>, Closed_bound<T, R>>; // (-∞,R]
-template <std::totally_ordered T, T R>
-using LU_RO_interval = Interval<Unbounded<T>, Open_bound<T, R>>; // (-∞,R)
-template <std::totally_ordered T>
-using Unbounded_interval = Interval<Unbounded<T>, Unbounded<T>>; // (-∞,+∞)
-template <std::totally_ordered T, T V = T{}>
-using Empty_interval = Open_interval<T, V, V>; // (V,V) = {}
-template <std::totally_ordered T, T V>
-using Degenerate_interval = Closed_interval<T, V, V>; // [V,V] = {V}
-
-// common uses
-
-template <std::totally_ordered T, T Z = T{0}>
-using Nonnegative_interval = LC_RU_interval<T, Z>; // [0,+∞)
-template <std::totally_ordered T, T Z = T{0}>
-using Nonpositive_interval = LU_RC_interval<T, Z>; // (-∞,0]
-template <std::totally_ordered T, T Z = T{0}>
-using Positive_interval = LO_RU_interval<T, Z>; // (0,+∞)
-template <std::totally_ordered T, T Z = T{0}>
-using Negative_interval = LU_RO_interval<T, Z>; // (-∞,0)
 } // namespace artccel::core::util
 
 #endif
