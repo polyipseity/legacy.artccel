@@ -109,9 +109,9 @@ private:
   std::unique_ptr<std::mutex> const mutex_;
   std::function<signature_type> function_;
   std::function<R()> bound_;
-  mutable bool invoked_{};
-  mutable std::packaged_task<R()> task_{package(invoked_, bound_)};
+  mutable std::packaged_task<R()> task_;
   std::shared_future<R> future_{task_.get_future()};
+  mutable bool invoked_{false};
 
 protected:
   template <typename F, typename... ForwardArgs>
@@ -129,6 +129,7 @@ protected:
                    : std::unique_ptr<std::mutex>{}},
         function_{std::forward<F>(function)},
         bound_{bind(function_, std::forward<ForwardArgs>(args)...)},
+        task_{package((options & Compute_option::defer).none(), bound_)},
         invoked_{(options & Compute_option::defer).none()} {
     constexpr static auto valid_options{Compute_option::concurrent |
                                         Compute_option::defer};
@@ -205,10 +206,10 @@ public:
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
     bound_ = bind(function_, std::forward<ForwardArgs>(args)...);
-    invoked_ = (options & Compute_option::defer).none();
-    task_ = package(invoked_, bound_);
+    auto const invoke{(options & Compute_option::defer).none()};
+    task_ = package(invoke, bound_);
     future_ = task_.get_future();
-    if (invoked_) {
+    if ((invoked_ = invoke)) {
       return std::shared_future{future_}.get();
     }
     return {};
@@ -223,8 +224,9 @@ public:
                             : std::unique_lock<std::mutex>{}};
     task_.reset();
     future_ = task_.get_future();
-    if ((invoked_ = (options & Compute_option::defer).none())) {
+    if ((options & Compute_option::defer).none()) {
       task_();
+      invoked_ = true;
       return std::shared_future{future_}.get();
     }
     return {};
@@ -329,8 +331,8 @@ protected:
       : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
                             : std::unique_ptr<std::mutex>{}},
         function_{std::move(other.function_)}, bound_{std::move(other.bound_)},
-        invoked_{std::move(other.invoked_)}, task_{std::move(other.task_)},
-        future_{std::move(other.future_)} {}
+        task_{std::move(other.task_)}, future_{std::move(other.future_)},
+        invoked_{std::move(other.invoked_)} {}
   auto operator=(Compute_function &&right) noexcept -> Compute_function & {
     Compute_function{std::move(right)}.swap(*this);
     return *this;
@@ -341,12 +343,12 @@ protected:
       decltype(invoked_) invoked) noexcept(noexcept(decltype(mutex_){
       std::move(mutex)}) &&noexcept(decltype(function_){
       other.function_}) &&noexcept(decltype(bound_){
-      other.bound_}) &&noexcept(decltype(invoked_){
-      invoked}) &&noexcept(decltype(task_){
-      package(invoked_, bound_)}) &&noexcept(decltype(future_){
-      task_.get_future()}))
+      other.bound_}) &&noexcept(decltype(task_){
+      package(invoked, bound_)}) &&noexcept(decltype(future_){
+      task_.get_future()}) &&noexcept(decltype(invoked_){invoked}))
       : mutex_{std::move(mutex)}, function_{other.function_},
-        bound_{other.bound_}, invoked_{invoked} {}
+        bound_{other.bound_}, task_{package(invoked, bound_)}, invoked_{
+                                                                   invoked} {}
 };
 template <typename F>
 Compute_function(F &&, auto &&...) -> Compute_function<
