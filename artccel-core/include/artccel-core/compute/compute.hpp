@@ -15,7 +15,7 @@
 #include <optional>    // import std::optional
 #include <string>      // import std::literals::string_literals
 #include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
-#include <utility> // import std::declval, std::forward, std::move, std::swap
+#include <utility> // import std::declval, std::exchange, std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;
@@ -109,7 +109,7 @@ public:
   }
   auto operator()([[maybe_unused]] Extract_t /*unused*/) -> R {
     if (auto const c_in{c_in_.lock()}) {
-      return_ = (*c_in)();
+      return_ = *c_in();
     }
     return return_;
   }
@@ -333,13 +333,17 @@ public:
                             : std::unique_lock<std::mutex>{}};
     return value_;
   }
-  auto operator<<(R const &value) -> R {
-    auto value_copy{value};
+  auto operator<<(R const &value) -> R { return *this << R{value}; }
+  auto operator<<(R &&value) -> R {
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
-    using std::swap;
-    swap(value_, value_copy);
-    return value_copy;
+    return std::exchange(value_, std::move(value));
+  }
+  auto operator<<=(R const &value) -> R { return *this <<= R{value}; }
+  auto operator<<=(R &&value) -> R {
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
+    return value_ = std::move(value);
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
