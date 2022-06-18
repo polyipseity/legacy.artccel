@@ -346,7 +346,7 @@ protected:
         bound_{other.bound_}, invoked_{invoked} {}
 };
 template <typename F>
-explicit Compute_function(F &&, auto &&...) -> Compute_function<
+Compute_function(F &&, auto &&...) -> Compute_function<
     decltype(decltype(std::function{std::declval<F>()})::operator())>;
 template <typename F>
 Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
@@ -607,8 +607,7 @@ public:
     return *this;
   };
 };
-template <std::copyable R>
-explicit Compute_out(Compute_io<R> const &) -> Compute_out<R>;
+template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
 template <std::copyable R>
 constexpr void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
   left.swap(right);
