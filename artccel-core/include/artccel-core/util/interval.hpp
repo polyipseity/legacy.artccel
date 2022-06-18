@@ -14,8 +14,9 @@ template <std::totally_ordered T, T V> struct Open_bound;
 template <std::totally_ordered T, T V> struct Closed_bound;
 template <std::totally_ordered T> struct Unbounded;
 template <typename L, typename R, std::totally_ordered T = typename L::type>
-requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
-    (!std::same_as<L, Bound<T>>)&&(!std::same_as<R, Bound<T>>)struct Interval;
+requires std::is_base_of_v<Bound<T>, L> &&
+    (!std::same_as<L, Bound<T>>)&&std::is_base_of_v<Bound<T>, R> &&
+    (!std::same_as<R, Bound<T>>)&&std::move_constructible<T> struct Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Dynamic_interval_t {
   consteval Dynamic_interval_t() noexcept = default;
@@ -363,8 +364,9 @@ template <std::totally_ordered T> struct Unbounded : private Bound<T> {
 };
 
 template <typename L, typename R, std::totally_ordered T>
-requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
-    (!std::same_as<L, Bound<T>>)&&(!std::same_as<R, Bound<T>>)struct Interval {
+requires std::is_base_of_v<Bound<T>, L> &&
+    (!std::same_as<L, Bound<T>>)&&std::is_base_of_v<Bound<T>, R> &&
+    (!std::same_as<R, Bound<T>>)&&std::move_constructible<T> struct Interval {
   using left = L;
   using right = R;
   using type = T;
@@ -377,9 +379,8 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   - compile-time checking, causes (complicated) compile error @ assert
   */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval Interval(T value) noexcept(noexcept(Interval{
-      std::move(value),
-      Dynamic_interval_t{}})) requires std::move_constructible<T>
+  consteval Interval(T value) noexcept(noexcept(Interval{std::move(value),
+                                                         Dynamic_interval_t{}}))
       : Interval{std::move(value), Dynamic_interval_t{}} {
     /* the parameter is passed-by-value to not bound to a temporary for using
      * this type as non-type template parameters */
@@ -392,16 +393,8 @@ requires std::is_base_of_v<Bound<T>, L> && std::is_base_of_v<Bound<T>, R> &&
   (complicated) compile error @ assert
   - runtime checking
   */
-  constexpr Interval(
-      T const &value,
-      [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(noexcept(decltype(value_){
-      value}) &&noexcept(check(value_))) requires std::copy_constructible<T>
-      : value_{value} {
-    check(value_);
-  }
-  constexpr Interval(T &&value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
-      noexcept(decltype(value_){std::move(value)}) &&noexcept(
-          check(value_))) requires std::move_constructible<T>
+  constexpr Interval(T value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
+      noexcept(decltype(value_){std::move(value)}) &&noexcept(check(value_)))
       : value_{std::move(value)} {
     check(value_);
   }

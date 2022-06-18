@@ -277,14 +277,14 @@ private:
   R value_;
 
 protected:
-  explicit Compute_value(R const &value)
-      : Compute_value{util::Enum_bitset{} | Compute_option::concurrent, value} {
-  }
-  Compute_value(Compute_options const &options, R const &value)
+  explicit Compute_value(R value)
+      : Compute_value{util::Enum_bitset{} | Compute_option::concurrent,
+                      std::move(value)} {}
+  Compute_value(Compute_options const &options, R value)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
                    : std::unique_ptr<std::mutex>{}},
-        value_{value} {
+        value_{std::move(value)} {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::concurrent};
     util::check_bitset(valid_options,
