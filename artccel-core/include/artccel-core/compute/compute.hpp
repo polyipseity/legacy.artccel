@@ -192,15 +192,7 @@ public:
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
     return create_const_0(std::forward<ForwardArgs>(args)...);
   }
-  auto invoke() const {
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
-    if (!invoked_) {
-      task_();
-      invoked_ = true;
-    }
-    return std::shared_future{future_}.get();
-  }
+
   template <typename... ForwardArgs>
   requires std::invocable<decltype(function_), ForwardArgs...>
   auto bind(Compute_options const &options, ForwardArgs &&...args)
@@ -238,7 +230,15 @@ public:
     return {};
   }
 
-  auto operator()() const -> R override { return invoke(); }
+  auto operator()() const -> R override {
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
+    if (!invoked_) {
+      task_();
+      invoked_ = true;
+    }
+    return std::shared_future{future_}.get();
+  }
   template <template <typename...> typename Tuple, typename... ForwardArgs>
   requires std::invocable<decltype(function_), ForwardArgs...>
   void operator<<(Tuple<ForwardArgs...> &&t_args) {
@@ -251,9 +251,9 @@ public:
   }
   template <template <typename...> typename Tuple, typename... ForwardArgs>
   requires std::invocable<decltype(function_), ForwardArgs...>
-  auto operator<<=(Tuple<ForwardArgs...> &&t_args) {
+  auto operator<<=(Tuple<ForwardArgs...> &&t_args) -> R {
     return util::forward_apply(
-        [this](ForwardArgs &&...args) mutable {
+        [this](ForwardArgs &&...args) mutable -> decltype(auto) {
           return bind(util::Enum_bitset{} | Compute_option::identity,
                       std::forward<ForwardArgs>(args)...)
               .value();
@@ -263,7 +263,7 @@ public:
   void operator<<([[maybe_unused]] Reset_t /*unused*/) {
     reset(util::Enum_bitset{} | Compute_option::defer);
   }
-  auto operator<<=([[maybe_unused]] Reset_t /*unused*/) {
+  auto operator<<=([[maybe_unused]] Reset_t /*unused*/) -> R {
     return reset(util::Enum_bitset{} | Compute_option::identity).value();
   }
 
@@ -381,7 +381,9 @@ public:
     return std::make_shared<Compute_constant const>(
         Friend{}, std::forward<ForwardArgs>(args)...);
   }
-  constexpr auto operator() [[nodiscard]] () const -> R override {
+  constexpr auto operator() [[nodiscard]] () const
+      noexcept(noexcept(R{value_}) && std::is_nothrow_move_constructible_v<R>)
+          -> R override {
     return value_;
   }
 
@@ -435,7 +437,9 @@ public:
     return std::make_shared<Compute_function_constant const>(
         Friend{}, std::forward<ForwardArgs>(args)...);
   }
-  constexpr auto operator() [[nodiscard]] () const -> R override {
+  constexpr auto operator() [[nodiscard]] () const
+      noexcept(noexcept(R{std::invoke(F)}) &&
+               std::is_nothrow_move_constructible_v<R>) -> R override {
     return std::invoke(F);
   }
 
@@ -527,12 +531,13 @@ public:
   static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
     return create_const_0(std::forward<ForwardArgs>(args)...);
   }
-  auto get [[nodiscard]] () const {
+
+  auto operator() [[nodiscard]] () const -> R override {
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
     return value_;
   }
-  auto set(R const &value) {
+  auto operator<<(R const &value) -> R {
     auto value_copy{value};
     auto const guard{mutex_ ? std::unique_lock{*mutex_}
                             : std::unique_lock<std::mutex>{}};
@@ -540,9 +545,6 @@ public:
     swap(value_, value_copy);
     return value_copy;
   }
-
-  auto operator() [[nodiscard]] () const -> R override { return get(); }
-  auto operator<<(R const &value) { return set(value); }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> util::Owner<Compute_value &> override {
@@ -618,30 +620,23 @@ public:
   explicit Compute_out(Compute_in_c<R> auto const &c_in)
       : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
 
-  auto get [[nodiscard]] () const
-      noexcept(noexcept(return_) &&
-               std::is_nothrow_move_constructible_v<decltype(return_)>) {
+  auto operator() [[nodiscard]] () const
+      noexcept(noexcept(R{return_}) && std::is_nothrow_move_constructible_v<R>)
+          -> R override {
     return return_;
   }
-  auto extract() {
+  auto operator()([[maybe_unused]] Extract_t /*unused*/) -> R {
     if (auto const c_in{c_in_.lock()}) {
       return_ = (*c_in)();
     }
     return return_;
   }
-
-  auto operator() [[nodiscard]] () const
-      noexcept(noexcept(R{get()}) && std::is_nothrow_move_constructible_v<R>)
-          -> R override {
-    return get();
-  }
-  auto operator()([[maybe_unused]] Extract_t /*unused*/) { return extract(); }
   auto operator>>(R &right) const
-      noexcept(noexcept(right = get()) &&
-               std::is_nothrow_move_constructible_v<decltype(right = get())>) {
-    return right = get();
+      noexcept(noexcept(R{right = *this()}) &&
+               std::is_nothrow_move_constructible_v<R>) -> R {
+    return right = *this();
   }
-  auto operator>>=(R &right) { return right = extract(); }
+  auto operator>>=(R &right) -> R { return right = *this(Extract_t{}); }
 
   ~Compute_out() noexcept override = default;
   constexpr void swap(Compute_out &other) noexcept {
