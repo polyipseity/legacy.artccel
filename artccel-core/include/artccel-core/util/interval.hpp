@@ -394,7 +394,7 @@ requires std::is_base_of_v<Bound<T>, L> &&
   - runtime checking
   */
   constexpr Interval(T value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
-      noexcept(decltype(value_){std::move(value)}) &&noexcept(check(value_)))
+      noexcept(decltype(value_){std::move(value)}, check(value_)))
       : value_{std::move(value)} {
     check(value_);
   }
@@ -419,9 +419,9 @@ requires std::is_base_of_v<Bound<T>, L> &&
   }
 
 private:
-  constexpr static void check(T const &value) noexcept(
-      noexcept(L{} < value && u8"L >(=) value") &&noexcept(value < R{} &&
-                                                           u8"value >(=) R")) {
+  constexpr static void
+  check(T const &value) noexcept(noexcept(L{} < value && u8"L >(=) value",
+                                          value < R{} && u8"value >(=) R")) {
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(L{} < value && u8"L >(=) value");

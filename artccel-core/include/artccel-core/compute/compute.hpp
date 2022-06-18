@@ -126,11 +126,11 @@ public:
     swap(c_in_, other.c_in_);
     swap(return_, other.return_);
   }
-  Compute_out(Compute_out const &other) noexcept(noexcept(decltype(c_in_){
-      other.c_in_}) &&noexcept(decltype(return_){other.return_}))
+  Compute_out(Compute_out const &other) noexcept(
+      noexcept(decltype(c_in_){other.c_in_}, decltype(return_){other.return_}))
       : c_in_{other.c_in_}, return_{other.return_} {}
-  auto operator=(Compute_out const &right) noexcept(noexcept(
-      Compute_out{right}.swap(*this)) &&noexcept(*this)) -> Compute_out & {
+  auto operator=(Compute_out const &right) noexcept(
+      noexcept(Compute_out{right}.swap(*this), *this)) -> Compute_out & {
     Compute_out{right}.swap(*this);
     return *this;
   };
@@ -381,8 +381,8 @@ protected:
                           : std::unique_ptr<std::mutex>{}}))
       : Compute_value{other, other.mutex_ ? std::make_unique<std::mutex>()
                                           : std::unique_ptr<std::mutex>{}} {}
-  auto operator=(Compute_value const &right) noexcept(noexcept(
-      Compute_value{right}.swap(*this)) &&noexcept(*this)) -> Compute_value & {
+  auto operator=(Compute_value const &right) noexcept(
+      noexcept(Compute_value{right}.swap(*this), *this)) -> Compute_value & {
     Compute_value{right}.swap(*this);
     return *this;
   };
@@ -397,8 +397,8 @@ protected:
 
   Compute_value(Compute_value const &other,
                 std::remove_cv_t<decltype(mutex_)>
-                    mutex) noexcept(noexcept(decltype(mutex_){
-      std::move(mutex)}) &&noexcept(decltype(value_){other.value_}))
+                    mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
+                                             decltype(value_){other.value_}))
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
@@ -633,8 +633,7 @@ protected:
                                       : std::unique_ptr<std::mutex>{},
                          other.invoked_} {}
   auto operator=(Compute_function const &right) noexcept(
-      noexcept(this == &right) &&noexcept(swap(right)) &&noexcept(*this))
-      -> Compute_function & {
+      noexcept(this == &right, swap(right), *this)) -> Compute_function & {
     if (this == &right) {
       // copy constructor cannot handle self-assignment
       return *this;
@@ -655,12 +654,13 @@ protected:
 
   Compute_function(
       Compute_function const &other, std::remove_cv_t<decltype(mutex_)> mutex,
-      decltype(invoked_) invoked) noexcept(noexcept(decltype(mutex_){
-      std::move(mutex)}) &&noexcept(decltype(function_){
-      other.function_}) &&noexcept(decltype(bound_){
-      other.bound_}) &&noexcept(decltype(task_){
-      package(invoked, bound_)}) &&noexcept(decltype(future_){
-      task_.get_future()}) &&noexcept(decltype(invoked_){invoked}))
+      decltype(invoked_)
+          invoked) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
+                                     decltype(function_){other.function_},
+                                     decltype(bound_){other.bound_},
+                                     decltype(task_){package(invoked, bound_)},
+                                     decltype(future_){task_.get_future()},
+                                     decltype(invoked_){invoked}))
       : mutex_{std::move(mutex)}, function_{other.function_},
         bound_{other.bound_}, task_{package(invoked, bound_)}, invoked_{
                                                                    invoked} {}
