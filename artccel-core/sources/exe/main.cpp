@@ -6,7 +6,7 @@
 #include <span>        // import std::span
 #include <string>      // import std::u8string
 #include <string_view> // import std::string_view
-#include <utility>     // import std::pair
+#include <utility>     // import std::as_const, std::pair
 #include <vector>      // import std::vector
 
 namespace artccel::core {
@@ -17,7 +17,7 @@ auto main(std::span<std::string_view const> args) -> int {
   auto const norm_args{[args] {
     std::vector<std::pair<std::u8string const, std::string_view const>> init{};
     init.reserve(args.size());
-    for (auto const arg : args) {
+    for (auto const arg : std::as_const(args)) {
       init.emplace_back(util::mbsrtoc8s(arg), arg);
     }
     return init;

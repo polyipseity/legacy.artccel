@@ -14,6 +14,7 @@
 #include <stdexcept> // import std::invalid_argument
 #include <string> // import std::basic_string, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
+#include <utility>     // import std::as_const
 
 namespace artccel::core::util {
 using literals::operator""_UZ;
@@ -126,7 +127,7 @@ auto csrtombs(std::basic_string_view<CharT> cs_) -> std::string {
   std::string result{};
   std::mbstate_t state{};
   std::array<char, MB_LEN_MAX> out_mb{};
-  for (auto const in_c : cs_) {
+  for (auto const in_c : std::as_const(cs_)) {
     auto const processed{crtomb(out_mb, in_c, state)};
     switch (processed) {
       [[unlikely]] case cuchar_crtomb_error :
