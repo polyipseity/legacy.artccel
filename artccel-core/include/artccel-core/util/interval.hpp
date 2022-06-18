@@ -422,18 +422,14 @@ using Degenerate_interval = Closed_interval<T, V, V>; // [V,V] = {V}
 
 // common uses
 
-template <std::totally_ordered T>
-requires std::constructible_from<T, decltype(0)>
-using Nonnegative_interval = LC_RU_interval<T, T{0}>; // [0,+∞)
-template <std::totally_ordered T>
-requires std::constructible_from<T, decltype(0)>
-using Nonpositive_interval = LU_RC_interval<T, T{0}>; // (-∞,0]
-template <std::totally_ordered T>
-requires std::constructible_from<T, decltype(0)>
-using Positive_interval = LO_RU_interval<T, T{0}>; // (0,+∞)
-template <std::totally_ordered T>
-requires std::constructible_from<T, decltype(0)>
-using Negative_interval = LU_RO_interval<T, T{0}>; // (-∞,0)
+template <std::totally_ordered T, T Z = T{0}>
+using Nonnegative_interval = LC_RU_interval<T, Z>; // [0,+∞)
+template <std::totally_ordered T, T Z = T{0}>
+using Nonpositive_interval = LU_RC_interval<T, Z>; // (-∞,0]
+template <std::totally_ordered T, T Z = T{0}>
+using Positive_interval = LO_RU_interval<T, Z>; // (0,+∞)
+template <std::totally_ordered T, T Z = T{0}>
+using Negative_interval = LU_RO_interval<T, Z>; // (-∞,0)
 } // namespace artccel::core::util
 
 #endif
