@@ -464,7 +464,8 @@ protected:
                                         std::is_nothrow_move_constructible_v<
                                             decltype(function(
                                                 std::forward<ForwardArgs>(
-                                                    args)...))>) {
+                                                    args)...))>)
+            -> decltype(auto) {
           return function(std::forward<ForwardArgs>(args)...);
         };
   }
