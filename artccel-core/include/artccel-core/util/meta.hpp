@@ -12,7 +12,7 @@
 namespace artccel::core::util {
 namespace detail {
 template <typename T>
-consteval auto raw_type_name [[nodiscard]] () -> std::string_view {
+consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 #ifndef _MSC_VER
   // clang-format off
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
@@ -24,7 +24,7 @@ consteval auto raw_type_name [[nodiscard]] () -> std::string_view {
 #endif
 }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-constexpr struct alignas(64) {
+constexpr static struct alignas(64) {
   std::string_view const control_type_name{/*u8*/ "int"};
   std::string_view const control{raw_type_name<int>()};
   std::size_t const junk_prefix{control.find(control_type_name)};
@@ -32,7 +32,7 @@ constexpr struct alignas(64) {
                                 control_type_name.size()};
 } type_name_format{};
 template <typename T>
-constexpr auto type_name_storage{[] {
+constexpr static auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix == std::string_view::npos) {
     return std::to_array(/*u8*/ "<type name unavailable>");
   }
@@ -87,14 +87,15 @@ template <typename P, typename R>
 using Replace_ptr_value_type_t = typename Replace_ptr_value_type<P, R>::type;
 
 template <typename T>
-consteval auto type_name_mbs_data [[nodiscard]] () noexcept {
+consteval static auto type_name_mbs_data [[nodiscard]] () noexcept {
   return detail::type_name_storage<T>;
 }
-template <typename T> consteval auto type_name_mbs [[nodiscard]] () noexcept {
+template <typename T>
+consteval static auto type_name_mbs [[nodiscard]] () noexcept {
   return std::string_view{detail::type_name_storage<T>.cbegin(),
                           detail::type_name_storage<T>.cend() - 1};
 }
-template <typename T> auto type_name [[nodiscard]] () {
+template <typename T> static auto type_name [[nodiscard]] () {
   return mbsrtoc8s(type_name_mbs<T>());
 }
 } // namespace artccel::core::util

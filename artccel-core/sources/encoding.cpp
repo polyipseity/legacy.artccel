@@ -16,7 +16,43 @@
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 
 namespace artccel::core::util {
+using literals::operator""_UZ;
+
 namespace detail {
+constexpr auto cwchar_mbrlen_null{0_UZ};
+constexpr auto cwchar_mbrlen_error{-1_UZ};
+constexpr auto cwchar_mbrlen_incomplete{-2_UZ};
+constexpr auto cuchar_mbrtoc_null{0_UZ};
+constexpr auto cuchar_mbrtoc_error{-1_UZ};
+constexpr auto cuchar_mbrtoc_incomplete{-2_UZ};
+constexpr auto cuchar_mbrtoc_surrogate{-3_UZ};
+constexpr auto cuchar_crtomb_surrogate{0_UZ};
+constexpr auto cuchar_crtomb_error{-1_UZ};
+
+auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
+  auto const old_state{state};
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
+  auto const result{std::mbrlen(mbs.begin(), mbs.size(), &state)};
+  // clang-format off
+  // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
+  /* clang-format on */ if (result == cwchar_mbrlen_null) [[unlikely]] {
+    auto const null_len_max{std::min(std::size_t{MB_LEN_MAX}, mbs.size())};
+    for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
+      auto state_copy{old_state};
+      // NOLINTNEXTLINE(concurrency-mt-unsafe)
+      if (std::mbrlen(mbs.begin(), null_len, &state_copy) ==
+          cwchar_mbrlen_null) {
+        return null_len;
+      }
+    }
+    // clang-format off
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+    /* clang-format on */ assert(
+        false && u8"Could not find the length of the null character");
+  }
+  return result;
+}
+
 template <typename CharT>
 auto mbrtoc(CharT &output, std::string_view input, std::mbstate_t &state)
     -> std::size_t;
@@ -164,29 +200,5 @@ auto c32srtombs(std::u32string_view c32s) -> std::string {
 }
 auto c32srtombs(char32_t c32s) -> std::string {
   return c32srtombs({&c32s, 1_UZ});
-}
-
-auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
-  auto const old_state{state};
-  // NOLINTNEXTLINE(concurrency-mt-unsafe)
-  auto const result{std::mbrlen(mbs.begin(), mbs.size(), &state)};
-  // clang-format off
-  // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
-  /* clang-format on */ if (result == cwchar_mbrlen_null) [[unlikely]] {
-    auto const null_len_max{std::min(std::size_t{MB_LEN_MAX}, mbs.size())};
-    for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
-      auto state_copy{old_state};
-      // NOLINTNEXTLINE(concurrency-mt-unsafe)
-      if (std::mbrlen(mbs.begin(), null_len, &state_copy) ==
-          cwchar_mbrlen_null) {
-        return null_len;
-      }
-    }
-    // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(
-        false && u8"Could not find the length of the null character");
-  }
-  return result;
 }
 } // namespace artccel::core::util
