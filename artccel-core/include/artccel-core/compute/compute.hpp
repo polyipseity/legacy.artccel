@@ -29,13 +29,13 @@ concept Compute_in_c =
     std::derived_from<T, Compute_in<T, R>> && std::copyable<R>;
 template <typename T>
 concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
-template <typename Signature> class Compute_function;
+template <std::copyable R> class Compute_out;
 template <std::copyable R, R V> class Compute_constant;
 template <std::copyable R, auto F>
 requires std::is_invocable_r_v<R, decltype(F)>
 class Compute_function_constant;
 template <std::copyable R> class Compute_value;
-template <std::copyable R> class Compute_out;
+template <typename Signature> class Compute_function;
 enum struct Compute_option : std::uint8_t {
   identity = util::bitset_value(0U),
   concurrent = util::bitset_value(1U),
@@ -86,6 +86,320 @@ public:
 
 protected:
   constexpr Compute_in() noexcept = default;
+};
+
+template <std::copyable R> class Compute_out : public Compute_io<R> {
+public:
+  using return_type = typename Compute_out::return_type;
+  using in_type = Compute_io<R>;
+
+private:
+  std::weak_ptr<in_type const> c_in_{};
+  R return_{};
+
+public:
+  constexpr Compute_out() noexcept = default;
+  explicit Compute_out(Compute_in_c<R> auto const &c_in)
+      : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
+
+  auto operator() [[nodiscard]] () const
+      noexcept(noexcept(R{return_}) && std::is_nothrow_move_constructible_v<R>)
+          -> R override {
+    return return_;
+  }
+  auto operator()([[maybe_unused]] Extract_t /*unused*/) -> R {
+    if (auto const c_in{c_in_.lock()}) {
+      return_ = (*c_in)();
+    }
+    return return_;
+  }
+  auto operator>>(R &right) const
+      noexcept(noexcept(R{right = *this()}) &&
+               std::is_nothrow_move_constructible_v<R>) -> R {
+    return right = *this();
+  }
+  auto operator>>=(R &right) -> R { return right = *this(Extract_t{}); }
+
+  ~Compute_out() noexcept override = default;
+  constexpr void swap(Compute_out &other) noexcept {
+    using std::swap;
+    swap(c_in_, other.c_in_);
+    swap(return_, other.return_);
+  }
+  Compute_out(Compute_out const &other) noexcept(noexcept(decltype(c_in_){
+      other.c_in_}) &&noexcept(decltype(return_){other.return_}))
+      : c_in_{other.c_in_}, return_{other.return_} {}
+  auto operator=(Compute_out const &right) noexcept(noexcept(
+      Compute_out{right}.swap(*this)) &&noexcept(*this)) -> Compute_out & {
+    Compute_out{right}.swap(*this);
+    return *this;
+  };
+  Compute_out(Compute_out &&other) noexcept
+      : c_in_{std::move(other.c_in_)}, return_{std::move(other.return_)} {}
+  auto operator=(Compute_out &&right) noexcept -> Compute_out & {
+    Compute_out{std::move(right)}.swap(*this);
+    return *this;
+  };
+};
+template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
+template <std::copyable R>
+constexpr void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
+  left.swap(right);
+}
+auto operator<<([[maybe_unused]] Out_t /*unused*/,
+                Compute_in_any_c auto const &right) {
+  return Compute_out{right};
+}
+
+template <std::copyable R, R V>
+class Compute_constant : public Compute_in<Compute_constant<R, V>, R> {
+private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
+  struct Friend {
+    consteval Friend() noexcept = default;
+  };
+
+public:
+  using return_type = typename Compute_constant::return_type;
+  constexpr static auto value_{V};
+  template <typename... ForwardArgs>
+  constexpr explicit Compute_constant([[maybe_unused]] Friend /*unused*/,
+                                      ForwardArgs &&...args)
+      : Compute_constant{std::forward<ForwardArgs>(args)...} {}
+
+  template <typename... ForwardArgs>
+  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_constant>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_constant const>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
+  }
+  constexpr auto operator() [[nodiscard]] () const
+      noexcept(noexcept(R{value_}) && std::is_nothrow_move_constructible_v<R>)
+          -> R override {
+    return value_;
+  }
+
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_constant &> override {
+    return *new Compute_constant{/* *this */};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_constant &> override {
+    util::check_bitset(Compute_constant::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+    return *new Compute_constant{/* *this */};
+  };
+  constexpr ~Compute_constant() noexcept override = default;
+  Compute_constant(Compute_constant const &) = delete;
+  auto operator=(Compute_constant const &) = delete;
+  Compute_constant(Compute_constant &&) = delete;
+  auto operator=(Compute_constant &&) = delete;
+
+protected:
+  constexpr Compute_constant() noexcept = default;
+};
+
+template <std::copyable R, auto F>
+requires std::is_invocable_r_v<R, decltype(F)>
+class Compute_function_constant
+    : public Compute_in<Compute_function_constant<R, F>, R> {
+private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
+  struct Friend {
+    consteval Friend() noexcept = default;
+  };
+
+public:
+  using return_type = typename Compute_function_constant::return_type;
+  constexpr static auto function_{F};
+  template <typename... ForwardArgs>
+  constexpr explicit Compute_function_constant(
+      [[maybe_unused]] Friend /*unused*/, ForwardArgs &&...args)
+      : Compute_function_constant{std::forward<ForwardArgs>(args)...} {}
+
+  template <typename... ForwardArgs>
+  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_function_constant>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_function_constant const>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
+  }
+  constexpr auto operator() [[nodiscard]] () const
+      noexcept(noexcept(R{std::invoke(F)}) &&
+               std::is_nothrow_move_constructible_v<R>) -> R override {
+    return std::invoke(F);
+  }
+
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_function_constant &> override {
+    return *new Compute_function_constant{/* *this */};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_function_constant &> override {
+    util::check_bitset(Compute_function_constant::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+    return *new Compute_function_constant{/* *this */};
+  };
+  constexpr ~Compute_function_constant() noexcept override = default;
+  Compute_function_constant(Compute_function_constant const &) = delete;
+  auto operator=(Compute_function_constant const &) = delete;
+  Compute_function_constant(Compute_function_constant &&) = delete;
+  auto operator=(Compute_function_constant &&) = delete;
+
+protected:
+  constexpr Compute_function_constant() noexcept = default;
+};
+
+template <std::copyable R>
+class Compute_value : public Compute_in<Compute_value<R>, R> {
+private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
+  struct Friend {
+    consteval Friend() noexcept = default;
+  };
+
+public:
+  using return_type = typename Compute_value::return_type;
+  template <typename... ForwardArgs>
+  explicit Compute_value([[maybe_unused]] Friend /*unused*/,
+                         ForwardArgs &&...args)
+      : Compute_value{std::forward<ForwardArgs>(args)...} {}
+
+private:
+  std::unique_ptr<std::mutex> const mutex_;
+  R value_;
+
+protected:
+  explicit Compute_value(R const &value)
+      : Compute_value{util::Enum_bitset{} | Compute_option::concurrent, value} {
+  }
+  Compute_value(Compute_options const &options, R const &value)
+      : mutex_{(options & Compute_option::concurrent).any()
+                   ? std::make_unique<std::mutex>()
+                   : std::unique_ptr<std::mutex>{}},
+        value_{value} {
+    constexpr static auto valid_options{util::Enum_bitset{} |
+                                        Compute_option::concurrent};
+    util::check_bitset(valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+  }
+
+private:
+  template <typename... ForwardArgs>
+  static auto create_const_0
+      [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
+    constexpr static auto valid_options{~Compute_option::concurrent};
+    util::check_bitset(valid_options,
+                       u8"Unnecessary "s + util::type_name<Compute_option>(),
+                       options);
+    return create_const_1(options, std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
+    return create_const_1(util::Enum_bitset{} | Compute_option::identity,
+                          std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_value const>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
+  }
+
+public:
+  template <typename... ForwardArgs>
+  static auto create [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_value>(Friend{},
+                                           std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+    return create_const_0(std::forward<ForwardArgs>(args)...);
+  }
+
+  auto operator() [[nodiscard]] () const -> R override {
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
+    return value_;
+  }
+  auto operator<<(R const &value) -> R {
+    auto value_copy{value};
+    auto const guard{mutex_ ? std::unique_lock{*mutex_}
+                            : std::unique_lock<std::mutex>{}};
+    using std::swap;
+    swap(value_, value_copy);
+    return value_copy;
+  }
+
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_value &> override {
+    return *new Compute_value{*this};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_value &> override {
+    util::check_bitset(Compute_value::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+    return *new Compute_value{*this,
+                              (options | Compute_option::concurrent).any()
+                                  ? std::make_unique<std::mutex>()
+                                  : std::unique_ptr<std::mutex>{}};
+  };
+  ~Compute_value() noexcept override = default;
+
+protected:
+  void swap(Compute_value &other) noexcept {
+    auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
+                           : std::unique_lock<std::mutex>{}};
+    auto other_guard{other.mutex_
+                         ? std::unique_lock{other.*mutex_, std::defer_lock}
+                         : std::unique_lock<std::mutex>{}};
+    if (this_guard.mutex() && other_guard.mutex()) {
+      std::lock(this_guard, other_guard);
+    } else if (this_guard.mutex() != nullptr) {
+      this_guard.lock();
+    } else if (other_guard.mutex()) {
+      other_guard.lock();
+    }
+    using std::swap;
+    swap(value_, other.value_);
+  }
+  Compute_value(Compute_value const &other) noexcept(noexcept(Compute_value{
+      other, other.mutex_ ? std::make_unique<std::mutex>()
+                          : std::unique_ptr<std::mutex>{}}))
+      : Compute_value{other, other.mutex_ ? std::make_unique<std::mutex>()
+                                          : std::unique_ptr<std::mutex>{}} {}
+  auto operator=(Compute_value const &right) noexcept(noexcept(
+      Compute_value{right}.swap(*this)) &&noexcept(*this)) -> Compute_value & {
+    Compute_value{right}.swap(*this);
+    return *this;
+  };
+  Compute_value(Compute_value &&other) noexcept
+      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
+                            : std::unique_ptr<std::mutex>{}},
+        value_{std::move(other.value_)} {}
+  auto operator=(Compute_value &&right) noexcept -> Compute_value & {
+    Compute_value{std::move(right)}.swap(*this);
+    return *this;
+  };
+
+  Compute_value(Compute_value const &other,
+                std::remove_cv_t<decltype(mutex_)>
+                    mutex) noexcept(noexcept(decltype(mutex_){
+      std::move(mutex)}) &&noexcept(decltype(value_){other.value_}))
+      : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
 template <std::copyable R, typename... Args>
@@ -356,321 +670,6 @@ Compute_function(F &&, auto &&...) -> Compute_function<
 template <typename F>
 Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
     decltype(decltype(std::function{std::declval<F>()})::operator())>;
-
-template <std::copyable R, R V>
-class Compute_constant : public Compute_in<Compute_constant<R, V>, R> {
-private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
-  struct Friend {
-    consteval Friend() noexcept = default;
-  };
-
-public:
-  using return_type = typename Compute_constant::return_type;
-  constexpr static auto value_{V};
-  template <typename... ForwardArgs>
-  constexpr explicit Compute_constant([[maybe_unused]] Friend /*unused*/,
-                                      ForwardArgs &&...args)
-      : Compute_constant{std::forward<ForwardArgs>(args)...} {}
-
-  template <typename... ForwardArgs>
-  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_constant>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
-  }
-  template <typename... ForwardArgs>
-  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_constant const>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
-  }
-  constexpr auto operator() [[nodiscard]] () const
-      noexcept(noexcept(R{value_}) && std::is_nothrow_move_constructible_v<R>)
-          -> R override {
-    return value_;
-  }
-
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_constant &> override {
-    return *new Compute_constant{/* *this */};
-  };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_constant &> override {
-    util::check_bitset(Compute_constant::clone_valid_options,
-                       u8"Ignored "s + util::type_name<Compute_option>(),
-                       options);
-    return *new Compute_constant{/* *this */};
-  };
-  constexpr ~Compute_constant() noexcept override = default;
-  Compute_constant(Compute_constant const &) = delete;
-  auto operator=(Compute_constant const &) = delete;
-  Compute_constant(Compute_constant &&) = delete;
-  auto operator=(Compute_constant &&) = delete;
-
-protected:
-  constexpr Compute_constant() noexcept = default;
-};
-
-template <std::copyable R, auto F>
-requires std::is_invocable_r_v<R, decltype(F)>
-class Compute_function_constant
-    : public Compute_in<Compute_function_constant<R, F>, R> {
-private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
-  struct Friend {
-    consteval Friend() noexcept = default;
-  };
-
-public:
-  using return_type = typename Compute_function_constant::return_type;
-  constexpr static auto function_{F};
-  template <typename... ForwardArgs>
-  constexpr explicit Compute_function_constant(
-      [[maybe_unused]] Friend /*unused*/, ForwardArgs &&...args)
-      : Compute_function_constant{std::forward<ForwardArgs>(args)...} {}
-
-  template <typename... ForwardArgs>
-  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_function_constant>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
-  }
-  template <typename... ForwardArgs>
-  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_function_constant const>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
-  }
-  constexpr auto operator() [[nodiscard]] () const
-      noexcept(noexcept(R{std::invoke(F)}) &&
-               std::is_nothrow_move_constructible_v<R>) -> R override {
-    return std::invoke(F);
-  }
-
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_function_constant &> override {
-    return *new Compute_function_constant{/* *this */};
-  };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_function_constant &> override {
-    util::check_bitset(Compute_function_constant::clone_valid_options,
-                       u8"Ignored "s + util::type_name<Compute_option>(),
-                       options);
-    return *new Compute_function_constant{/* *this */};
-  };
-  constexpr ~Compute_function_constant() noexcept override = default;
-  Compute_function_constant(Compute_function_constant const &) = delete;
-  auto operator=(Compute_function_constant const &) = delete;
-  Compute_function_constant(Compute_function_constant &&) = delete;
-  auto operator=(Compute_function_constant &&) = delete;
-
-protected:
-  constexpr Compute_function_constant() noexcept = default;
-};
-
-template <std::copyable R>
-class Compute_value : public Compute_in<Compute_value<R>, R> {
-private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
-  struct Friend {
-    consteval Friend() noexcept = default;
-  };
-
-public:
-  using return_type = typename Compute_value::return_type;
-  template <typename... ForwardArgs>
-  explicit Compute_value([[maybe_unused]] Friend /*unused*/,
-                         ForwardArgs &&...args)
-      : Compute_value{std::forward<ForwardArgs>(args)...} {}
-
-private:
-  std::unique_ptr<std::mutex> const mutex_;
-  R value_;
-
-protected:
-  explicit Compute_value(R const &value)
-      : Compute_value{util::Enum_bitset{} | Compute_option::concurrent, value} {
-  }
-  Compute_value(Compute_options const &options, R const &value)
-      : mutex_{(options & Compute_option::concurrent).any()
-                   ? std::make_unique<std::mutex>()
-                   : std::unique_ptr<std::mutex>{}},
-        value_{value} {
-    constexpr static auto valid_options{util::Enum_bitset{} |
-                                        Compute_option::concurrent};
-    util::check_bitset(valid_options,
-                       u8"Ignored "s + util::type_name<Compute_option>(),
-                       options);
-  }
-
-private:
-  template <typename... ForwardArgs>
-  static auto create_const_0
-      [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
-    constexpr static auto valid_options{~Compute_option::concurrent};
-    util::check_bitset(valid_options,
-                       u8"Unnecessary "s + util::type_name<Compute_option>(),
-                       options);
-    return create_const_1(options, std::forward<ForwardArgs>(args)...);
-  }
-  template <typename... ForwardArgs>
-  static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_1(util::Enum_bitset{} | Compute_option::identity,
-                          std::forward<ForwardArgs>(args)...);
-  }
-  template <typename... ForwardArgs>
-  static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_value const>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
-  }
-
-public:
-  template <typename... ForwardArgs>
-  static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_value>(Friend{},
-                                           std::forward<ForwardArgs>(args)...);
-  }
-  template <typename... ForwardArgs>
-  static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_0(std::forward<ForwardArgs>(args)...);
-  }
-
-  auto operator() [[nodiscard]] () const -> R override {
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
-    return value_;
-  }
-  auto operator<<(R const &value) -> R {
-    auto value_copy{value};
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
-    using std::swap;
-    swap(value_, value_copy);
-    return value_copy;
-  }
-
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_value &> override {
-    return *new Compute_value{*this};
-  };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_value &> override {
-    util::check_bitset(Compute_value::clone_valid_options,
-                       u8"Ignored "s + util::type_name<Compute_option>(),
-                       options);
-    return *new Compute_value{*this,
-                              (options | Compute_option::concurrent).any()
-                                  ? std::make_unique<std::mutex>()
-                                  : std::unique_ptr<std::mutex>{}};
-  };
-  ~Compute_value() noexcept override = default;
-
-protected:
-  void swap(Compute_value &other) noexcept {
-    auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
-                           : std::unique_lock<std::mutex>{}};
-    auto other_guard{other.mutex_
-                         ? std::unique_lock{other.*mutex_, std::defer_lock}
-                         : std::unique_lock<std::mutex>{}};
-    if (this_guard.mutex() && other_guard.mutex()) {
-      std::lock(this_guard, other_guard);
-    } else if (this_guard.mutex() != nullptr) {
-      this_guard.lock();
-    } else if (other_guard.mutex()) {
-      other_guard.lock();
-    }
-    using std::swap;
-    swap(value_, other.value_);
-  }
-  Compute_value(Compute_value const &other) noexcept(noexcept(Compute_value{
-      other, other.mutex_ ? std::make_unique<std::mutex>()
-                          : std::unique_ptr<std::mutex>{}}))
-      : Compute_value{other, other.mutex_ ? std::make_unique<std::mutex>()
-                                          : std::unique_ptr<std::mutex>{}} {}
-  auto operator=(Compute_value const &right) noexcept(noexcept(
-      Compute_value{right}.swap(*this)) &&noexcept(*this)) -> Compute_value & {
-    Compute_value{right}.swap(*this);
-    return *this;
-  };
-  Compute_value(Compute_value &&other) noexcept
-      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
-                            : std::unique_ptr<std::mutex>{}},
-        value_{std::move(other.value_)} {}
-  auto operator=(Compute_value &&right) noexcept -> Compute_value & {
-    Compute_value{std::move(right)}.swap(*this);
-    return *this;
-  };
-
-  Compute_value(Compute_value const &other,
-                std::remove_cv_t<decltype(mutex_)>
-                    mutex) noexcept(noexcept(decltype(mutex_){
-      std::move(mutex)}) &&noexcept(decltype(value_){other.value_}))
-      : mutex_{std::move(mutex)}, value_{other.value_} {}
-};
-
-template <std::copyable R> class Compute_out : public Compute_io<R> {
-public:
-  using return_type = typename Compute_out::return_type;
-  using in_type = Compute_io<R>;
-
-private:
-  std::weak_ptr<in_type const> c_in_{};
-  R return_{};
-
-public:
-  constexpr Compute_out() noexcept = default;
-  explicit Compute_out(Compute_in_c<R> auto const &c_in)
-      : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
-
-  auto operator() [[nodiscard]] () const
-      noexcept(noexcept(R{return_}) && std::is_nothrow_move_constructible_v<R>)
-          -> R override {
-    return return_;
-  }
-  auto operator()([[maybe_unused]] Extract_t /*unused*/) -> R {
-    if (auto const c_in{c_in_.lock()}) {
-      return_ = (*c_in)();
-    }
-    return return_;
-  }
-  auto operator>>(R &right) const
-      noexcept(noexcept(R{right = *this()}) &&
-               std::is_nothrow_move_constructible_v<R>) -> R {
-    return right = *this();
-  }
-  auto operator>>=(R &right) -> R { return right = *this(Extract_t{}); }
-
-  ~Compute_out() noexcept override = default;
-  constexpr void swap(Compute_out &other) noexcept {
-    using std::swap;
-    swap(c_in_, other.c_in_);
-    swap(return_, other.return_);
-  }
-  Compute_out(Compute_out const &other) noexcept(noexcept(decltype(c_in_){
-      other.c_in_}) &&noexcept(decltype(return_){other.return_}))
-      : c_in_{other.c_in_}, return_{other.return_} {}
-  auto operator=(Compute_out const &right) noexcept(noexcept(
-      Compute_out{right}.swap(*this)) &&noexcept(*this)) -> Compute_out & {
-    Compute_out{right}.swap(*this);
-    return *this;
-  };
-  Compute_out(Compute_out &&other) noexcept
-      : c_in_{std::move(other.c_in_)}, return_{std::move(other.return_)} {}
-  auto operator=(Compute_out &&right) noexcept -> Compute_out & {
-    Compute_out{std::move(right)}.swap(*this);
-    return *this;
-  };
-};
-template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
-template <std::copyable R>
-constexpr void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
-  left.swap(right);
-}
-
-auto operator<<([[maybe_unused]] Out_t /*unused*/,
-                Compute_in_any_c auto const &right) {
-  return Compute_out{right};
-}
 } // namespace artccel::core::compute
 
 #endif
