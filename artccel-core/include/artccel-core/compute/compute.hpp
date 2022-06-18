@@ -8,13 +8,13 @@
 #include "../util/utility_extras.hpp" // import util::forward_apply
 #include <cinttypes>                  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
-#include <functional> // import std::function
+#include <functional> // import std::function, std::invoke
 #include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::unique_ptr, std::weak_ptr
 #include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
-#include <optional> // import std::optional
-#include <string>   // import std::literals::string_literals
-#include <type_traits> // import std::is_nothrow_move_constructible_v, std::remove_cv_t
+#include <optional>    // import std::optional
+#include <string>      // import std::literals::string_literals
+#include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
 #include <utility> // import std::declval, std::forward, std::move, std::swap
 
 namespace artccel::core::compute {
@@ -31,6 +31,9 @@ template <typename T>
 concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
 template <typename Signature> class Compute_function;
 template <std::copyable R, R V> class Compute_constant;
+template <std::copyable R, auto F>
+requires std::is_invocable_r_v<R, decltype(F)>
+class Compute_function_constant;
 template <std::copyable R> class Compute_value;
 template <std::copyable R> class Compute_out;
 enum struct Compute_option : std::uint8_t {
@@ -402,6 +405,60 @@ public:
 
 protected:
   constexpr Compute_constant() noexcept = default;
+};
+
+template <std::copyable R, auto F>
+requires std::is_invocable_r_v<R, decltype(F)>
+class Compute_function_constant
+    : public Compute_in<Compute_function_constant<R, F>, R> {
+private:
+  // NOLINTNEXTLINE(altera-struct-pack-align)
+  struct Friend {
+    consteval Friend() noexcept = default;
+  };
+
+public:
+  using return_type = typename Compute_function_constant::return_type;
+  constexpr static auto function_{F};
+  template <typename... ForwardArgs>
+  constexpr explicit Compute_function_constant(
+      [[maybe_unused]] Friend /*unused*/, ForwardArgs &&...args)
+      : Compute_function_constant{std::forward<ForwardArgs>(args)...} {}
+
+  template <typename... ForwardArgs>
+  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_function_constant>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
+  }
+  template <typename... ForwardArgs>
+  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+    return std::make_shared<Compute_function_constant const>(
+        Friend{}, std::forward<ForwardArgs>(args)...);
+  }
+  constexpr auto operator() [[nodiscard]] () const -> R override {
+    return std::invoke(F);
+  }
+
+  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+      -> util::Owner<Compute_function_constant &> override {
+    return *new Compute_function_constant{/* *this */};
+  };
+  auto clone [[deprecated(/*u8*/ "Unsafe"),
+               nodiscard]] (Compute_options const &options) const
+      -> util::Owner<Compute_function_constant &> override {
+    util::check_bitset(Compute_function_constant::clone_valid_options,
+                       u8"Ignored "s + util::type_name<Compute_option>(),
+                       options);
+    return *new Compute_function_constant{/* *this */};
+  };
+  constexpr ~Compute_function_constant() noexcept override = default;
+  Compute_function_constant(Compute_function_constant const &) = delete;
+  auto operator=(Compute_function_constant const &) = delete;
+  Compute_function_constant(Compute_function_constant &&) = delete;
+  auto operator=(Compute_function_constant &&) = delete;
+
+protected:
+  constexpr Compute_function_constant() noexcept = default;
 };
 
 template <std::copyable R>
