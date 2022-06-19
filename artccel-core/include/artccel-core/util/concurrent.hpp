@@ -3,12 +3,72 @@
 #pragma once
 
 #include <chrono>      // import std::chrono::duration, std::chrono::time_point
-#include <concepts>    // import std::same_as
+#include <concepts>    // import std::semiregular, std::same_as
 #include <memory>      // import std::make_unique, std::unique_ptr
+#include <mutex>       // import std::call_once, std::once_flag
 #include <type_traits> // import std::is_nothrow_move_constructible_v
-#include <utility>     // import std::move
+#include <utility>     // import std::forward, std::move, std::swap
 
 namespace artccel::core::util {
+class Semiregular_once_flag {
+private:
+  std::unique_ptr</* mutable */ std::once_flag> value_{
+      std::make_unique<std::once_flag>()};
+  bool flag_{false};
+
+public:
+  constexpr Semiregular_once_flag() noexcept = default;
+
+  template <typename Callable, typename... Args>
+  void call_once(Callable &&func, Args &&...args) {
+    std::call_once(
+        *value_,
+        [this](Callable &&func, Args &&...args) noexcept(noexcept(
+            std::invoke(std::forward<Callable>(func),
+                        std::forward<Args>(args)...))) -> decltype(auto) {
+          std::invoke(std::forward<Callable>(func),
+                      std::forward<Args>(args)...);
+          flag_ = true; // after invocation because std::invoke may throw
+        },
+        std::forward<Callable>(func), std::forward<Args>(args)...);
+  }
+
+  ~Semiregular_once_flag() noexcept = default;
+  constexpr void swap(Semiregular_once_flag &other) noexcept {
+    using std::swap;
+    swap(value_, other.value_);
+    swap(flag_, other.flag_);
+  }
+  Semiregular_once_flag(Semiregular_once_flag const &other)
+      : flag_{other.flag_} {
+    if (flag_) {
+      std::call_once(*value_, []() noexcept {});
+    }
+  }
+  auto operator=(Semiregular_once_flag const &right) noexcept(
+      noexcept(Semiregular_once_flag{right}.swap(*this), *this))
+      -> Semiregular_once_flag & {
+    Semiregular_once_flag{right}.swap(*this);
+    return *this;
+  }
+  Semiregular_once_flag(Semiregular_once_flag &&other) noexcept
+      : flag_{other.flag_} {
+    if (flag_) {
+      std::call_once(*value_, []() noexcept {});
+    }
+  }
+  auto operator=(Semiregular_once_flag &&right) noexcept
+      -> Semiregular_once_flag & {
+    Semiregular_once_flag{std::move(right)}.swap(*this);
+    return *this;
+  }
+};
+static_assert(std::semiregular<Semiregular_once_flag>);
+constexpr void swap(Semiregular_once_flag &left,
+                    Semiregular_once_flag &right) noexcept {
+  left.swap(right);
+}
+
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Null_lockable {
   consteval Null_lockable() noexcept = default;

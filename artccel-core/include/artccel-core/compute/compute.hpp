@@ -2,18 +2,18 @@
 #define ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
 #pragma once
 
-#include "../util/concurrent.hpp"  // import util::Nullable_lockable
+#include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::bitset_value, util::enum_bitset_operators
 #include "../util/meta.hpp"        // import util::type_name
 #include "../util/semantics.hpp"   // import util::Owner
 #include "../util/utility_extras.hpp" // import util::forward_apply
+#include <cassert>                    // import assert
 #include <cinttypes>                  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function, std::invoke
-#include <future>     // import std::packaged_task, std::shared_future
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
 #include <mutex>  // import std::lock_guard, std::mutex, std::scoped_lock
-#include <optional>    // import std::optional
+#include <optional>    // import std::nullopt, std::optional
 #include <string>      // import std::literals::string_literals
 #include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
 #include <utility> // import std::declval, std::exchange, std::forward, std::move, std::swap
@@ -387,7 +387,7 @@ protected:
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
-template <std::copyable R, typename... Args>
+template <std::copyable R, std::copyable... Args>
 class Compute_function<R(Args...)>
     : public Compute_in<Compute_function<R(Args...)>, R> {
 private:
@@ -404,13 +404,16 @@ public:
                             ForwardArgs &&...args)
       : Compute_function{std::forward<ForwardArgs>(args)...} {}
 
+protected:
+  enum class Bound_action : bool {
+    compute = false,
+    reset = true,
+  };
+
 private:
   util::Nullable_lockable<std::mutex> const mutex_;
   std::function<signature_type> function_;
-  std::function<R()> bound_;
-  mutable std::packaged_task<R()> task_;
-  std::shared_future<R> future_{task_.get_future()};
-  mutable bool invoked_{false};
+  std::function<std::optional<R>(Bound_action)> bound_;
 
 protected:
   template <typename F, typename... ForwardArgs>
@@ -427,9 +430,8 @@ protected:
                    ? std::make_unique<std::mutex>()
                    : nullptr},
         function_{std::forward<F>(function)},
-        bound_{bind(function_, std::forward<ForwardArgs>(args)...)},
-        task_{package((options & Compute_option::defer).none(), bound_)},
-        invoked_{(options & Compute_option::defer).none()} {
+        bound_{bind((options & Compute_option::defer).none(), function_,
+                    std::forward<ForwardArgs>(args)...)} {
     constexpr static auto valid_options{Compute_option::concurrent |
                                         Compute_option::defer};
     util::check_bitset(valid_options,
@@ -438,28 +440,34 @@ protected:
   }
   template <typename... ForwardArgs>
   requires std::invocable<decltype(function_), ForwardArgs...>
-  static auto bind(decltype(function_) const &function, ForwardArgs &&...args) {
-    return
-        [function,
-         ... args{std::forward<ForwardArgs>(
-             args)}]() mutable noexcept(noexcept(function(std::
-                                                              forward<
-                                                                  ForwardArgs>(
-                                                                  args)...)) &&
-                                        std::is_nothrow_move_constructible_v<
-                                            decltype(function(
-                                                std::forward<ForwardArgs>(
-                                                    args)...))>)
-            -> decltype(auto) {
-          return function(std::forward<ForwardArgs>(args)...);
-        };
-  }
-  static auto package(bool invoke, decltype(bound_) const &bound) {
-    decltype(task_) ret{bound};
+  static auto bind(bool invoke, decltype(function_) const &function,
+                   ForwardArgs &&...args) {
+    auto bound{[flag{util::Semiregular_once_flag{}}, ret{std::optional<R>{}},
+                function, ... args{std::forward<ForwardArgs>(args)}](
+                   Bound_action action) mutable {
+      switch (action) {
+      case Bound_action::compute:
+        flag.call_once(
+            [&ret, &function](ForwardArgs &&...args) noexcept(
+                noexcept(ret = function(std::forward<ForwardArgs>(args)...))) {
+              ret = function(std::forward<ForwardArgs>(args)...);
+            },
+            std::forward<ForwardArgs>(args)...);
+        return ret;
+      case Bound_action::reset:
+        flag = {};
+        return std::optional<R>{};
+      default:
+        // clang-format off
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+        /* clang-format on */ assert(false);
+        break;
+      }
+    }};
     if (invoke) {
-      ret();
+      bound(Bound_action::compute);
     }
-    return ret;
+    return bound;
   }
 
 private:
@@ -503,15 +511,10 @@ public:
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    std::lock_guard const guard{mutex_};
-    bound_ = bind(function_, std::forward<ForwardArgs>(args)...);
     auto const invoke{(options & Compute_option::defer).none()};
-    task_ = package(invoke, bound_);
-    future_ = task_.get_future();
-    if ((invoked_ = invoke)) {
-      return std::shared_future{future_}.get();
-    }
-    return {};
+    std::lock_guard const guard{mutex_};
+    bound_ = bind(invoke, function_, std::forward<ForwardArgs>(args)...);
+    return invoke ? bound_(Bound_action::compute) : std::nullopt;
   }
   auto reset(Compute_options const &options) -> std::optional<R> {
     constexpr static auto valid_options{util::Enum_bitset{} |
@@ -519,24 +522,15 @@ public:
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
+    auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
-    task_.reset();
-    future_ = task_.get_future();
-    if ((options & Compute_option::defer).none()) {
-      task_();
-      invoked_ = true;
-      return std::shared_future{future_}.get();
-    }
-    return {};
+    bound_(Bound_action::reset);
+    return invoke ? bound_(Bound_action::compute) : std::nullopt;
   }
 
   auto operator()() const -> R override {
     std::lock_guard const guard{mutex_};
-    if (!invoked_) {
-      task_();
-      invoked_ = true;
-    }
-    return std::shared_future{future_}.get();
+    return bound_(Bound_action::compute).value();
   }
   template <template <typename...> typename Tuple, typename... ForwardArgs>
   requires std::invocable<decltype(function_), ForwardArgs...>
@@ -579,8 +573,7 @@ public:
     return *new Compute_function{*this,
                                  (options | Compute_option::concurrent).any()
                                      ? std::make_unique<std::mutex>()
-                                     : nullptr,
-                                 (options | Compute_option::defer).none()};
+                                     : nullptr};
   };
   ~Compute_function() noexcept override = default;
 
@@ -590,48 +583,34 @@ protected:
     using std::swap;
     swap(function_, other.function_);
     swap(bound_, other.bound_);
-    swap(invoked_, other.invoked_);
-    swap(task_, other.task_);
-    swap(future_, other.future_);
   }
-  Compute_function(Compute_function const &other) noexcept(noexcept(
-      Compute_function{other,
-                       other.mutex_ ? std::make_unique<std::mutex>() : nullptr,
-                       other.invoked_}))
-      : Compute_function{
-            other, other.mutex_ ? std::make_unique<std::mutex>() : nullptr,
-            other.invoked_} {}
+  Compute_function(Compute_function const &other) noexcept(
+      noexcept(Compute_function{
+          other, other.mutex_ ? std::make_unique<std::mutex>() : nullptr}))
+      : Compute_function{other, other.mutex_ ? std::make_unique<std::mutex>()
+                                             : nullptr} {}
   auto operator=(Compute_function const &right) noexcept(
       noexcept(this == &right, swap(right), *this)) -> Compute_function & {
-    if (this == &right) {
-      // copy constructor cannot handle self-assignment
-      return *this;
-    }
-    swap(right);
+    Compute_function{right}.swap(*this);
     return *this;
   };
   Compute_function(Compute_function &&other) noexcept
       : mutex_{other.mutex_ ? std::make_unique<std::mutex>() : nullptr},
-        function_{std::move(other.function_)}, bound_{std::move(other.bound_)},
-        task_{std::move(other.task_)}, future_{std::move(other.future_)},
-        invoked_{std::move(other.invoked_)} {}
+        function_{std::move(other.function_)}, bound_{std::move(other.bound_)} {
+  }
   auto operator=(Compute_function &&right) noexcept -> Compute_function & {
     Compute_function{std::move(right)}.swap(*this);
     return *this;
   };
 
   Compute_function(
-      Compute_function const &other, std::remove_cv_t<decltype(mutex_)> mutex,
-      decltype(invoked_)
-          invoked) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
-                                     decltype(function_){other.function_},
-                                     decltype(bound_){other.bound_},
-                                     decltype(task_){package(invoked, bound_)},
-                                     decltype(future_){task_.get_future()},
-                                     decltype(invoked_){invoked}))
+      Compute_function const &other,
+      std::remove_cv_t<decltype(mutex_)>
+          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
+                                   decltype(function_){other.function_},
+                                   decltype(bound_){other.bound_}))
       : mutex_{std::move(mutex)}, function_{other.function_},
-        bound_{other.bound_}, task_{package(invoked, bound_)}, invoked_{
-                                                                   invoked} {}
+        bound_{other.bound_} {}
 };
 template <typename F>
 Compute_function(F &&, auto &&...) -> Compute_function<
