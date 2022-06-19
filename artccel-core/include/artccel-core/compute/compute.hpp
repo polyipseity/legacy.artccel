@@ -52,9 +52,9 @@ template <typename T>
 concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
 
 enum struct Compute_option : std::uint8_t {
-  identity = util::bitset_value(0U),
-  concurrent = util::bitset_value(1U),
-  defer = util::bitset_value(2U),
+  empty = util::empty_bitmask,
+  concurrent = util::next_bitmask(empty),
+  defer = util::next_bitmask(concurrent),
 };
 
 template <std::copyable R> class Compute_io {
@@ -306,7 +306,7 @@ private:
   }
   template <typename... ForwardArgs>
   static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_1(util::Enum_bitset{} | Compute_option::identity,
+    return create_const_1(util::Enum_bitset{} | Compute_option::empty,
                           std::forward<ForwardArgs>(args)...);
   }
   template <typename... ForwardArgs>
@@ -549,7 +549,7 @@ public:
   auto operator<<=(Tuple<ForwardArgs...> &&t_args) -> R {
     return util::forward_apply(
         [this](ForwardArgs &&...args) mutable -> decltype(auto) {
-          return bind(util::Enum_bitset{} | Compute_option::identity,
+          return bind(util::Enum_bitset{} | Compute_option::empty,
                       std::forward<ForwardArgs>(args)...)
               .value();
         },
@@ -559,7 +559,7 @@ public:
     reset(util::Enum_bitset{} | Compute_option::defer);
   }
   auto operator<<=([[maybe_unused]] Reset_t /*unused*/) -> R {
-    return reset(util::Enum_bitset{} | Compute_option::identity).value();
+    return reset(util::Enum_bitset{} | Compute_option::empty).value();
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const

@@ -3,11 +3,10 @@
 #pragma once
 
 #include "encoding.hpp" // import c8srtombs
-#include "interval.hpp" // import Closed_interval
 #include "polyfill.hpp" // import to_underlying
 #include <bitset>       // import std::bitset
 #include <cassert>      // import assert
-#include <cinttypes>    // import std::uint8_t, std::uint64_t
+#include <cinttypes>    // import std::uint64_t
 #include <climits>      // import CHAR_BIT
 #include <cstddef>      // import std::size_t
 #include <iostream>     // import std::cerr
@@ -19,11 +18,9 @@ template <typename E>
 requires std::is_enum_v<E>
 using Bitset_of = std::bitset<CHAR_BIT * sizeof(E)>;
 
-consteval auto bitset_value [[nodiscard]] (
-    Closed_interval<std::uint8_t, 0U, CHAR_BIT * sizeof(std::uint64_t)>
-        position) noexcept {
-  return position == 0U ? std::uint64_t{0}
-                        : std::uint64_t{0b1} << (position - 1U);
+constexpr inline std::uint64_t empty_bitmask{0};
+consteval auto next_bitmask [[nodiscard]] (std::uint64_t bitmask) {
+  return bitmask == empty_bitmask ? std::uint64_t{1} : bitmask << 1U;
 }
 template <std::size_t N>
 constexpr void check_bitset(std::bitset<N> const &valid,
