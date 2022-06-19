@@ -2,6 +2,7 @@
 #define ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
 #pragma once
 
+#include "../util/concurrent.hpp"  // import util::Nullable_lockable
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::bitset_value, util::enum_bitset_operators
 #include "../util/meta.hpp"        // import util::type_name
 #include "../util/semantics.hpp"   // import util::Owner
@@ -10,8 +11,8 @@
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function, std::invoke
 #include <future>     // import std::packaged_task, std::shared_future
-#include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::unique_ptr, std::weak_ptr
-#include <mutex> // import std::defer_lock, std::lock, std::mutex, std::unique_lock
+#include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
+#include <mutex>  // import std::lock_guard, std::mutex, std::scoped_lock
 #include <optional>    // import std::optional
 #include <string>      // import std::literals::string_literals
 #include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
@@ -273,7 +274,7 @@ public:
       : Compute_value{std::forward<ForwardArgs>(args)...} {}
 
 private:
-  std::unique_ptr<std::mutex> const mutex_;
+  util::Nullable_lockable<std::mutex> const mutex_;
   R value_;
 
 protected:
@@ -283,7 +284,7 @@ protected:
   Compute_value(Compute_options const &options, R value)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
-                   : std::unique_ptr<std::mutex>{}},
+                   : nullptr},
         value_{std::move(value)} {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::concurrent};
@@ -325,20 +326,17 @@ public:
   }
 
   auto operator() [[nodiscard]] () const -> R override {
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
+    std::lock_guard const guard{mutex_};
     return value_;
   }
   auto operator<<(R const &value) -> R { return *this << R{value}; }
   auto operator<<(R &&value) -> R {
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
+    std::lock_guard const guard{mutex_};
     return std::exchange(value_, std::move(value));
   }
   auto operator<<=(R const &value) -> R { return *this <<= R{value}; }
   auto operator<<=(R &&value) -> R {
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
+    std::lock_guard const guard{mutex_};
     return value_ = std::move(value);
   }
 
@@ -355,40 +353,27 @@ public:
     return *new Compute_value{*this,
                               (options | Compute_option::concurrent).any()
                                   ? std::make_unique<std::mutex>()
-                                  : std::unique_ptr<std::mutex>{}};
+                                  : nullptr};
   };
   ~Compute_value() noexcept override = default;
 
 protected:
   void swap(Compute_value &other) noexcept {
-    auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
-                           : std::unique_lock<std::mutex>{}};
-    auto other_guard{other.mutex_
-                         ? std::unique_lock{other.*mutex_, std::defer_lock}
-                         : std::unique_lock<std::mutex>{}};
-    if (this_guard.mutex() && other_guard.mutex()) {
-      std::lock(this_guard, other_guard);
-    } else if (this_guard.mutex() != nullptr) {
-      this_guard.lock();
-    } else if (other_guard.mutex()) {
-      other_guard.lock();
-    }
+    std::scoped_lock const guard{mutex_, other.mutex_};
     using std::swap;
     swap(value_, other.value_);
   }
   Compute_value(Compute_value const &other) noexcept(noexcept(Compute_value{
-      other, other.mutex_ ? std::make_unique<std::mutex>()
-                          : std::unique_ptr<std::mutex>{}}))
+      other, other.mutex_ ? std::make_unique<std::mutex>() : nullptr}))
       : Compute_value{other, other.mutex_ ? std::make_unique<std::mutex>()
-                                          : std::unique_ptr<std::mutex>{}} {}
+                                          : nullptr} {}
   auto operator=(Compute_value const &right) noexcept(
       noexcept(Compute_value{right}.swap(*this), *this)) -> Compute_value & {
     Compute_value{right}.swap(*this);
     return *this;
   };
   Compute_value(Compute_value &&other) noexcept
-      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
-                            : std::unique_ptr<std::mutex>{}},
+      : mutex_{other.mutex_ ? std::make_unique<std::mutex>() : nullptr},
         value_{std::move(other.value_)} {}
   auto operator=(Compute_value &&right) noexcept -> Compute_value & {
     Compute_value{std::move(right)}.swap(*this);
@@ -420,7 +405,7 @@ public:
       : Compute_function{std::forward<ForwardArgs>(args)...} {}
 
 private:
-  std::unique_ptr<std::mutex> const mutex_;
+  util::Nullable_lockable<std::mutex> const mutex_;
   std::function<signature_type> function_;
   std::function<R()> bound_;
   mutable std::packaged_task<R()> task_;
@@ -440,7 +425,7 @@ protected:
                    ForwardArgs &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::mutex>()
-                   : std::unique_ptr<std::mutex>{}},
+                   : nullptr},
         function_{std::forward<F>(function)},
         bound_{bind(function_, std::forward<ForwardArgs>(args)...)},
         task_{package((options & Compute_option::defer).none(), bound_)},
@@ -518,8 +503,7 @@ public:
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
+    std::lock_guard const guard{mutex_};
     bound_ = bind(function_, std::forward<ForwardArgs>(args)...);
     auto const invoke{(options & Compute_option::defer).none()};
     task_ = package(invoke, bound_);
@@ -535,8 +519,7 @@ public:
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
+    std::lock_guard const guard{mutex_};
     task_.reset();
     future_ = task_.get_future();
     if ((options & Compute_option::defer).none()) {
@@ -548,8 +531,7 @@ public:
   }
 
   auto operator()() const -> R override {
-    auto const guard{mutex_ ? std::unique_lock{*mutex_}
-                            : std::unique_lock<std::mutex>{}};
+    std::lock_guard const guard{mutex_};
     if (!invoked_) {
       task_();
       invoked_ = true;
@@ -597,25 +579,14 @@ public:
     return *new Compute_function{*this,
                                  (options | Compute_option::concurrent).any()
                                      ? std::make_unique<std::mutex>()
-                                     : std::unique_ptr<std::mutex>{},
+                                     : nullptr,
                                  (options | Compute_option::defer).none()};
   };
   ~Compute_function() noexcept override = default;
 
 protected:
   void swap(Compute_function &other) noexcept {
-    auto this_guard{mutex_ ? std::unique_lock{*mutex_, std::defer_lock}
-                           : std::unique_lock<std::mutex>{}};
-    auto other_guard{other.mutex_
-                         ? std::unique_lock{other.*mutex_, std::defer_lock}
-                         : std::unique_lock<std::mutex>{}};
-    if (this_guard.mutex() && other_guard.mutex()) {
-      std::lock(this_guard, other_guard);
-    } else if (this_guard.mutex() != nullptr) {
-      this_guard.lock();
-    } else if (other_guard.mutex()) {
-      other_guard.lock();
-    }
+    std::scoped_lock const guard{mutex_, other.mutex_};
     using std::swap;
     swap(function_, other.function_);
     swap(bound_, other.bound_);
@@ -623,15 +594,13 @@ protected:
     swap(task_, other.task_);
     swap(future_, other.future_);
   }
-  Compute_function(Compute_function const &other) noexcept(
-      noexcept(Compute_function{other,
-                                other.mutex_ ? std::make_unique<std::mutex>()
-                                             : std::unique_ptr<std::mutex>{},
-                                other.invoked_}))
-      : Compute_function{other,
-                         other.mutex_ ? std::make_unique<std::mutex>()
-                                      : std::unique_ptr<std::mutex>{},
-                         other.invoked_} {}
+  Compute_function(Compute_function const &other) noexcept(noexcept(
+      Compute_function{other,
+                       other.mutex_ ? std::make_unique<std::mutex>() : nullptr,
+                       other.invoked_}))
+      : Compute_function{
+            other, other.mutex_ ? std::make_unique<std::mutex>() : nullptr,
+            other.invoked_} {}
   auto operator=(Compute_function const &right) noexcept(
       noexcept(this == &right, swap(right), *this)) -> Compute_function & {
     if (this == &right) {
@@ -642,8 +611,7 @@ protected:
     return *this;
   };
   Compute_function(Compute_function &&other) noexcept
-      : mutex_{other.mutex_ ? std::make_unique<std::mutex>()
-                            : std::unique_ptr<std::mutex>{}},
+      : mutex_{other.mutex_ ? std::make_unique<std::mutex>() : nullptr},
         function_{std::move(other.function_)}, bound_{std::move(other.bound_)},
         task_{std::move(other.task_)}, future_{std::move(other.future_)},
         invoked_{std::move(other.invoked_)} {}
