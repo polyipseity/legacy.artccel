@@ -35,11 +35,11 @@ template <std::copyable R> class Compute_value;
 template <typename Signature> class Compute_function;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Reset_t {
-  consteval Reset_t() noexcept = default;
+  explicit consteval Reset_t() noexcept = default;
 };
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Extract_t {
-  consteval Extract_t() noexcept = default;
+  explicit consteval Extract_t() noexcept = default;
 };
 struct Out_t;
 
@@ -674,7 +674,7 @@ Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
 
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Out_t {
-  consteval Out_t() noexcept = default;
+  explicit consteval Out_t() noexcept = default;
   auto operator<<(Compute_in_any_c auto const &right) {
     return Compute_out{right};
   }

@@ -19,7 +19,7 @@ requires std::is_base_of_v<Bound<T>, L> &&
     (!std::same_as<R, Bound<T>>)&&std::move_constructible<T> struct Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Dynamic_interval_t {
-  consteval Dynamic_interval_t() noexcept = default;
+  explicit consteval Dynamic_interval_t() noexcept = default;
 };
 
 // mathematical classifications
