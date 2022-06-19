@@ -81,6 +81,7 @@
 		"thread": "cpp",
 		"locale": "cpp",
 		"bitset": "cpp",
-		"propagate_const": "cpp"
+		"propagate_const": "cpp",
+		"shared_mutex": "cpp"
 	}
 }
