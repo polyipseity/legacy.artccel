@@ -12,9 +12,10 @@
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function, std::invoke
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
-#include <mutex>  // import std::lock_guard, std::mutex, std::scoped_lock
-#include <optional>    // import std::nullopt, std::optional
-#include <string>      // import std::literals::string_literals
+#include <mutex>  // import std::lock_guard, std::scoped_lock
+#include <optional>     // import std::nullopt, std::optional
+#include <shared_mutex> // import std::shared_lock, std::shared_mutex
+#include <string>       // import std::literals::string_literals
 #include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
 #include <utility> // import std::declval, std::exchange, std::forward, std::move, std::swap
 
@@ -274,7 +275,7 @@ public:
       : Compute_value{std::forward<ForwardArgs>(args)...} {}
 
 private:
-  util::Nullable_lockable<std::mutex> const mutex_;
+  util::Nullable_lockable<std::shared_mutex> const mutex_;
   R value_;
 
 protected:
@@ -283,7 +284,7 @@ protected:
                       std::move(value)} {}
   Compute_value(Compute_options const &options, R value)
       : mutex_{(options & Compute_option::concurrent).any()
-                   ? std::make_unique<std::mutex>()
+                   ? std::make_unique<std::shared_mutex>()
                    : nullptr},
         value_{std::move(value)} {
     constexpr static auto valid_options{util::Enum_bitset{} |
@@ -326,7 +327,7 @@ public:
   }
 
   auto operator() [[nodiscard]] () const -> R override {
-    std::lock_guard const guard{mutex_};
+    std::shared_lock const guard{mutex_};
     return value_;
   }
   auto operator<<(R const &value) -> R { return *this << R{value}; }
@@ -352,7 +353,7 @@ public:
                        options);
     return *new Compute_value{*this,
                               (options | Compute_option::concurrent).any()
-                                  ? std::make_unique<std::mutex>()
+                                  ? std::make_unique<std::shared_mutex>()
                                   : nullptr};
   };
   ~Compute_value() noexcept override = default;
@@ -364,16 +365,17 @@ protected:
     swap(value_, other.value_);
   }
   Compute_value(Compute_value const &other) noexcept(noexcept(Compute_value{
-      other, other.mutex_ ? std::make_unique<std::mutex>() : nullptr}))
-      : Compute_value{other, other.mutex_ ? std::make_unique<std::mutex>()
-                                          : nullptr} {}
+      other, other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr}))
+      : Compute_value{other, other.mutex_
+                                 ? std::make_unique<std::shared_mutex>()
+                                 : nullptr} {}
   auto operator=(Compute_value const &right) noexcept(
       noexcept(Compute_value{right}.swap(*this), *this)) -> Compute_value & {
     Compute_value{right}.swap(*this);
     return *this;
   };
   Compute_value(Compute_value &&other) noexcept
-      : mutex_{other.mutex_ ? std::make_unique<std::mutex>() : nullptr},
+      : mutex_{other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr},
         value_{std::move(other.value_)} {}
   auto operator=(Compute_value &&right) noexcept -> Compute_value & {
     Compute_value{std::move(right)}.swap(*this);
@@ -411,7 +413,7 @@ protected:
   };
 
 private:
-  util::Nullable_lockable<std::mutex> const mutex_;
+  util::Nullable_lockable<std::shared_mutex> const mutex_;
   std::function<signature_type> function_;
   std::function<std::optional<R>(Bound_action)> bound_;
 
@@ -427,7 +429,7 @@ protected:
   Compute_function(Compute_options const &options, F &&function,
                    ForwardArgs &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
-                   ? std::make_unique<std::mutex>()
+                   ? std::make_unique<std::shared_mutex>()
                    : nullptr},
         function_{std::forward<F>(function)},
         bound_{bind((options & Compute_option::defer).none(), function_,
@@ -529,7 +531,7 @@ public:
   }
 
   auto operator()() const -> R override {
-    std::lock_guard const guard{mutex_};
+    std::shared_lock const guard{mutex_};
     return bound_(Bound_action::compute).value();
   }
   template <template <typename...> typename Tuple, typename... ForwardArgs>
@@ -572,7 +574,7 @@ public:
                        options);
     return *new Compute_function{*this,
                                  (options | Compute_option::concurrent).any()
-                                     ? std::make_unique<std::mutex>()
+                                     ? std::make_unique<std::shared_mutex>()
                                      : nullptr};
   };
   ~Compute_function() noexcept override = default;
@@ -584,18 +586,19 @@ protected:
     swap(function_, other.function_);
     swap(bound_, other.bound_);
   }
-  Compute_function(Compute_function const &other) noexcept(
-      noexcept(Compute_function{
-          other, other.mutex_ ? std::make_unique<std::mutex>() : nullptr}))
-      : Compute_function{other, other.mutex_ ? std::make_unique<std::mutex>()
-                                             : nullptr} {}
+  Compute_function(
+      Compute_function const &other) noexcept(noexcept(Compute_function{
+      other, other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr}))
+      : Compute_function{other, other.mutex_
+                                    ? std::make_unique<std::shared_mutex>()
+                                    : nullptr} {}
   auto operator=(Compute_function const &right) noexcept(
       noexcept(this == &right, swap(right), *this)) -> Compute_function & {
     Compute_function{right}.swap(*this);
     return *this;
   };
   Compute_function(Compute_function &&other) noexcept
-      : mutex_{other.mutex_ ? std::make_unique<std::mutex>() : nullptr},
+      : mutex_{other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr},
         function_{std::move(other.function_)}, bound_{std::move(other.bound_)} {
   }
   auto operator=(Compute_function &&right) noexcept -> Compute_function & {
