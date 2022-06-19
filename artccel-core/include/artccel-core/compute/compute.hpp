@@ -86,7 +86,7 @@ public:
       -> util::Owner<Compute_in &> = 0;
 
 protected:
-  constexpr Compute_in() noexcept = default;
+  using Compute_in::Compute_io::Compute_io;
 };
 
 template <std::copyable R> class Compute_out : public Compute_io<R> {
