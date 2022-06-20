@@ -52,11 +52,7 @@ public:
     return *this;
   }
   Semiregular_once_flag(Semiregular_once_flag &&other) noexcept
-      : flag_{other.flag_} {
-    if (flag_) {
-      std::call_once(*value_, []() noexcept {});
-    }
-  }
+      : value_{std::move(other.value_)}, flag_{other.flag_} {}
   auto operator=(Semiregular_once_flag &&right) noexcept
       -> Semiregular_once_flag & {
     Semiregular_once_flag{std::move(right)}.swap(*this);
