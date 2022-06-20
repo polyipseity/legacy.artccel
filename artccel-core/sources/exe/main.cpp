@@ -30,12 +30,10 @@ auto main(std::span<std::string_view const> args) -> int {
 } // namespace artccel::core
 
 auto main(int argc, gsl::zstring argv[]) -> int {
-  // clang-format off
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
-  /* clang-format on */ return artccel::core::main([argc, argv] {
-    std::vector<std::string_view> init(argc);
+  return artccel::core::main([args{std::span{argv, argv + argc}}] {
+    std::vector<std::string_view> init(args.size());
     std::transform(
-        argv, argv + argc, init.begin(),
+        args.begin(), args.end(), init.begin(),
         [](gsl::not_null<gsl::zstring> arg) { return std::string_view{arg}; });
     return init;
   }());
