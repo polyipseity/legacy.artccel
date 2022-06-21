@@ -5,9 +5,9 @@
 #include "encoding.hpp" // import mbsrtoc8s
 #include <algorithm>    // import std::copy_n
 #include <array>        // import std::array, std::to_array
+#include <concepts>     // import std::same_as
 #include <cstddef>      // import std::size_t
 #include <string_view>  // import std::string_view
-#include <type_traits>  // import std::remove_cv_t
 
 namespace artccel::core::util {
 namespace detail {
@@ -43,48 +43,72 @@ constexpr static auto type_name_storage{[] {
   std::copy_n(type_name.data(), type_name.size(), ret.data());
   return ret;
 }()};
+
+template <typename T, typename Find, typename Replace>
+struct Find_and_replace_all;
+enum class Find_and_replace_target : bool {
+  self = false,
+  container = true,
+};
+template <typename NotFound, typename Find, typename Replace>
+requires(!std::same_as<NotFound, Find>)
+    // NOLINTNEXTLINE(altera-struct-pack-align)
+    struct Find_and_replace_all<NotFound, Find, Replace> {
+  using type = NotFound;
+};
+template <typename Find, typename Replace>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Find_and_replace_all<Find, Find, Replace> {
+  using type = Replace;
+};
+template <template <Find_and_replace_target> typename Find, typename Replace>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Find_and_replace_all<Find<Find_and_replace_target::self>,
+                            Find<Find_and_replace_target::self>, Replace> {
+  using type = Replace;
+};
+template <template <typename> typename T,
+          template <Find_and_replace_target> typename Find, typename Replace>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Find_and_replace_all<T<Find<Find_and_replace_target::container>>,
+                            Find<Find_and_replace_target::container>, Replace> {
+  using type = Replace;
+};
+template <template <typename...> typename T, typename Find, typename Replace,
+          typename... TArgs>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Find_and_replace_all<T<TArgs...>, Find, Replace> {
+  using type = T<typename Find_and_replace_all<TArgs, Find, Replace>::type...>;
+};
+template <typename T, typename Find, typename Replace>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Find_and_replace_all<T *, Find, Replace> {
+  using type = typename Find_and_replace_all<T, Find, Replace>::type *;
+};
+template <typename T, typename Find, typename Replace>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Find_and_replace_all<T &, Find, Replace> {
+  using type = typename Find_and_replace_all<T, Find, Replace>::type &;
+};
+template <typename T, typename Find, typename Replace>
+// NOLINTNEXTLINE(altera-struct-pack-align)
+struct Find_and_replace_all<T &&, Find, Replace> {
+  using type = typename Find_and_replace_all<T, Find, Replace>::type &&;
+};
 } // namespace detail
 
-template <typename P> struct Remove_ptr;
-// NOLINTNEXTLINE(altera-struct-pack-align)
-template <typename T> struct Remove_ptr<T *> { using type = T; };
-// NOLINTNEXTLINE(altera-struct-pack-align)
-template <typename T> struct Remove_ptr<T &> { using type = T; };
-// NOLINTNEXTLINE(altera-struct-pack-align)
-template <typename T> struct Remove_ptr<T &&> { using type = T; };
-template <template <typename...> typename P, typename T>
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct Remove_ptr<P<T>> {
-  using type = T;
-};
-template <typename P> using Remove_ptr_t = typename Remove_ptr<P>::type;
-
-// NOLINTNEXTLINE(altera-struct-pack-align)
-template <typename P> struct Remove_cvptr {
-  using type = std::remove_cv_t<Remove_ptr_t<P>>;
-};
-template <typename P> using Remove_cvptr_t = typename Remove_cvptr<P>::type;
-
-template <typename P, typename R> struct Replace_ptr_value_type;
-// NOLINTNEXTLINE(altera-struct-pack-align)
-template <typename T, typename R> struct Replace_ptr_value_type<T *, R> {
-  using type = R *;
-};
-// NOLINTNEXTLINE(altera-struct-pack-align)
-template <typename T, typename R> struct Replace_ptr_value_type<T &, R> {
-  using type = R &;
-};
-// NOLINTNEXTLINE(altera-struct-pack-align)
-template <typename T, typename R> struct Replace_ptr_value_type<T &&, R> {
-  using type = R &&;
-};
-template <template <typename...> typename P, typename T, typename R>
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct Replace_ptr_value_type<P<T>, R> {
-  using type = P<R>;
-};
-template <typename P, typename R>
-using Replace_ptr_value_type_t = typename Replace_ptr_value_type<P, R>::type;
+using Find_and_replace_target = detail::Find_and_replace_target;
+template <typename T, typename Find, typename Replace>
+using Find_and_replace_all = detail::Find_and_replace_all<T, Find, Replace>;
+template <typename T, typename Find, typename Replace>
+using Find_and_replace_all_t =
+    typename Find_and_replace_all<T, Find, Replace>::type;
+template <typename T, template <Find_and_replace_target> typename Find,
+          typename Replace>
+using Find_and_replace_all_t_t = Find_and_replace_all_t<
+    Find_and_replace_all_t<T, Find<Find_and_replace_target::container>,
+                           Replace>,
+    Find<Find_and_replace_target::self>, Replace>;
 
 template <typename T>
 consteval static auto type_name_mbs_data [[nodiscard]] () noexcept {
