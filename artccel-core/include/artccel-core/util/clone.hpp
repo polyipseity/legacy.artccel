@@ -54,14 +54,15 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func)
   // clang-format off
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ assert(ptr && u8"ptr == nullptr");
-  decltype(auto) ret_tmp{
-      std::invoke(std::forward<F>(func), *std::to_address(ptr))};
-  // T/smart_pointer<T>, T*, T&, T&&
-  static_assert(!std::is_rvalue_reference_v<decltype(ret_tmp)>,
-                u8"Clone function should not return a rvalue");
-  // T/smart_pointer<T> -> T/smart_pointer<T>, T* -> T*, T& -> T*
-  auto ret{
-      std::move(unify_ref_to_ptr(std::forward<decltype(ret_tmp)>(ret_tmp)))};
+  auto ret{[&ptr, &func] {
+    decltype(auto) init{
+        std::invoke(std::forward<F>(func), *std::to_address(ptr))};
+    // T/smart_pointer<T>, T*, T&, T&&
+    static_assert(!std::is_rvalue_reference_v<decltype(init)>,
+                  u8"Clone function should not return a rvalue");
+    // T/smart_pointer<T> -> T/smart_pointer<T>, T* -> T*, T& -> T*; T&& -> T
+    return unify_ref_to_ptr(std::forward<decltype(init)>(init));
+  }()};
   // clang-format off
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ assert(ret && u8"ret == nullptr");
@@ -79,12 +80,12 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func)
       auto &&deleter{unify_ptr_to_ref(ret.get_deleter())};
       using deleter_type = typename ret_type::deleter_type;
       if constexpr (std::is_reference_v<deleter_type>) {
-        static_assert(!std::is_lvalue_reference_v<decltype(deleter)>,
+        static_assert(std::is_lvalue_reference_v<decltype(deleter)>,
                       u8"get_deleter() should return a lvalue or pointer");
         return std::unique_ptr<raw_type, deleter_type>{
             unify_ref_to_ptr(ret.release()), deleter};
       } else {
-        auto &&released{unify_ref_to_ptr(
+        auto const released{unify_ref_to_ptr(
             ret.release())}; // happens before stealing the deleter
         return std::unique_ptr<raw_type, deleter_type>{released,
                                                        std::move(deleter)};

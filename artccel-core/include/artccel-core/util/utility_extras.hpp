@@ -12,15 +12,14 @@
 namespace artccel::core::util {
 template <typename> constexpr inline auto dependent_false_v{false};
 
-template <typename T>
-constexpr auto unify_ref_to_ptr(T &&value) noexcept -> decltype(auto) {
+template <typename T> constexpr auto unify_ref_to_ptr(T &&value) noexcept {
   // (callsite) -> (return)
   if constexpr (std::is_reference_v<T>) {
     // t& -> t*, t*& -> t**
     return &value;
   } else {
-    // t -> t&&, t&& -> t&&, t* -> t*&&, t*&& -> t*&&
-    return std::forward<T>(value);
+    // t -> t, t&& -> t, t* -> t*, t*&& -> t*
+    return value;
   }
 }
 template <typename T>
@@ -31,10 +30,10 @@ constexpr auto unify_ptr_to_ref(T &&value) noexcept -> decltype(auto) {
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(value && u8"value == nullptr");
-    return *value; // *v is lvalue
+    return *value; // *v is t&
   } else {
-    // t -> t&&, t& -> t&, t&& -> t&&
-    return std::forward<T>(value);
+    // t -> t, t& -> t&, t&& -> t
+    return static_cast<T>(value);
   }
 }
 
