@@ -19,7 +19,7 @@ template <typename T> constexpr auto unify_ref_to_ptr(T &&value) noexcept {
     return &value;
   } else {
     // t -> t, t&& -> t, t* -> t*, t*&& -> t*
-    return value;
+    return std::forward<T>(value);
   }
 }
 template <typename T>
@@ -33,7 +33,7 @@ constexpr auto unify_ptr_to_ref(T &&value) noexcept -> decltype(auto) {
     return *value; // *v is t&
   } else {
     // t -> t, t& -> t&, t&& -> t
-    return static_cast<T>(value);
+    return T{std::forward<T>(value)};
   }
 }
 
