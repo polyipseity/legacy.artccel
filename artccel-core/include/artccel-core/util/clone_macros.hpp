@@ -9,7 +9,7 @@
   [](auto const &(ptr_name)) -> decltype(auto) {                               \
     constexpr struct {                                                         \
       constexpr auto operator()                                                \
-          [[deprecated, nodiscard]] (decltype(ptr_name) &(ptr_name)) const     \
+          [[deprecated, nodiscard]] (decltype(ptr_name)(ptr_name)) const       \
           -> decltype(auto) {                                                  \
         return ret_expr;                                                       \
       }                                                                        \

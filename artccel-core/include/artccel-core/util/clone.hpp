@@ -10,7 +10,7 @@
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::same_as
 #include <functional> // import std::invoke
 #include <memory> // import std::enable_shared_from_this, std::pointer_traits, std::shared_ptr, std::to_address, std::unique_pto_addresstr
-#include <type_traits> // import std::add_pointer_t, std::invoke_result_t, std::is_lvalue_reference_v, std::is_pointer_v, std::is_reference_v, std::remove_cv_t, std::remove_pointer_t
+#include <type_traits> // import std::add_pointer_t, std::invoke_result_t, std::is_lvalue_reference_v, std::is_rvalue_reference_v, std::is_pointer_v, std::is_reference_v, std::remove_cv_t, std::remove_pointer_t
 #include <utility>     // import std::forward, std::move
 
 namespace artccel::core::util {
@@ -54,15 +54,20 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func)
   // clang-format off
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ assert(ptr && u8"ptr == nullptr");
-  auto ret{unify_ref_to_ptr(
-      std::invoke(std::forward<F>(func), *std::to_address(ptr)))};
+  decltype(auto) ret_tmp{
+      std::invoke(std::forward<F>(func), *std::to_address(ptr))};
+  // T/smart_pointer<T>, T*, T&, T&&
+  static_assert(!std::is_rvalue_reference_v<decltype(ret_tmp)>,
+                u8"Clone function should not return a rvalue");
+  // T/smart_pointer<T> -> T/smart_pointer<T>, T* -> T*, T& -> T*
+  auto ret{
+      std::move(unify_ref_to_ptr(std::forward<decltype(ret_tmp)>(ret_tmp)))};
   // clang-format off
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ assert(ret && u8"ret == nullptr");
   using ret_type = decltype(ret);
-  if constexpr (std::is_reference_v<ret_type>) {
-    static_assert(dependent_false_v<ret_type>, u8"Unexpected");
-  } else if constexpr (std::is_pointer_v<ret_type>) {
+  static_assert(!std::is_reference_v<ret_type>, u8"Unexpected");
+  if constexpr (std::is_pointer_v<ret_type>) {
     return std::unique_ptr<std::remove_pointer_t<ret_type>>{ret};
   } else if constexpr (!std::same_as<decltype(ret.release()), void>) {
     using raw_type =
@@ -71,21 +76,18 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func)
                     typename ret_type::deleter_type;
                     requires !std::same_as<decltype(ret.get_deleter()), void>;
                   }) {
+      auto &&deleter{unify_ptr_to_ref(ret.get_deleter())};
       using deleter_type = typename ret_type::deleter_type;
       if constexpr (std::is_reference_v<deleter_type>) {
-        decltype(auto) deleter{unify_ptr_to_ref(ret.get_deleter())};
-        if constexpr (std::is_lvalue_reference_v<decltype(deleter)>) {
-          return std::unique_ptr<raw_type, deleter_type>{
-              unify_ref_to_ptr(ret.release()), deleter};
-        } else {
-          static_assert(
-              dependent_false_v<decltype(deleter)>,
-              u8"get_deleter() should not return an object or rvalue");
-        }
-      } else {
-        auto deleter{std::move(unify_ptr_to_ref(ret.get_deleter()))};
+        static_assert(!std::is_lvalue_reference_v<decltype(deleter)>,
+                      u8"get_deleter() should return a lvalue or pointer");
         return std::unique_ptr<raw_type, deleter_type>{
-            unify_ref_to_ptr(ret.release()), std::move(deleter)};
+            unify_ref_to_ptr(ret.release()), deleter};
+      } else {
+        auto &&released{unify_ref_to_ptr(
+            ret.release())}; // happens before stealing the deleter
+        return std::unique_ptr<raw_type, deleter_type>{released,
+                                                       std::move(deleter)};
       }
     } else {
       return std::unique_ptr<raw_type>{unify_ref_to_ptr(ret.release())};
@@ -131,7 +133,8 @@ requires(!std::derived_from<
                                     std::shared_ptr<int>>) {
     return replaced_return_type{std::move(ret)};
   } else {
-    auto &deleter{ret.get_deleter()};
+    auto &deleter{
+        ret.get_deleter()}; // std::unique_ptr<T, D>::get_deleter() -> D&
     constexpr auto is_deleter_reference{
         std::is_reference_v<detail::clone_deleter_t<P, F>>};
     if constexpr (is_deleter_reference &&
