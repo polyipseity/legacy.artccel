@@ -325,13 +325,15 @@ requires std::is_base_of_v<Bound<T>, L> &&
   }
   [[nodiscard]] constexpr
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator T &&() &&noexcept(noexcept(std::move(value_))) {
+  operator T() &&noexcept(noexcept(std::move(value_)) &&
+                          std::is_nothrow_move_constructible_v<T>) {
     return std::move(value_);
   }
   [[nodiscard]] constexpr
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator T const &&() const &&noexcept(noexcept(std::move(value_))) {
-    return std::move(value_);
+  operator T() const &&noexcept(noexcept(std::move(value_)) &&
+                                std::is_nothrow_move_constructible_v<T>) {
+    return value_;
   }
 
 private:
