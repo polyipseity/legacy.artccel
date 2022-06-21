@@ -5,20 +5,32 @@
 #include <concepts>    // import std::invocable
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
-#include <type_traits> // import std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_reference_v
-#include <utility>     // import std::index_sequence, std::index_sequence_for
+#include <type_traits> // import std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
+#include <utility> // import std::forward, std::index_sequence, std::index_sequence_for
 
 namespace artccel::core::util {
 template <typename> constexpr inline auto dependent_false_v{false};
 
 template <typename T>
-constexpr auto possible_ref_as_pointer(T &&value) noexcept {
+constexpr auto unify_ref_to_ptr(T &&value) noexcept -> decltype(auto) {
+  // (callsite) -> (return)
   if constexpr (std::is_reference_v<T>) {
-    // lvalues (T = t&), xvalues (T = t&&)
+    // t& -> t*
     return &value;
   } else {
-    // prvalues (T = t), others
-    return value;
+    // t -> t&&, t&& -> t&&
+    return std::forward<T>(value);
+  }
+}
+template <typename T>
+constexpr auto unify_ptr_to_ref(T &&value) noexcept -> decltype(auto) {
+  // (callsite) -> (return)
+  if constexpr (std::is_pointer_v<std::remove_reference_t<T>>) {
+    // t* -> t&, t*& -> t&, t*&& -> t&
+    return *value; // *v is lvalue
+  } else {
+    // t -> t&&, t& -> t&, t&& -> t&&
+    return std::forward<T>(value);
   }
 }
 
