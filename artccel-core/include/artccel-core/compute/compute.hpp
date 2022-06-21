@@ -5,12 +5,12 @@
 #include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::bitset_value, util::enum_bitset_operators
 #include "../util/meta.hpp"        // import util::type_name
-#include "../util/semantics.hpp"   // import util::Owner
 #include "../util/utility_extras.hpp" // import util::forward_apply
 #include <cassert>                    // import assert
 #include <cinttypes>                  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function, std::invoke
+#include <gsl/gsl>    // import gsl::owner
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
 #include <mutex>  // import std::lock_guard, std::scoped_lock
 #include <optional>     // import std::nullopt, std::optional
@@ -79,12 +79,12 @@ public:
   using return_type = typename Compute_in::return_type;
   virtual auto clone_unmodified
       [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_in &> = 0;
+      -> gsl::owner<Compute_in *> = 0;
   constexpr static auto clone_valid_options{Compute_option::concurrent |
                                             Compute_option::defer};
   virtual auto clone [[deprecated(/*u8*/ "Unsafe"),
                        nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_in &> = 0;
+      -> gsl::owner<Compute_in *> = 0;
 
 protected:
   using Compute_in::Compute_io::Compute_io;
@@ -182,16 +182,16 @@ public:
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_constant &> override {
-    return *new Compute_constant{/* *this */};
+      -> gsl::owner<Compute_constant *> override {
+    return new Compute_constant{/* *this */};
   };
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_constant &> override {
+      -> gsl::owner<Compute_constant *> override {
     util::check_bitset(Compute_constant::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    return *new Compute_constant{/* *this */};
+    return new Compute_constant{/* *this */};
   };
   constexpr ~Compute_constant() noexcept override = default;
   Compute_constant(Compute_constant const &) = delete;
@@ -238,16 +238,16 @@ public:
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_function_constant &> override {
-    return *new Compute_function_constant{/* *this */};
+      -> gsl::owner<Compute_function_constant *> override {
+    return new Compute_function_constant{/* *this */};
   };
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_function_constant &> override {
+      -> gsl::owner<Compute_function_constant *> override {
     util::check_bitset(Compute_function_constant::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    return *new Compute_function_constant{/* *this */};
+    return new Compute_function_constant{/* *this */};
   };
   constexpr ~Compute_function_constant() noexcept override = default;
   Compute_function_constant(Compute_function_constant const &) = delete;
@@ -342,19 +342,18 @@ public:
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_value &> override {
-    return *new Compute_value{*this};
+      -> gsl::owner<Compute_value *> override {
+    return new Compute_value{*this};
   };
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_value &> override {
+      -> gsl::owner<Compute_value *> override {
     util::check_bitset(Compute_value::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    return *new Compute_value{*this,
-                              (options | Compute_option::concurrent).any()
-                                  ? std::make_unique<std::shared_mutex>()
-                                  : nullptr};
+    return new Compute_value{*this, (options | Compute_option::concurrent).any()
+                                        ? std::make_unique<std::shared_mutex>()
+                                        : nullptr};
   };
   ~Compute_value() noexcept override = default;
 
@@ -563,19 +562,19 @@ public:
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> util::Owner<Compute_function &> override {
-    return *new Compute_function{*this};
+      -> gsl::owner<Compute_function *> override {
+    return new Compute_function{*this};
   };
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
-      -> util::Owner<Compute_function &> override {
+      -> gsl::owner<Compute_function *> override {
     util::check_bitset(Compute_function::clone_valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
-    return *new Compute_function{*this,
-                                 (options | Compute_option::concurrent).any()
-                                     ? std::make_unique<std::shared_mutex>()
-                                     : nullptr};
+    return new Compute_function{*this,
+                                (options | Compute_option::concurrent).any()
+                                    ? std::make_unique<std::shared_mutex>()
+                                    : nullptr};
   };
   ~Compute_function() noexcept override = default;
 
