@@ -21,15 +21,12 @@ public:
 
   template <typename Callable, typename... Args>
   void call_once(Callable &&func, Args &&...args) {
-    std::call_once(
-        *value_,
-        [this](Callable &&func, Args &&...args) noexcept(noexcept(std::invoke(
-            std::forward<Callable>(func), std::forward<Args>(args)...))) {
-          std::invoke(std::forward<Callable>(func),
-                      std::forward<Args>(args)...);
-          flag_ = true; // after invocation because std::invoke may throw
-        },
-        std::forward<Callable>(func), std::forward<Args>(args)...);
+    std::call_once(*value_, [this, &func, &args...]() noexcept(noexcept(
+                                std::invoke(std::forward<Callable>(func),
+                                            std::forward<Args>(args)...))) {
+      std::invoke(std::forward<Callable>(func), std::forward<Args>(args)...);
+      flag_ = true; // after invocation because std::invoke may throw
+    });
   }
 
   ~Semiregular_once_flag() noexcept = default;

@@ -445,12 +445,10 @@ protected:
          ... args{std::forward<Args>(args)}](Bound_action action) mutable {
           switch (action) {
           case Bound_action::compute:
-            flag.call_once(
-                [&ret, &function](Args &&...args) noexcept(
-                    noexcept(ret = function(std::forward<Args>(args)...))) {
-                  ret = function(std::forward<Args>(args)...);
-                },
-                std::forward<Args>(args)...);
+            flag.call_once([&ret, &function, &args...]() noexcept(noexcept(
+                               ret = function(std::forward<Args>(args)...))) {
+              ret = function(std::forward<Args>(args)...);
+            });
             return ret;
           case Bound_action::reset:
             flag = {};

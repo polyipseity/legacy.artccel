@@ -45,8 +45,7 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
     -> decltype(auto) {
   using TArgs = Tuple<Args...>;
   return
-      []<std::size_t... I>(
-          F && func, TArgs && t_args,
+      [&func, &t_args ]<std::size_t... I>(
           [[maybe_unused]] std::index_sequence<
               I...> /*unused*/) mutable noexcept(std::
                                                      is_nothrow_invocable_v<
@@ -60,8 +59,7 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
         std::forward<F>(func),
         std::forward<Args>(std::get<I>(std::forward<TArgs>(t_args)))...);
   }
-  (std::forward<F>(func), std::forward<TArgs>(t_args),
-   std::index_sequence_for<Args...>{});
+  (std::index_sequence_for<Args...>{});
 }
 } // namespace artccel::core::util
 
