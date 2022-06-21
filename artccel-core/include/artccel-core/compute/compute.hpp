@@ -160,20 +160,20 @@ private:
 public:
   using return_type = typename Compute_constant::return_type;
   constexpr static auto value_{V};
-  template <typename... ForwardArgs>
+  template <typename... Args>
   constexpr explicit Compute_constant([[maybe_unused]] Friend /*unused*/,
-                                      ForwardArgs &&...args)
-      : Compute_constant{std::forward<ForwardArgs>(args)...} {}
+                                      Args &&...args)
+      : Compute_constant{std::forward<Args>(args)...} {}
 
-  template <typename... ForwardArgs>
-  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_constant>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
+  template <typename... Args>
+  constexpr static auto create [[nodiscard]] (Args &&...args) {
+    return std::make_shared<Compute_constant>(Friend{},
+                                              std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+  template <typename... Args>
+  constexpr static auto create_const [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_constant const>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
+        Friend{}, std::forward<Args>(args)...);
   }
   constexpr auto operator() [[nodiscard]] () const
       noexcept(noexcept(R{value_}) && std::is_nothrow_move_constructible_v<R>)
@@ -216,20 +216,20 @@ private:
 public:
   using return_type = typename Compute_function_constant::return_type;
   constexpr static auto function_{F};
-  template <typename... ForwardArgs>
+  template <typename... Args>
   constexpr explicit Compute_function_constant(
-      [[maybe_unused]] Friend /*unused*/, ForwardArgs &&...args)
-      : Compute_function_constant{std::forward<ForwardArgs>(args)...} {}
+      [[maybe_unused]] Friend /*unused*/, Args &&...args)
+      : Compute_function_constant{std::forward<Args>(args)...} {}
 
-  template <typename... ForwardArgs>
-  constexpr static auto create [[nodiscard]] (ForwardArgs &&...args) {
+  template <typename... Args>
+  constexpr static auto create [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_function_constant>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
+        Friend{}, std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  constexpr static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
+  template <typename... Args>
+  constexpr static auto create_const [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_function_constant const>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
+        Friend{}, std::forward<Args>(args)...);
   }
   constexpr auto operator() [[nodiscard]] () const
       noexcept(noexcept(R{std::invoke(F)}) &&
@@ -269,10 +269,9 @@ private:
 
 public:
   using return_type = typename Compute_value::return_type;
-  template <typename... ForwardArgs>
-  explicit Compute_value([[maybe_unused]] Friend /*unused*/,
-                         ForwardArgs &&...args)
-      : Compute_value{std::forward<ForwardArgs>(args)...} {}
+  template <typename... Args>
+  explicit Compute_value([[maybe_unused]] Friend /*unused*/, Args &&...args)
+      : Compute_value{std::forward<Args>(args)...} {}
 
 private:
   util::Nullable_lockable<std::shared_mutex> const mutex_;
@@ -295,35 +294,35 @@ protected:
   }
 
 private:
-  template <typename... ForwardArgs>
+  template <typename... Args>
   static auto create_const_0
-      [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
+      [[nodiscard]] (Compute_options const &options, Args &&...args) {
     constexpr static auto valid_options{~Compute_option::concurrent};
     util::check_bitset(valid_options,
                        u8"Unnecessary "s + util::type_name<Compute_option>(),
                        options);
-    return create_const_1(options, std::forward<ForwardArgs>(args)...);
+    return create_const_1(options, std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
+  template <typename... Args>
+  static auto create_const_0 [[nodiscard]] (Args &&...args) {
     return create_const_1(util::Enum_bitset{} | Compute_option::empty,
-                          std::forward<ForwardArgs>(args)...);
+                          std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_value const>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
+  template <typename... Args>
+  static auto create_const_1 [[nodiscard]] (Args &&...args) {
+    return std::make_shared<Compute_value const>(Friend{},
+                                                 std::forward<Args>(args)...);
   }
 
 public:
-  template <typename... ForwardArgs>
-  static auto create [[nodiscard]] (ForwardArgs &&...args) {
+  template <typename... Args>
+  static auto create [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_value>(Friend{},
-                                           std::forward<ForwardArgs>(args)...);
+                                           std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_0(std::forward<ForwardArgs>(args)...);
+  template <typename... Args>
+  static auto create_const [[nodiscard]] (Args &&...args) {
+    return create_const_0(std::forward<Args>(args)...);
   }
 
   auto operator() [[nodiscard]] () const -> R override {
@@ -388,9 +387,9 @@ protected:
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
-template <std::copyable R, std::copyable... Args>
-class Compute_function<R(Args...)>
-    : public Compute_in<Compute_function<R(Args...)>, R> {
+template <std::copyable R, std::copyable... TArgs>
+class Compute_function<R(TArgs...)>
+    : public Compute_in<Compute_function<R(TArgs...)>, R> {
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
@@ -399,11 +398,10 @@ private:
 
 public:
   using return_type = typename Compute_function::return_type;
-  using signature_type = R(Args...);
-  template <typename... ForwardArgs>
-  explicit Compute_function([[maybe_unused]] Friend /*unused*/,
-                            ForwardArgs &&...args)
-      : Compute_function{std::forward<ForwardArgs>(args)...} {}
+  using signature_type = R(TArgs...);
+  template <typename... Args>
+  explicit Compute_function([[maybe_unused]] Friend /*unused*/, Args &&...args)
+      : Compute_function{std::forward<Args>(args)...} {}
 
 protected:
   enum class Bound_action : bool {
@@ -417,54 +415,53 @@ private:
   std::function<std::optional<R>(Bound_action)> bound_;
 
 protected:
-  template <typename F, typename... ForwardArgs>
-  requires std::invocable<F, ForwardArgs...>
-  explicit Compute_function(F &&function, ForwardArgs &&...args)
+  template <typename F, typename... Args>
+  requires std::invocable<F, Args...>
+  explicit Compute_function(F &&function, Args &&...args)
       : Compute_function{Compute_option::concurrent | Compute_option::defer,
                          std::forward<F>(function),
-                         std::forward<ForwardArgs>(args)...} {}
-  template <typename F, typename... ForwardArgs>
-  requires std::invocable<F, ForwardArgs...>
-  Compute_function(Compute_options const &options, F &&function,
-                   ForwardArgs &&...args)
+                         std::forward<Args>(args)...} {}
+  template <typename F, typename... Args>
+  requires std::invocable<F, Args...>
+  Compute_function(Compute_options const &options, F &&function, Args &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::shared_mutex>()
                    : nullptr},
         function_{std::forward<F>(function)},
         bound_{bind((options & Compute_option::defer).none(), function_,
-                    std::forward<ForwardArgs>(args)...)} {
+                    std::forward<Args>(args)...)} {
     constexpr static auto valid_options{Compute_option::concurrent |
                                         Compute_option::defer};
     util::check_bitset(valid_options,
                        u8"Ignored "s + util::type_name<Compute_option>(),
                        options);
   }
-  template <typename... ForwardArgs>
-  requires std::invocable<decltype(function_), ForwardArgs...>
+  template <typename... Args>
+  requires std::invocable<decltype(function_), Args...>
   static auto bind(bool invoke, decltype(function_) const &function,
-                   ForwardArgs &&...args) {
-    auto bound{[flag{util::Semiregular_once_flag{}}, ret{std::optional<R>{}},
-                function, ... args{std::forward<ForwardArgs>(args)}](
-                   Bound_action action) mutable {
-      switch (action) {
-      case Bound_action::compute:
-        flag.call_once(
-            [&ret, &function](ForwardArgs &&...args) noexcept(
-                noexcept(ret = function(std::forward<ForwardArgs>(args)...))) {
-              ret = function(std::forward<ForwardArgs>(args)...);
-            },
-            std::forward<ForwardArgs>(args)...);
-        return ret;
-      case Bound_action::reset:
-        flag = {};
-        return std::optional<R>{};
-      default:
-        // clang-format off
+                   Args &&...args) {
+    auto bound{
+        [flag{util::Semiregular_once_flag{}}, ret{std::optional<R>{}}, function,
+         ... args{std::forward<Args>(args)}](Bound_action action) mutable {
+          switch (action) {
+          case Bound_action::compute:
+            flag.call_once(
+                [&ret, &function](Args &&...args) noexcept(
+                    noexcept(ret = function(std::forward<Args>(args)...))) {
+                  ret = function(std::forward<Args>(args)...);
+                },
+                std::forward<Args>(args)...);
+            return ret;
+          case Bound_action::reset:
+            flag = {};
+            return std::optional<R>{};
+          default:
+            // clang-format off
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-        /* clang-format on */ assert(false);
-        break;
-      }
-    }};
+            /* clang-format on */ assert(false);
+            break;
+          }
+        }};
     if (invoke) {
       bound(Bound_action::compute);
     }
@@ -472,40 +469,40 @@ protected:
   }
 
 private:
-  template <typename... ForwardArgs>
+  template <typename... Args>
   static auto create_const_0
-      [[nodiscard]] (Compute_options const &options, ForwardArgs &&...args) {
+      [[nodiscard]] (Compute_options const &options, Args &&...args) {
     constexpr static auto valid_options{~Compute_option::concurrent};
     util::check_bitset(valid_options,
                        u8"Unnecessary "s + util::type_name<Compute_option>(),
                        options);
-    return create_const_1(options, std::forward<ForwardArgs>(args)...);
+    return create_const_1(options, std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  static auto create_const_0 [[nodiscard]] (ForwardArgs &&...args) {
+  template <typename... Args>
+  static auto create_const_0 [[nodiscard]] (Args &&...args) {
     return create_const_1(util::Enum_bitset{} | Compute_option::defer,
-                          std::forward<ForwardArgs>(args)...);
+                          std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  static auto create_const_1 [[nodiscard]] (ForwardArgs &&...args) {
+  template <typename... Args>
+  static auto create_const_1 [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_function const>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
+        Friend{}, std::forward<Args>(args)...);
   }
 
 public:
-  template <typename... ForwardArgs>
-  static auto create [[nodiscard]] (ForwardArgs &&...args) {
-    return std::make_shared<Compute_function>(
-        Friend{}, std::forward<ForwardArgs>(args)...);
+  template <typename... Args>
+  static auto create [[nodiscard]] (Args &&...args) {
+    return std::make_shared<Compute_function>(Friend{},
+                                              std::forward<Args>(args)...);
   }
-  template <typename... ForwardArgs>
-  static auto create_const [[nodiscard]] (ForwardArgs &&...args) {
-    return create_const_0(std::forward<ForwardArgs>(args)...);
+  template <typename... Args>
+  static auto create_const [[nodiscard]] (Args &&...args) {
+    return create_const_0(std::forward<Args>(args)...);
   }
 
-  template <typename... ForwardArgs>
-  requires std::invocable<decltype(function_), ForwardArgs...>
-  auto bind(Compute_options const &options, ForwardArgs &&...args)
+  template <typename... Args>
+  requires std::invocable<decltype(function_), Args...>
+  auto bind(Compute_options const &options, Args &&...args)
       -> std::optional<R> {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::defer};
@@ -514,7 +511,7 @@ public:
                        options);
     auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
-    bound_ = bind(invoke, function_, std::forward<ForwardArgs>(args)...);
+    bound_ = bind(invoke, function_, std::forward<Args>(args)...);
     return invoke ? bound_(Bound_action::compute) : std::nullopt;
   }
   auto reset(Compute_options const &options) -> std::optional<R> {
@@ -533,26 +530,26 @@ public:
     std::shared_lock const guard{mutex_};
     return bound_(Bound_action::compute).value();
   }
-  template <template <typename...> typename Tuple, typename... ForwardArgs>
-  requires std::invocable<decltype(function_), ForwardArgs...>
-  void operator<<(Tuple<ForwardArgs...> &&t_args) {
+  template <template <typename...> typename Tuple, typename... Args>
+  requires std::invocable<decltype(function_), Args...>
+  void operator<<(Tuple<Args...> &&t_args) {
     util::forward_apply(
-        [this](ForwardArgs &&...args) mutable {
+        [this](Args &&...args) mutable {
           bind(util::Enum_bitset{} | Compute_option::defer,
-               std::forward<ForwardArgs>(args)...);
+               std::forward<Args>(args)...);
         },
-        std::forward<Tuple<ForwardArgs...>>(t_args));
+        std::forward<Tuple<Args...>>(t_args));
   }
-  template <template <typename...> typename Tuple, typename... ForwardArgs>
-  requires std::invocable<decltype(function_), ForwardArgs...>
-  auto operator<<=(Tuple<ForwardArgs...> &&t_args) -> R {
+  template <template <typename...> typename Tuple, typename... Args>
+  requires std::invocable<decltype(function_), Args...>
+  auto operator<<=(Tuple<Args...> &&t_args) -> R {
     return util::forward_apply(
-        [this](ForwardArgs &&...args) mutable -> decltype(auto) {
+        [this](Args &&...args) mutable -> decltype(auto) {
           return bind(util::Enum_bitset{} | Compute_option::empty,
-                      std::forward<ForwardArgs>(args)...)
+                      std::forward<Args>(args)...)
               .value();
         },
-        std::forward<Tuple<ForwardArgs...>>(t_args));
+        std::forward<Tuple<Args...>>(t_args));
   }
   void operator<<([[maybe_unused]] Reset_t /*unused*/) {
     reset(util::Enum_bitset{} | Compute_option::defer);
