@@ -13,10 +13,12 @@ template <std::totally_ordered T> struct Bound;
 template <std::totally_ordered T, T V> struct Open_bound;
 template <std::totally_ordered T, T V> struct Closed_bound;
 template <std::totally_ordered T> struct Unbounded;
-template <typename L, typename R, std::totally_ordered T = typename L::type>
-requires std::is_base_of_v<Bound<T>, L> &&
-    (!std::same_as<L, Bound<T>>)&&std::is_base_of_v<Bound<T>, R> &&
-    (!std::same_as<R, Bound<T>>)&&std::move_constructible<T> struct Interval;
+template <typename L, typename R>
+requires std::is_base_of_v<Bound<typename L::type>, L> &&
+    (!std::same_as<L, Bound<typename L::type>>)&&std::is_base_of_v<
+        Bound<typename L::type>, R> &&
+    (!std::same_as<R, Bound<typename L::type>>)&&std::move_constructible<
+        typename L::type> struct Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Dynamic_interval_t {
   explicit consteval Dynamic_interval_t() noexcept = default;
@@ -279,15 +281,17 @@ template <std::totally_ordered T> struct Unbounded : private Bound<T> {
   }
 };
 
-template <typename L, typename R, std::totally_ordered T>
-requires std::is_base_of_v<Bound<T>, L> &&
-    (!std::same_as<L, Bound<T>>)&&std::is_base_of_v<Bound<T>, R> &&
-    (!std::same_as<R, Bound<T>>)&&std::move_constructible<T> struct Interval {
+template <typename L, typename R>
+requires std::is_base_of_v<Bound<typename L::type>, L> &&
+    (!std::same_as<L, Bound<typename L::type>>)&&std::is_base_of_v<
+        Bound<typename L::type>, R> &&
+    (!std::same_as<R, Bound<typename L::type>>)&&std::move_constructible<
+        typename L::type> struct Interval {
   using left = L;
   using right = R;
-  using type = T;
+  using type = typename L::type;
   // public members to be a structual T
-  T value_; // NOLINT(misc-non-private-member-variables-in-classes)
+  type value_; // NOLINT(misc-non-private-member-variables-in-classes)
   /*
   usage
   `(constant expression)`
@@ -295,8 +299,8 @@ requires std::is_base_of_v<Bound<T>, L> &&
   - compile-time checking, causes (complicated) compile error @ assert
   */
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  consteval Interval(T value) noexcept(noexcept(Interval{std::move(value),
-                                                         Dynamic_interval_t{}}))
+  consteval Interval(type value) noexcept(noexcept(Interval{
+      std::move(value), Dynamic_interval_t{}}))
       : Interval{std::move(value), Dynamic_interval_t{}} {
     /* the parameter is passed-by-value to not bound to a temporary for using
      * this type as non-type template parameters */
@@ -309,37 +313,37 @@ requires std::is_base_of_v<Bound<T>, L> &&
   (complicated) compile error @ assert
   - runtime checking
   */
-  constexpr Interval(T value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
+  constexpr Interval(type value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
       noexcept(decltype(value_){std::move(value)}, check(value_)))
       : value_{std::move(value)} {
     check(value_);
   }
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  [[nodiscard]] constexpr operator T &() &noexcept(noexcept(value_)) {
+  [[nodiscard]] constexpr operator type &() &noexcept(noexcept(value_)) {
     return value_;
   }
   [[nodiscard]] constexpr
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator T const &() const &noexcept(noexcept(value_)) {
+  operator type const &() const &noexcept(noexcept(value_)) {
     return value_;
   }
   [[nodiscard]] constexpr
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator T() &&noexcept(noexcept(std::move(value_)) &&
-                          std::is_nothrow_move_constructible_v<T>) {
+  operator type() &&noexcept(noexcept(std::move(value_)) &&
+                             std::is_nothrow_move_constructible_v<type>) {
     return std::move(value_);
   }
   [[nodiscard]] constexpr
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator T() const &&noexcept(noexcept(std::move(value_)) &&
-                                std::is_nothrow_move_constructible_v<T>) {
+  operator type() const &&noexcept(noexcept(std::move(value_)) &&
+                                   std::is_nothrow_move_constructible_v<type>) {
     return value_;
   }
 
 private:
   constexpr static void
-  check(T const &value) noexcept(noexcept(L{} < value && u8"L >(=) value",
-                                          value < R{} && u8"value >(=) R")) {
+  check(type const &value) noexcept(noexcept(L{} < value && u8"L >(=) value",
+                                             value < R{} && u8"value >(=) R")) {
     // clang-format off
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(L{} < value && u8"L >(=) value");
