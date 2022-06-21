@@ -2,6 +2,7 @@
 #define ARTCCEL_CORE_UTIL_UTILITY_EXTRAS_HPP
 #pragma once
 
+#include <cassert>     // import assert
 #include <concepts>    // import std::invocable
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
@@ -15,10 +16,10 @@ template <typename T>
 constexpr auto unify_ref_to_ptr(T &&value) noexcept -> decltype(auto) {
   // (callsite) -> (return)
   if constexpr (std::is_reference_v<T>) {
-    // t& -> t*
+    // t& -> t*, t*& -> t**
     return &value;
   } else {
-    // t -> t&&, t&& -> t&&
+    // t -> t&&, t&& -> t&&, t* -> t*&&, t*&& -> t*&&
     return std::forward<T>(value);
   }
 }
@@ -27,6 +28,9 @@ constexpr auto unify_ptr_to_ref(T &&value) noexcept -> decltype(auto) {
   // (callsite) -> (return)
   if constexpr (std::is_pointer_v<std::remove_reference_t<T>>) {
     // t* -> t&, t*& -> t&, t*&& -> t&
+    // clang-format off
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+    /* clang-format on */ assert(value && u8"value == nullptr");
     return *value; // *v is lvalue
   } else {
     // t -> t&&, t& -> t&, t&& -> t&&
