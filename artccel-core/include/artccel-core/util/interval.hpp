@@ -6,8 +6,8 @@
 #include <cassert>            // import assert
 #include <compare>            // import std::partial_ordering
 #include <concepts> // import std::move_constructible, std::same_as, std::totally_ordered
-#include <type_traits> // import std::decay_t, std::is_base_of_v, std::is_nothrow_move_constructible_v
-#include <utility> // import std::move
+#include <type_traits> // import std::decay_t, std::is_base_of_v, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
+#include <utility>     // import std::move
 
 namespace artccel::core::util {
 template <std::totally_ordered T> struct Bound;
@@ -271,7 +271,7 @@ template <std::totally_ordered T> struct Unbounded : private Bound<T> {
   friend constexpr auto operator<=>(
       Unbounded const &left [[maybe_unused]], T const &right
       [[maybe_unused]]) noexcept(noexcept(std::partial_ordering::unordered) &&
-                                 std::is_nothrow_constructible_v<
+                                 std::is_nothrow_move_constructible_v<
                                      decltype(std::partial_ordering::
                                                   unordered)>) {
     return std::partial_ordering::unordered;
@@ -279,7 +279,7 @@ template <std::totally_ordered T> struct Unbounded : private Bound<T> {
   friend constexpr auto operator<=>(
       T const &left [[maybe_unused]], Unbounded const &right
       [[maybe_unused]]) noexcept(noexcept(std::partial_ordering::unordered) &&
-                                 std::is_nothrow_constructible_v<
+                                 std::is_nothrow_move_constructible_v<
                                      decltype(std::partial_ordering::
                                                   unordered)>) {
     return std::partial_ordering::unordered;
@@ -319,9 +319,9 @@ public:
   - runtime checking
   */
   constexpr Interval(type value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
-      noexcept(std::is_nothrow_constructible_v<typename Interval::Delegate,
-                                               decltype(std::move(value))>,
-               check(this->value_)))
+      std::is_nothrow_constructible_v<typename Interval::Delegate,
+                                      decltype(std::move(value))>
+          &&noexcept(check(this->value_)))
       : Interval::Delegate{std::move(value)} {
     check(this->value_);
   }
