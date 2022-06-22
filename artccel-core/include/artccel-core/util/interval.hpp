@@ -6,7 +6,7 @@
 #include <cassert>            // import assert
 #include <compare>            // import std::partial_ordering
 #include <concepts> // import std::move_constructible, std::same_as, std::totally_ordered
-#include <type_traits> // import std::is_base_of_v, std::is_nothrow_move_constructible_v
+#include <type_traits> // import std::decay_t, std::is_base_of_v, std::is_nothrow_move_constructible_v
 #include <utility> // import std::move
 
 namespace artccel::core::util {
@@ -94,37 +94,39 @@ struct Open_bound : private Bound<T> {
   friend constexpr auto
   operator<=(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
       noexcept(V < right) &&
-      std::is_nothrow_move_constructible_v<decltype(V < right)>) {
+      std::is_nothrow_move_constructible_v<std::decay_t<decltype(V < right)>>) {
     return V < right;
   }
   friend constexpr auto
   operator<=(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
       noexcept(left < V) &&
-      std::is_nothrow_move_constructible_v<decltype(left < V)>) {
+      std::is_nothrow_move_constructible_v<std::decay_t<decltype(left < V)>>) {
     return left < V;
   }
   friend constexpr auto
   operator>=(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
       noexcept(V > left) &&
-      std::is_nothrow_move_constructible_v<decltype(V > right)>) {
+      std::is_nothrow_move_constructible_v<std::decay_t<decltype(V > right)>>) {
     return V > right;
   }
   friend constexpr auto
   operator>=(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
       noexcept(left > V) &&
-      std::is_nothrow_move_constructible_v<decltype(left > V)>) {
+      std::is_nothrow_move_constructible_v<std::decay_t<decltype(left > V)>>) {
     return left > V;
   }
-  friend constexpr auto
-  operator<=>(Open_bound const &left [[maybe_unused]], T const &right) noexcept(
-      noexcept(compare(V, right)) &&
-      std::is_nothrow_move_constructible_v<decltype(compare(V, right))>) {
+  friend constexpr auto operator<=>(
+      Open_bound const &left [[maybe_unused]],
+      T const &right) noexcept(noexcept(compare(V, right)) &&
+                               std::is_nothrow_move_constructible_v<
+                                   std::decay_t<decltype(compare(V, right))>>) {
     return compare(V, right);
   }
   friend constexpr auto
   operator<=>(T const &left, Open_bound const &right [[maybe_unused]]) noexcept(
       noexcept(compare(left, V)) &&
-      std::is_nothrow_move_constructible_v<decltype(compare(left, V))>) {
+      std::is_nothrow_move_constructible_v<
+          std::decay_t<decltype(compare(left, V))>>) {
     return compare(left, V);
   }
 
@@ -162,27 +164,29 @@ struct Closed_bound : private Bound<T> {
     return left == V;
   }
   friend constexpr auto
-  operator<(Closed_bound const &left [[maybe_unused]], T const &right) noexcept(
-      noexcept(V <= right) &&
-      std::is_nothrow_move_constructible_v<decltype(V <= right)>) {
+  operator<(Closed_bound const &left [[maybe_unused]],
+            T const &right) noexcept(noexcept(V <= right) &&
+                                     std::is_nothrow_move_constructible_v<
+                                         std::decay_t<decltype(V <= right)>>) {
     return V <= right;
   }
   friend constexpr auto
   operator<(T const &left, Closed_bound const &right [[maybe_unused]]) noexcept(
       noexcept(left <= V) &&
-      std::is_nothrow_move_constructible_v<decltype(left <= V)>) {
+      std::is_nothrow_move_constructible_v<std::decay_t<decltype(left <= V)>>) {
     return left <= V;
   }
   friend constexpr auto
-  operator>(Closed_bound const &left [[maybe_unused]], T const &right) noexcept(
-      noexcept(V >= right) &&
-      std::is_nothrow_move_constructible_v<decltype(V >= right)>) {
+  operator>(Closed_bound const &left [[maybe_unused]],
+            T const &right) noexcept(noexcept(V >= right) &&
+                                     std::is_nothrow_move_constructible_v<
+                                         std::decay_t<decltype(V >= right)>>) {
     return V >= right;
   }
   friend constexpr auto
   operator>(T const &left, Closed_bound const &right [[maybe_unused]]) noexcept(
       noexcept(left >= V) &&
-      std::is_nothrow_move_constructible_v<decltype(left >= V)>) {
+      std::is_nothrow_move_constructible_v<std::decay_t<decltype(left >= V)>>) {
     return left >= V;
   }
   friend constexpr auto
