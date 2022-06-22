@@ -7,7 +7,7 @@
 #include "meta.hpp" // import Find_and_replace_all_t, Find_and_replace_all_t_t, Find_and_replace_target
 #include "utility_extras.hpp" // import dependent_false_v, unify_ptr_to_ref, unify_ref_to_ptr
 #include <cassert>  // import assert
-#include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::same_as
+#include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as
 #include <functional> // import std::invoke
 #include <memory> // import std::enable_shared_from_this, std::pointer_traits, std::shared_ptr, std::to_address, std::unique_pto_addresstr
 #include <type_traits> // import std::add_pointer_t, std::invoke_result_t, std::is_lvalue_reference_v, std::is_rvalue_reference_v, std::is_pointer_v, std::is_reference_v, std::remove_cv_t, std::remove_pointer_t
@@ -49,8 +49,7 @@ concept Cloneable_by_default_clone_function =
 
 namespace detail {
 template <typename P, Cloner_of<P> F>
-constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func)
--> decltype(auto) {
+constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
   // clang-format off
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ assert(ptr && u8"ptr == nullptr");
@@ -117,54 +116,57 @@ requires(!std::derived_from<
              std::shared_ptr<int>>) constexpr auto clone
     [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P const &ptr, F &&func)
     -> decltype(auto) {
-  using replaced_return_type = Find_and_replace_all_t_t<
+  using return_type = Find_and_replace_all_t_t<
       Find_and_replace_all_t_t<Return, Clone_auto_deleter_t,
                                detail::clone_deleter_t<P, F>>,
       Clone_auto_element_t, detail::clone_element_t<P, F>>;
-  decltype(auto) ret{detail::clone_raw(
-      ptr, func)}; // std::shared_ptr<?>, std::unique_ptr<?, ?>, or unknown
-  if constexpr (std::is_reference_v<replaced_return_type>) {
-    return replaced_return_type{*ret.release()};
-  } else if constexpr (std::is_pointer_v<replaced_return_type>) {
-    return replaced_return_type{ret.release()};
-  } else if constexpr (std::constructible_from<replaced_return_type,
+  auto ret{detail::clone_raw(
+      ptr, func)}; // std::shared_ptr<?>, std::unique_ptr<?, ?>, T
+  if constexpr (std::is_reference_v<return_type>) {
+    return return_type{*ret.release()};
+  } else if constexpr (std::is_pointer_v<return_type>) {
+    return return_type{ret.release()};
+  } else if constexpr (std::constructible_from<return_type,
                                                decltype(std::move(ret))> ||
                        std::same_as<typename std::pointer_traits<
                                         decltype(ret)>::template rebind<int>,
                                     std::shared_ptr<int>>) {
-    return replaced_return_type{std::move(ret)};
+    return return_type{std::move(ret)};
   } else {
     auto &deleter{
         ret.get_deleter()}; // std::unique_ptr<T, D>::get_deleter() -> D&
     constexpr auto is_deleter_reference{
         std::is_reference_v<detail::clone_deleter_t<P, F>>};
     if constexpr (is_deleter_reference &&
-                  std::constructible_from<replaced_return_type,
-                                          decltype(ret.release()),
+                  std::constructible_from<return_type, decltype(ret.release()),
                                           decltype(deleter)>) {
-      return replaced_return_type{ret.release(), deleter};
+      return return_type{ret.release(), deleter};
     } else if constexpr (is_deleter_reference &&
-                         std::constructible_from<replaced_return_type,
+                         std::constructible_from<return_type,
                                                  decltype(*ret.release()),
                                                  decltype(deleter)>) {
-      return replaced_return_type{*ret.release(), deleter};
+      return return_type{*ret.release(), deleter};
     } else if constexpr (std::constructible_from<
-                             replaced_return_type, decltype(ret.release()),
+                             return_type, decltype(ret.release()),
                              decltype(std::move(deleter))>) {
-      return replaced_return_type{ret.release(), std::move(deleter)};
+      return return_type{ret.release(), std::move(deleter)};
     } else if constexpr (std::constructible_from<
-                             replaced_return_type, decltype(*ret.release()),
+                             return_type, decltype(*ret.release()),
                              decltype(std::move(deleter))>) {
-      return replaced_return_type{*ret.release(), std::move(deleter)};
-    } else if constexpr (std::constructible_from<replaced_return_type,
+      return return_type{*ret.release(), std::move(deleter)};
+    } else if constexpr (std::invocable<decltype(std::pointer_traits<
+                                                 return_type>::pointer_to),
+                                        decltype(*ret.release())>) {
+      return std::pointer_traits<return_type>::pointer_to(*ret.release());
+    } else if constexpr (std::constructible_from<return_type,
                                                  decltype(ret.release())>) {
-      return replaced_return_type{ret.release()};
-    } else if constexpr (std::constructible_from<replaced_return_type,
+      return return_type{ret.release()};
+    } else if constexpr (std::constructible_from<return_type,
                                                  decltype(*ret.release())>) {
-      return replaced_return_type{*ret.release()};
+      return return_type{*ret.release()};
     } else {
-      return std::pointer_traits<replaced_return_type>::pointer_to(
-          *ret.release());
+      static_assert(dependent_false_v<return_type>,
+                    u8"Cannot convert ret to return_type");
     }
   }
 }
