@@ -118,7 +118,8 @@ consteval static auto type_name_mbs_data [[nodiscard]] () noexcept {
 template <typename T>
 consteval static auto type_name_mbs [[nodiscard]] () noexcept {
   return std::string_view{detail::type_name_storage<T>.cbegin(),
-                          detail::type_name_storage<T>.cend() - 1};
+                          detail::type_name_storage<T>.cend() -
+                              null_terminator_size};
 }
 template <typename T> static auto type_name [[nodiscard]] () {
   return mbsrtoc8s(type_name_mbs<T>());
