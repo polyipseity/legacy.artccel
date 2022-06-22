@@ -2,6 +2,7 @@
 #define ARTCCEL_CORE_UTIL_CONCURRENT_HPP
 #pragma once
 
+#include "utility_extras.hpp" // import Delegate
 #include <chrono>      // import std::chrono::duration, std::chrono::time_point
 #include <concepts>    // import std::semiregular, std::same_as
 #include <memory>      // import std::make_unique, std::unique_ptr
@@ -117,51 +118,47 @@ struct Null_lockable {
   }
 };
 
-template <typename L, typename NL = Null_lockable> class Nullable_lockable {
+template <typename L, typename NL = Null_lockable>
+class Nullable_lockable : public Delegate<std::unique_ptr</* mutable */ L>> {
 public:
+  using type = typename Nullable_lockable::type;
   using lockable_type = L;
   using null_lockable_type = NL;
 
 private:
   constexpr static NL null_lockable{};
-  std::unique_ptr<L> lockable_{};
 
 public:
-  constexpr Nullable_lockable() noexcept(noexcept(decltype(lockable_){
-      std::make_unique<L>()}))
-      : lockable_{std::make_unique<L>()} {}
+  constexpr Nullable_lockable() noexcept
+      : Nullable_lockable{std::make_unique<L>()} {}
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  constexpr Nullable_lockable(std::unique_ptr<L> lockable) noexcept
-      : lockable_{std::move(lockable)} {}
-
-  constexpr explicit operator bool() const noexcept {
-    return lockable_.operator bool();
-  }
+  constexpr Nullable_lockable(type value) noexcept
+      : Nullable_lockable::Delegate{std::move(value)} {}
 
   // named requirement: BasicLockable
 
   constexpr void lock() const
-      noexcept(noexcept(lockable_->lock(),
+      noexcept(noexcept(this->value_->lock(),
                         null_lockable.lock())) requires requires {
-    { lockable_->lock() } -> std::same_as<void>;
+    { this->value_->lock() } -> std::same_as<void>;
     { null_lockable.lock() } -> std::same_as<void>;
   }
   {
-    if (lockable_) {
-      lockable_->lock();
+    if (this->value_) {
+      this->value_->lock();
     } else {
       null_lockable.lock();
     }
   }
   constexpr void unlock() const
-      noexcept(noexcept(lockable_->unlock(),
+      noexcept(noexcept(this->value_->unlock(),
                         null_lockable.unlock())) requires requires {
-    { lockable_->unlock() } -> std::same_as<void>;
+    { this->value_->unlock() } -> std::same_as<void>;
     { null_lockable.unlock() } -> std::same_as<void>;
   }
   {
-    if (lockable_) {
-      lockable_->unlock();
+    if (this->value_) {
+      this->value_->unlock();
     } else {
       null_lockable.unlock();
     }
@@ -170,16 +167,16 @@ public:
   // named requirement: BasicLockable <- Lockable
 
   constexpr auto try_lock [[nodiscard]] () const
-      noexcept(noexcept(bool{lockable_->try_lock()},
+      noexcept(noexcept(bool{this->value_->try_lock()},
                         bool{null_lockable.try_lock()}) &&
                std::is_nothrow_move_constructible_v<bool>)
           -> bool requires requires {
-    { lockable_->try_lock() } -> std::same_as<bool>;
+    { this->value_->try_lock() } -> std::same_as<bool>;
     { null_lockable.try_lock() } -> std::same_as<bool>;
   }
   {
-    if (lockable_) {
-      return lockable_->try_lock();
+    if (this->value_) {
+      return this->value_->try_lock();
     }
     return null_lockable.try_lock();
   }
@@ -189,32 +186,32 @@ public:
   template <typename Rep, typename Period>
   constexpr auto try_lock_for
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
-      noexcept(noexcept(bool{lockable_->try_lock_for(rel_time)},
+      noexcept(noexcept(bool{this->value_->try_lock_for(rel_time)},
                         bool{null_lockable.try_lock_for(rel_time)}) &&
                std::is_nothrow_move_constructible_v<bool>)
           -> bool requires requires {
-    { lockable_->try_lock_for(rel_time) } -> std::same_as<bool>;
+    { this->value_->try_lock_for(rel_time) } -> std::same_as<bool>;
     { null_lockable.try_lock_for(rel_time) } -> std::same_as<bool>;
   }
   {
-    if (lockable_) {
-      return lockable_->try_lock_for(rel_time);
+    if (this->value_) {
+      return this->value_->try_lock_for(rel_time);
     }
     return null_lockable.try_lock_for(rel_time);
   }
   template <typename Clock, typename Duration>
   constexpr auto try_lock_until [[nodiscard]] (
       std::chrono::time_point<Clock, Duration> const &abs_time) const
-      noexcept(noexcept(bool{lockable_->try_lock_until(abs_time)},
+      noexcept(noexcept(bool{this->value_->try_lock_until(abs_time)},
                         bool{null_lockable.try_lock_until(abs_time)}) &&
                std::is_nothrow_move_constructible_v<bool>)
           -> bool requires requires {
-    { lockable_->try_lock_until(abs_time) } -> std::same_as<bool>;
+    { this->value_->try_lock_until(abs_time) } -> std::same_as<bool>;
     { null_lockable.try_lock_until(abs_time) } -> std::same_as<bool>;
   }
   {
-    if (lockable_) {
-      return lockable_->try_lock_until(abs_time);
+    if (this->value_) {
+      return this->value_->try_lock_until(abs_time);
     }
     return null_lockable.try_lock_until(abs_time);
   }
@@ -222,41 +219,41 @@ public:
   // named requirement: SharedLockable
 
   constexpr void lock_shared() const
-      noexcept(noexcept(lockable_->lock_shared(),
+      noexcept(noexcept(this->value_->lock_shared(),
                         null_lockable.lock_shared())) requires requires {
-    { lockable_->lock_shared() } -> std::same_as<void>;
+    { this->value_->lock_shared() } -> std::same_as<void>;
     { null_lockable.lock_shared() } -> std::same_as<void>;
   }
   {
-    if (lockable_) {
-      lockable_->lock_shared();
+    if (this->value_) {
+      this->value_->lock_shared();
     } else {
       null_lockable.lock_shared();
     }
   }
   constexpr auto try_lock_shared [[nodiscard]] () const
-      noexcept(noexcept(bool{lockable_->try_lock_shared()},
+      noexcept(noexcept(bool{this->value_->try_lock_shared()},
                         bool{null_lockable.try_lock_shared()}) &&
                std::is_nothrow_move_constructible_v<bool>)
           -> bool requires requires {
-    { lockable_->try_lock_shared() } -> std::same_as<bool>;
+    { this->value_->try_lock_shared() } -> std::same_as<bool>;
     { null_lockable.try_lock_shared() } -> std::same_as<bool>;
   }
   {
-    if (lockable_) {
-      return lockable_->try_lock_shared();
+    if (this->value_) {
+      return this->value_->try_lock_shared();
     }
     return null_lockable.try_lock_shared();
   }
   constexpr void unlock_shared() const
-      noexcept(noexcept(lockable_->unlock_shared(),
+      noexcept(noexcept(this->value_->unlock_shared(),
                         null_lockable.unlock_shared())) requires requires {
-    { lockable_->unlock_shared() } -> std::same_as<void>;
+    { this->value_->unlock_shared() } -> std::same_as<void>;
     { null_lockable.unlock_shared() } -> std::same_as<void>;
   }
   {
-    if (lockable_) {
-      lockable_->unlock_shared();
+    if (this->value_) {
+      this->value_->unlock_shared();
     } else {
       null_lockable.unlock_shared();
     }
@@ -267,22 +264,22 @@ public:
   template <typename Rep, typename Period>
   constexpr auto try_lock_shared_for
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
-      noexcept(noexcept(bool{lockable_->try_lock_shared_for(rel_time)},
+      noexcept(noexcept(bool{this->value_->try_lock_shared_for(rel_time)},
                         bool{null_lockable.try_lock_shared_for(rel_time)}) &&
                std::is_nothrow_move_constructible_v<bool>) -> bool {
-    if (lockable_) {
-      return lockable_->try_lock_shared_for(rel_time);
+    if (this->value_) {
+      return this->value_->try_lock_shared_for(rel_time);
     }
     return null_lockable.try_lock_shared_for(rel_time);
   }
   template <typename Clock, typename Duration>
   constexpr auto try_lock_shared_until [[nodiscard]] (
       std::chrono::time_point<Clock, Duration> const &abs_time) const
-      noexcept(noexcept(bool{lockable_->try_lock_shared_until(abs_time)},
+      noexcept(noexcept(bool{this->value_->try_lock_shared_until(abs_time)},
                         bool{null_lockable.try_lock_shared_until(abs_time)}) &&
                std::is_nothrow_move_constructible_v<bool>) -> bool {
-    if (lockable_) {
-      return lockable_->try_lock_shared_until(abs_time);
+    if (this->value_) {
+      return this->value_->try_lock_shared_until(abs_time);
     }
     return null_lockable.try_lock_shared_until(abs_time);
   }

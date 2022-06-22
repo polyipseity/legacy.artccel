@@ -2,9 +2,10 @@
 #define ARTCCEL_CORE_UTIL_INTERVAL_HPP
 #pragma once
 
-#include <cassert>  // import assert
-#include <compare>  // import std::partial_ordering
-#include <concepts> // import std::constructible_from, std::copy_constructible, std::move_constructible, std::same_as, std::totally_ordered
+#include "utility_extras.hpp" // import Delegate
+#include <cassert>            // import assert
+#include <compare>            // import std::partial_ordering
+#include <concepts> // import std::move_constructible, std::same_as, std::totally_ordered
 #include <type_traits> // import std::is_base_of_v, std::is_nothrow_move_constructible_v
 #include <utility> // import std::move
 
@@ -18,7 +19,7 @@ requires std::is_base_of_v<Bound<typename L::type>, L> &&
     (!std::same_as<L, Bound<typename L::type>>)&&std::is_base_of_v<
         Bound<typename L::type>, R> &&
     (!std::same_as<R, Bound<typename L::type>>)&&std::move_constructible<
-        typename L::type> struct Interval;
+        typename L::type> class Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Dynamic_interval_t {
   explicit consteval Dynamic_interval_t() noexcept = default;
@@ -286,12 +287,12 @@ requires std::is_base_of_v<Bound<typename L::type>, L> &&
     (!std::same_as<L, Bound<typename L::type>>)&&std::is_base_of_v<
         Bound<typename L::type>, R> &&
     (!std::same_as<R, Bound<typename L::type>>)&&std::move_constructible<
-        typename L::type> struct Interval {
+        typename L::type> class Interval
+    : public Delegate<typename L::type, false> {
+public:
   using left = L;
   using right = R;
-  using type = typename L::type;
-  // public members to be a structual T
-  type value_; // NOLINT(misc-non-private-member-variables-in-classes)
+  using type = typename Interval::type;
   /*
   usage
   `(constant expression)`
@@ -314,30 +315,11 @@ requires std::is_base_of_v<Bound<typename L::type>, L> &&
   - runtime checking
   */
   constexpr Interval(type value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
-      noexcept(decltype(value_){std::move(value)}, check(value_)))
-      : value_{std::move(value)} {
-    check(value_);
-  }
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  [[nodiscard]] constexpr operator type &() &noexcept(noexcept(value_)) {
-    return value_;
-  }
-  [[nodiscard]] constexpr
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator type const &() const &noexcept(noexcept(value_)) {
-    return value_;
-  }
-  [[nodiscard]] constexpr
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator type() &&noexcept(noexcept(std::move(value_)) &&
-                             std::is_nothrow_move_constructible_v<type>) {
-    return std::move(value_);
-  }
-  [[nodiscard]] constexpr
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator type() const &&noexcept(noexcept(std::move(value_)) &&
-                                   std::is_nothrow_move_constructible_v<type>) {
-    return value_;
+      noexcept(std::is_nothrow_constructible_v<typename Interval::Delegate,
+                                               decltype(std::move(value))>,
+               check(this->value_)))
+      : Interval::Delegate{std::move(value)} {
+    check(this->value_);
   }
 
 private:

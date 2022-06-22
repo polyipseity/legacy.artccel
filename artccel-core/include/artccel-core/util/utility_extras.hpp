@@ -7,10 +7,12 @@
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
-#include <type_traits> // import std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
-#include <utility> // import std::forward, std::index_sequence, std::index_sequence_for
+#include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_nothrow_invocable_v, std::is_copy_constructible_v, std::is_move_constructible_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
+#include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 namespace artccel::core::util {
+template <typename T, bool Explicit = true> class Delegate;
+
 template <typename> constexpr inline auto dependent_false_v{false};
 
 template <typename T> constexpr auto unify_ref_to_ptr(T &&value) noexcept {
@@ -62,6 +64,47 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
   }
   (std::index_sequence_for<Args...>{});
 }
+
+template <typename T, bool Explicit> class Delegate {
+public:
+  using type = T;
+  // public members to be a structual type
+  T value_; // NOLINT(misc-non-private-member-variables-in-classes)
+
+  [[nodiscard]] explicit(Explicit) constexpr
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  operator auto &() &noexcept(noexcept(value_)) {
+    return value_;
+  }
+  [[nodiscard]] explicit(Explicit) constexpr
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  operator auto const &() const &noexcept(noexcept(value_)) {
+    return value_;
+  }
+  template <typename = void>
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  [[nodiscard]] explicit(Explicit) constexpr operator auto() &&noexcept(
+      noexcept(std::move(value_)) &&
+      std::is_nothrow_move_constructible_v<
+          std::decay_t<decltype(std::move(value_))>>) requires
+      std::is_move_constructible_v<T> {
+    return std::move(value_);
+  }
+  template <typename = void>
+  [[nodiscard]] explicit(Explicit) constexpr
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  operator auto() const &&noexcept(noexcept(value_) &&
+                                   std::is_nothrow_move_constructible_v<
+                                       std::decay_t<decltype(value_)>>) requires
+      std::is_copy_constructible_v<T> {
+    return value_;
+  }
+
+protected:
+  explicit constexpr Delegate(T value) noexcept(noexcept(decltype(value_){
+      std::move(value)}))
+      : value_{std::move(value)} {}
+};
 } // namespace artccel::core::util
 
 #endif

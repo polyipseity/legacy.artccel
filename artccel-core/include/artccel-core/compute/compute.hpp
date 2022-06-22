@@ -274,7 +274,7 @@ public:
       : Compute_value{std::forward<Args>(args)...} {}
 
 private:
-  util::Nullable_lockable<std::shared_mutex> const mutex_;
+  util::Nullable_lockable</* mutable */ std::shared_mutex> const mutex_;
   R value_;
 
 protected:
@@ -363,8 +363,9 @@ protected:
     swap(value_, other.value_);
   }
   Compute_value(Compute_value const &other) noexcept(noexcept(Compute_value{
-      other, other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr}))
-      : Compute_value{other, other.mutex_
+      other,
+      other.mutex_.value_ ? std::make_unique<std::shared_mutex>() : nullptr}))
+      : Compute_value{other, other.mutex_.value_
                                  ? std::make_unique<std::shared_mutex>()
                                  : nullptr} {}
   auto operator=(Compute_value const &right) noexcept(
@@ -410,7 +411,7 @@ protected:
   };
 
 private:
-  util::Nullable_lockable<std::shared_mutex> const mutex_;
+  util::Nullable_lockable</* mutable */ std::shared_mutex> const mutex_;
   std::function<signature_type> function_;
   std::function<std::optional<R>(Bound_action)> bound_;
 
@@ -580,10 +581,11 @@ protected:
     swap(function_, other.function_);
     swap(bound_, other.bound_);
   }
-  Compute_function(
-      Compute_function const &other) noexcept(noexcept(Compute_function{
-      other, other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr}))
-      : Compute_function{other, other.mutex_
+  Compute_function(Compute_function const &other) noexcept(noexcept(
+      Compute_function{other, other.mutex_.value_
+                                  ? std::make_unique<std::shared_mutex>()
+                                  : nullptr}))
+      : Compute_function{other, other.mutex_.value_
                                     ? std::make_unique<std::shared_mutex>()
                                     : nullptr} {}
   auto operator=(Compute_function const &right) noexcept(
