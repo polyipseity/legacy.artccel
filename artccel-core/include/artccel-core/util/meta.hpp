@@ -2,12 +2,13 @@
 #define ARTCCEL_CORE_UTIL_META_HPP
 #pragma once
 
-#include "encoding.hpp" // import mbsrtoc8s
-#include <algorithm>    // import std::copy_n
-#include <array>        // import std::array, std::to_array
-#include <concepts>     // import std::same_as
-#include <cstddef>      // import std::size_t
-#include <string_view>  // import std::string_view
+#include "encoding.hpp"  // import mbsrtoc8s
+#include "semantics.hpp" // import null_terminator_size
+#include <algorithm>     // import std::copy_n
+#include <array>         // import std::array, std::to_array
+#include <concepts>      // import std::same_as
+#include <cstddef>       // import std::size_t
+#include <string_view>   // import std::string_view
 
 namespace artccel::core::util {
 namespace detail {
@@ -39,7 +40,7 @@ constexpr static auto type_name_storage{[] {
   constexpr std::string_view type_name{
       raw_type_name<T>().cbegin() + type_name_format.junk_prefix,
       raw_type_name<T>().cend() - type_name_format.junk_suffix};
-  std::array<char, type_name.size() + 1> ret{};
+  std::array<char, type_name.size() + null_terminator_size> ret{};
   std::copy_n(type_name.data(), type_name.size(), ret.data());
   return ret;
 }()};
