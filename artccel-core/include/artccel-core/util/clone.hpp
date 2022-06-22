@@ -58,7 +58,7 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
         std::invoke(std::forward<F>(func), *std::to_address(ptr))};
     // T/smart_pointer<T>, T*, T&, T&&
     static_assert(!std::is_rvalue_reference_v<decltype(init)>,
-                  u8"Clone function should not return a rvalue");
+                  u8"Clone function should not return a xvalue");
     // T/smart_pointer<T> -> T/smart_pointer<T>, T* -> T*, T& -> T*; T&& -> T
     return unify_ref_to_ptr(std::forward<decltype(init)>(init));
   }()};
