@@ -31,7 +31,7 @@ constexpr auto unify_ptr_to_ref(T &&value) noexcept -> decltype(auto) {
   if constexpr (std::is_pointer_v<std::remove_reference_t<T>>) {
     // t* -> t&, t*& -> t&, t*&& -> t&
     // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(value && u8"value == nullptr");
     return *value; // *v is t&
   } else {

@@ -456,7 +456,7 @@ protected:
             return std::optional<R>{};
           default:
             // clang-format off
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
             /* clang-format on */ assert(false);
             break;
           }

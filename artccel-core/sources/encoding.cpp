@@ -47,7 +47,7 @@ auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
       }
     }
     // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(
         false && u8"Could not find the length of the null character");
   }
@@ -105,7 +105,7 @@ auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
         [[unlikely]] case cwchar_mbrlen_error : [[fallthrough]];
         [[unlikely]] case cwchar_mbrlen_incomplete :
             // clang-format off
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
             /* clang-format on */ assert(
                 false && u8"Could not find the length of the null character");
         break;

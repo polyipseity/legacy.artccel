@@ -15,11 +15,11 @@ template <typename T>
 consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 #ifndef _MSC_VER
   // clang-format off
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ return __PRETTY_FUNCTION__;
 #else
   // clang-format off
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ return __FUNCSIG__;
 #endif
 }

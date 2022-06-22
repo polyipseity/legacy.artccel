@@ -331,10 +331,10 @@ private:
   check(type const &value) noexcept(noexcept(L{} < value && u8"L >(=) value",
                                              value < R{} && u8"value >(=) R")) {
     // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(L{} < value && u8"L >(=) value");
     // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(value < R{} && u8"value >(=) R");
   }
 };

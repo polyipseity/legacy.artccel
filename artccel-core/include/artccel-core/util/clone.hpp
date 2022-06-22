@@ -51,7 +51,7 @@ namespace detail {
 template <typename P, Cloner_of<P> F>
 constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
   // clang-format off
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ assert(ptr && u8"ptr == nullptr");
   auto ret{[&ptr, &func] {
     decltype(auto) init{
@@ -63,7 +63,7 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
     return unify_ref_to_ptr(std::forward<decltype(init)>(init));
   }()};
   // clang-format off
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ assert(ret && u8"ret == nullptr");
   using ret_type = decltype(ret);
   static_assert(!std::is_reference_v<ret_type>, u8"Unexpected");

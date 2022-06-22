@@ -34,7 +34,7 @@ constexpr void check_bitset(std::bitset<N> const &valid,
     std::cerr << c8srtombs(msg_prefix) << c8srtombs(u8": ")
               << (value ^ valid_value) << c8srtombs(u8'\n');
     // clang-format off
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(false);
   }
 #endif
