@@ -36,13 +36,14 @@ template <typename T>
 constexpr static auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix == std::string_view::npos) {
     return std::to_array(/*u8*/ "<type name unavailable>");
+  } else {
+    constexpr std::string_view type_name{
+        raw_type_name<T>().cbegin() + type_name_format.junk_prefix,
+        raw_type_name<T>().cend() - type_name_format.junk_suffix};
+    std::array<char, type_name.size() + null_terminator_size> ret{};
+    std::copy_n(type_name.cbegin(), type_name.size(), ret.begin());
+    return ret;
   }
-  constexpr std::string_view type_name{
-      raw_type_name<T>().cbegin() + type_name_format.junk_prefix,
-      raw_type_name<T>().cend() - type_name_format.junk_suffix};
-  std::array<char, type_name.size() + null_terminator_size> ret{};
-  std::copy_n(type_name.data(), type_name.size(), ret.data());
-  return ret;
 }()};
 
 template <typename T, typename Find, typename Replace>
