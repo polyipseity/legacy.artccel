@@ -1,4 +1,5 @@
-#include <algorithm>                      // import std::transform
+#include <algorithm>                               // import std::transform
+#include <artccel-core/util/containers_extras.hpp> // import artccel::core::util::const_span
 #include <artccel-core/util/encoding.hpp> // import util::mbsrtoc8s
 #include <gsl/gsl>                        // import gsl::not_null, gsl::zstring
 #include <iostream>    // import std::ios_base::sync_with_stdio
@@ -30,11 +31,13 @@ auto main(std::span<std::string_view const> args) -> int {
 } // namespace artccel::core
 
 auto main(int argc, gsl::zstring argv[]) -> int {
-  return artccel::core::main([args{std::span{argv, argv + argc}}] {
-    std::vector<std::string_view> init(args.size());
-    std::transform(
-        std::cbegin(args), std::cend(args), init.begin(),
-        [](gsl::not_null<gsl::zstring> arg) { return std::string_view{arg}; });
-    return init;
-  }());
+  return artccel::core::main(
+      [args{artccel::core::util::const_span(argv, argv + argc)}] {
+        std::vector<std::string_view> init(args.size());
+        std::transform(std::cbegin(args), std::cend(args), init.begin(),
+                       [](gsl::not_null<gsl::zstring> arg) {
+                         return std::string_view{arg};
+                       });
+        return init;
+      }());
 }
