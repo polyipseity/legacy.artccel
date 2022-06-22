@@ -6,6 +6,7 @@
 #include <concepts>    // import std::invocable
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
+#include <memory>      // import std::addressof
 #include <type_traits> // import std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for
 
@@ -16,7 +17,7 @@ template <typename T> constexpr auto unify_ref_to_ptr(T &&value) noexcept {
   // (callsite) -> (return)
   if constexpr (std::is_reference_v<T>) {
     // t& -> t*, t*& -> t**
-    return &value;
+    return std::addressof(value);
   } else {
     // t -> t, t&& -> t, t* -> t*, t*&& -> t*
     return std::forward<T>(value);
