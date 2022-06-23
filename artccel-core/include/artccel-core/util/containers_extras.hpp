@@ -8,12 +8,12 @@
 
 namespace artccel::core::util {
 template <typename... Args>
-constexpr auto const_span(Args &&...args) noexcept(noexcept(std::span{
-    std::forward<Args>(args)...})) {
-  std::span const ret{std::forward<Args>(args)...};
-  using ret_type = decltype(ret);
-  return std::span<std::add_const_t<typename ret_type::element_type>,
-                   ret_type::extent>{ret};
+constexpr auto const_span
+    [[nodiscard]] (Args &&...args) noexcept(noexcept(std::span{
+        std::forward<Args>(args)...})) {
+  using span_type = decltype(std::span{std::forward<Args>(args)...});
+  return std::span<std::add_const_t<typename span_type::element_type>,
+                   span_type::extent>{std::forward<Args>(args)...};
 }
 } // namespace artccel::core::util
 
