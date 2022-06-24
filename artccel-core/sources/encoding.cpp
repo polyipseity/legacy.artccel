@@ -10,7 +10,7 @@
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
 #include <locale>    // import std::wstring_convert
-#include <span>      // import std::span
+#include <span>      // import std::cbegin, std::cend, std::span
 #include <stdexcept> // import std::invalid_argument
 #include <string> // import std::basic_string, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
@@ -33,7 +33,7 @@ constexpr auto cuchar_crtomb_error{-1_UZ};
 auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
   auto const old_state{state};
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
-  auto const result{std::mbrlen(mbs.cbegin(), mbs.size(), &state)};
+  auto const result{std::mbrlen(std::cbegin(mbs), mbs.size(), &state)};
   // clang-format off
   // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
   /* clang-format on */ if (result == cwchar_mbrlen_null) [[unlikely]] {
@@ -41,7 +41,7 @@ auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
     for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
       auto state_copy{old_state};
       // NOLINTNEXTLINE(concurrency-mt-unsafe)
-      if (std::mbrlen(mbs.cbegin(), null_len, &state_copy) ==
+      if (std::mbrlen(std::cbegin(mbs), null_len, &state_copy) ==
           cwchar_mbrlen_null) {
         return null_len;
       }
@@ -60,12 +60,12 @@ auto mbrtoc(CharT &output, std::string_view input, std::mbstate_t &state)
 template <>
 auto mbrtoc(char16_t &output, std::string_view input, std::mbstate_t &state)
     -> std::size_t {
-  return std::mbrtoc16(&output, input.cbegin(), input.size(), &state);
+  return std::mbrtoc16(&output, std::cbegin(input), input.size(), &state);
 }
 template <>
 auto mbrtoc(char32_t &output, std::string_view input, std::mbstate_t &state)
     -> std::size_t {
-  return std::mbrtoc32(&output, input.cbegin(), input.size(), &state);
+  return std::mbrtoc32(&output, std::cbegin(input), input.size(), &state);
 }
 
 template <typename CharT>
@@ -136,7 +136,7 @@ auto csrtombs(std::basic_string_view<CharT> cs_) -> std::string {
     case cuchar_crtomb_surrogate:
       [[fallthrough]];
     default:
-      result.append(out_mb.cbegin(), processed);
+      result.append(std::cbegin(out_mb), processed);
       break;
     }
   }
@@ -145,19 +145,19 @@ auto csrtombs(std::basic_string_view<CharT> cs_) -> std::string {
 } // namespace detail
 
 auto c8s_compatrtoc8s(std::string_view c8s_compat) -> std::u8string {
-  return {c8s_compat.cbegin(), c8s_compat.cend()};
+  return {std::cbegin(c8s_compat), std::cend(c8s_compat)};
 }
 auto c8srtoc8s_compat(std::u8string_view c8s) -> std::string {
-  return {c8s.cbegin(), c8s.cend()};
+  return {std::cbegin(c8s), std::cend(c8s)};
 }
 
 auto c8srtoc16s(std::u8string_view c8s) -> std::u16string {
   return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
       .from_bytes(
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(c8s.cbegin()), // defined behavior
+          reinterpret_cast<char const *>(std::cbegin(c8s)), // defined behavior
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(c8s.cend())); // defined behavior
+          reinterpret_cast<char const *>(std::cend(c8s))); // defined behavior
 }
 auto c8srtoc16s(char8_t c8s) -> std::u16string {
   return c8srtoc16s({&c8s, 1_UZ});
@@ -165,7 +165,7 @@ auto c8srtoc16s(char8_t c8s) -> std::u16string {
 auto c16srtoc8s(std::u16string_view c16s) -> std::u8string {
   return c8s_compatrtoc8s(
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-          .to_bytes(c16s.cbegin(), c16s.cend()));
+          .to_bytes(std::cbegin(c16s), std::cend(c16s)));
 }
 auto c16srtoc8s(char16_t c16s) -> std::u8string {
   return c16srtoc8s({&c16s, 1_UZ});

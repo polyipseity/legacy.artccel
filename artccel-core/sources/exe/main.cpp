@@ -4,7 +4,7 @@
 #include <gsl/gsl>                        // import gsl::not_null, gsl::zstring
 #include <iostream>    // import std::ios_base::sync_with_stdio
 #include <locale>      // import std::locale, std::locale::global
-#include <span>        // import std::cbegin, std::cend, std::span
+#include <span>        // import std::begin, std::cbegin, std::cend, std::span
 #include <string>      // import std::u8string
 #include <string_view> // import std::string_view
 #include <utility>     // import std::as_const, std::pair
@@ -34,7 +34,7 @@ auto main(int argc, gsl::zstring argv[]) -> int {
   return artccel::core::main(
       [args{artccel::core::util::const_span(argv, argv + argc)}] {
         std::vector<std::string_view> init(args.size());
-        std::transform(std::cbegin(args), std::cend(args), init.begin(),
+        std::transform(std::cbegin(args), std::cend(args), std::begin(init),
                        [](gsl::not_null<gsl::zstring> arg) {
                          return std::string_view{arg};
                        });

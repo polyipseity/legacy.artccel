@@ -5,10 +5,10 @@
 #include "encoding.hpp"  // import mbsrtoc8s
 #include "semantics.hpp" // import null_terminator_size
 #include <algorithm>     // import std::copy_n
-#include <array>         // import std::array, std::to_array
-#include <concepts>      // import std::same_as
-#include <cstddef>       // import std::size_t
-#include <string_view>   // import std::string_view
+#include <array> // import std::array, std::begin, std::cbegin, std::cend, std::to_array
+#include <concepts>    // import std::same_as
+#include <cstddef>     // import std::size_t
+#include <string_view> // import std::string_view
 
 namespace artccel::core::util {
 namespace detail {
@@ -38,10 +38,10 @@ constexpr static auto type_name_storage{[] {
     return std::to_array(/*u8*/ "<type name unavailable>");
   } else {
     constexpr std::string_view type_name{
-        raw_type_name<T>().cbegin() + type_name_format.junk_prefix,
-        raw_type_name<T>().cend() - type_name_format.junk_suffix};
+        std::cbegin(raw_type_name<T>()) + type_name_format.junk_prefix,
+        std::cend(raw_type_name<T>()) - type_name_format.junk_suffix};
     std::array<char, type_name.size() + null_terminator_size> ret{};
-    std::copy_n(type_name.cbegin(), type_name.size(), ret.begin());
+    std::copy_n(std::cbegin(type_name), type_name.size(), std::begin(ret));
     return ret;
   }
 }()};
@@ -118,8 +118,8 @@ consteval static auto type_name_mbs_data [[nodiscard]] () noexcept {
 }
 template <typename T>
 consteval static auto type_name_mbs [[nodiscard]] () noexcept {
-  return std::string_view{detail::type_name_storage<T>.cbegin(),
-                          detail::type_name_storage<T>.cend() -
+  return std::string_view{std::cbegin(detail::type_name_storage<T>),
+                          std::cend(detail::type_name_storage<T>) -
                               null_terminator_size};
 }
 template <typename T> static auto type_name [[nodiscard]] () {
