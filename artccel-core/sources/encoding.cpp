@@ -2,11 +2,13 @@
 #include <array>                          // import std::array
 #include <artccel-core/util/encoding.hpp> // interface
 #include <artccel-core/util/polyfill.hpp> // import literals::operator""_UZ
-#include <cassert>                        // import assert
-#include <cerrno>                         // import errno
-#include <climits>                        // import MB_LEN_MAX
-#include <codecvt>                        // import std::codecvt_utf8_utf16
-#include <cstring>                        // import std::strerror
+#include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
+#include <cassert>                              // import assert
+#include <cerrno>                               // import errno
+#include <climits>                              // import MB_LEN_MAX
+#include <codecvt>  // import std::codecvt_utf8_utf16
+#include <concepts> // import std::same_as
+#include <cstring>  // import std::strerror
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
 #include <locale>    // import std::wstring_convert
@@ -31,7 +33,30 @@ constexpr auto cuchar_mbrtoc_surrogate{-3_UZ};
 constexpr auto cuchar_crtomb_surrogate{0_UZ};
 constexpr auto cuchar_crtomb_error{-1_UZ};
 
-auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
+template <typename CharT>
+auto mbrtoc(CharT &output, std::string_view input,
+            std::mbstate_t &state) noexcept {
+  if constexpr (std::same_as<CharT, char16_t>) {
+    return std::mbrtoc16(&output, std::cbegin(input), input.size(), &state);
+  } else if constexpr (std::same_as<CharT, char32_t>) {
+    return std::mbrtoc32(&output, std::cbegin(input), input.size(), &state);
+  } else {
+    static_assert(dependent_false_v<CharT>, u8"Unimplemented");
+  }
+}
+template <typename CharT>
+auto crtomb(std::span<char, MB_LEN_MAX> output, CharT input,
+            std::mbstate_t &state) noexcept {
+  if constexpr (std::same_as<CharT, char16_t>) {
+    return std::c16rtomb(output.data(), input, &state);
+  } else if constexpr (std::same_as<CharT, char32_t>) {
+    return std::c32rtomb(output.data(), input, &state);
+  } else {
+    static_assert(dependent_false_v<CharT>, u8"Unimplemented");
+  }
+}
+
+auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) noexcept {
   auto const old_state{state};
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
   auto const result{std::mbrlen(std::cbegin(mbs), mbs.size(), &state)};
@@ -53,34 +78,6 @@ auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) -> std::size_t {
         false && u8"Could not find the length of the null character");
   }
   return result;
-}
-
-template <typename CharT>
-auto mbrtoc(CharT &output, std::string_view input, std::mbstate_t &state)
-    -> std::size_t;
-template <>
-auto mbrtoc(char16_t &output, std::string_view input, std::mbstate_t &state)
-    -> std::size_t {
-  return std::mbrtoc16(&output, std::cbegin(input), input.size(), &state);
-}
-template <>
-auto mbrtoc(char32_t &output, std::string_view input, std::mbstate_t &state)
-    -> std::size_t {
-  return std::mbrtoc32(&output, std::cbegin(input), input.size(), &state);
-}
-
-template <typename CharT>
-auto crtomb(std::span<char, MB_LEN_MAX> output, CharT input,
-            std::mbstate_t &state) -> std::size_t;
-template <>
-auto crtomb(std::span<char, MB_LEN_MAX> output, char16_t input,
-            std::mbstate_t &state) -> std::size_t {
-  return std::c16rtomb(output.data(), input, &state);
-}
-template <>
-auto crtomb(std::span<char, MB_LEN_MAX> output, char32_t input,
-            std::mbstate_t &state) -> std::size_t {
-  return std::c32rtomb(output.data(), input, &state);
 }
 
 template <typename CharT>
