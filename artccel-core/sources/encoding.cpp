@@ -1,7 +1,7 @@
-#include "artccel-core/util/encoding.hpp" // interface
-#include "artccel-core/util/polyfill.hpp" // import literals::operator""_UZ
 #include <algorithm>                      // import std::min
 #include <array>                          // import std::array
+#include <artccel-core/util/encoding.hpp> // interface
+#include <artccel-core/util/polyfill.hpp> // import literals::operator""_UZ
 #include <cassert>                        // import assert
 #include <cerrno>                         // import errno
 #include <climits>                        // import MB_LEN_MAX
@@ -17,9 +17,10 @@
 #include <utility>     // import std::as_const
 
 namespace artccel::core::util {
+namespace detail {
+// NOLINTNEXTLINE(misc-unused-using-decls)
 using literals::operator""_UZ;
 
-namespace detail {
 constexpr auto cwchar_mbrlen_null{0_UZ};
 constexpr auto cwchar_mbrlen_error{-1_UZ};
 constexpr auto cwchar_mbrlen_incomplete{-2_UZ};
@@ -96,7 +97,7 @@ auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
           throw std::invalid_argument{std::strerror(errno)};
       [[unlikely]] case cuchar_mbrtoc_incomplete
           : throw std::invalid_argument{
-                c8srtombs(u8"Incomplete byte sequence")};
+                f::c8srtombs(u8"Incomplete byte sequence")};
     case cuchar_mbrtoc_surrogate:
       break;
       [[unlikely]] case cuchar_mbrtoc_null
@@ -143,6 +144,10 @@ auto csrtombs(std::basic_string_view<CharT> cs_) -> std::string {
   return result;
 }
 } // namespace detail
+
+namespace f {
+// NOLINTNEXTLINE(misc-unused-using-decls)
+using literals::operator""_UZ;
 
 auto c8s_compatrtoc8s(std::string_view c8s_compat) -> std::u8string {
   return {std::cbegin(c8s_compat), std::cend(c8s_compat)};
@@ -202,4 +207,5 @@ auto c32srtombs(std::u32string_view c32s) -> std::string {
 auto c32srtombs(char32_t c32s) -> std::string {
   return c32srtombs({&c32s, 1_UZ});
 }
+} // namespace f
 } // namespace artccel::core::util

@@ -1,6 +1,6 @@
 #include <algorithm>                               // import std::transform
-#include <artccel-core/util/containers_extras.hpp> // import artccel::core::util::const_span
-#include <artccel-core/util/encoding.hpp> // import util::mbsrtoc8s
+#include <artccel-core/util/containers_extras.hpp> // import artccel::core::util::f::const_span
+#include <artccel-core/util/encoding.hpp> // import util::f::mbsrtoc8s
 #include <gsl/gsl>                        // import gsl::not_null, gsl::zstring
 #include <iostream>    // import std::ios_base::sync_with_stdio
 #include <locale>      // import std::locale, std::locale::global
@@ -10,7 +10,7 @@
 #include <utility>     // import std::as_const, std::pair
 #include <vector>      // import std::vector
 
-namespace artccel::core {
+namespace artccel::core::f {
 auto main(std::span<std::string_view const> args) -> int {
   std::ios_base::sync_with_stdio(false);
   std::locale::global(
@@ -19,7 +19,7 @@ auto main(std::span<std::string_view const> args) -> int {
     std::vector<std::pair<std::u8string const, std::string_view const>> init{};
     init.reserve(args.size());
     for (auto const arg : std::as_const(args)) {
-      init.emplace_back(util::mbsrtoc8s(arg), arg);
+      init.emplace_back(util::f::mbsrtoc8s(arg), arg);
     }
     return init;
   }()};
@@ -28,11 +28,11 @@ auto main(std::span<std::string_view const> args) -> int {
   std::clog.flush();
   return 0;
 }
-} // namespace artccel::core
+} // namespace artccel::core::f
 
 auto main(int argc, gsl::zstring argv[]) -> int {
-  return artccel::core::main(
-      [args{artccel::core::util::const_span(argv, argv + argc)}] {
+  return artccel::core::f::main(
+      [args{artccel::core::util::f::const_span(argv, argv + argc)}] {
         std::vector<std::string_view> init(args.size());
         std::transform(std::cbegin(args), std::cend(args), std::begin(init),
                        [](gsl::not_null<gsl::zstring> arg) {

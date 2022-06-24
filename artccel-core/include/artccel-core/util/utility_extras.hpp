@@ -15,6 +15,7 @@ template <typename T, bool Explicit = true> class Delegate;
 
 template <typename> constexpr inline auto dependent_false_v{false};
 
+namespace f {
 template <typename T> constexpr auto unify_ref_to_ptr(T &&value) noexcept {
   // (callsite) -> (return)
   if constexpr (std::is_reference_v<T>) {
@@ -64,6 +65,7 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
   }
   (std::index_sequence_for<Args...>{});
 }
+} // namespace f
 
 template <typename T, bool Explicit> class Delegate {
 public:

@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_UTIL_META_HPP
 #pragma once
 
-#include "encoding.hpp"  // import mbsrtoc8s
+#include "encoding.hpp"  // import f::mbsrtoc8s
 #include "semantics.hpp" // import null_terminator_size
 #include <algorithm>     // import std::copy_n
 #include <array> // import std::array, std::begin, std::cbegin, std::cend, std::to_array
@@ -112,6 +112,7 @@ using Find_and_replace_all_t_t = Find_and_replace_all_t<
                            Replace>,
     Find<Find_and_replace_target::self>, Replace>;
 
+namespace f {
 template <typename T>
 consteval static auto type_name_mbs_data [[nodiscard]] () noexcept {
   return detail::type_name_storage<T>;
@@ -123,8 +124,9 @@ consteval static auto type_name_mbs [[nodiscard]] () noexcept {
                               null_terminator_size};
 }
 template <typename T> static auto type_name [[nodiscard]] () {
-  return mbsrtoc8s(type_name_mbs<T>());
+  return f::mbsrtoc8s(type_name_mbs<T>());
 }
+} // namespace f
 } // namespace artccel::core::util
 
 #endif

@@ -6,7 +6,7 @@
 #include <type_traits> // import std::add_const_t
 #include <utility>     // import std::forward
 
-namespace artccel::core::util {
+namespace artccel::core::util::f {
 template <typename... Args>
 constexpr auto const_span
     [[nodiscard]] (Args &&...args) noexcept(noexcept(std::span{
@@ -15,6 +15,6 @@ constexpr auto const_span
   return std::span<std::add_const_t<typename span_type::element_type>,
                    span_type::extent>{std::forward<Args>(args)...};
 }
-} // namespace artccel::core::util
+} // namespace artccel::core::util::f
 
 #endif

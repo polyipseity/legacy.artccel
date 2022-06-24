@@ -6,11 +6,13 @@
 #include <type_traits> // import std::is_enum_v, std::underlying_type_t
 
 namespace artccel::core::util {
+namespace f {
 constexpr auto to_underlying [[nodiscard]] (
     auto enum_) noexcept requires std::is_enum_v<decltype(enum_)> {
   // TODO: C++23: std::to_underlying
   return static_cast<std::underlying_type_t<decltype(enum_)>>(enum_);
 }
+} // namespace f
 
 namespace literals {
 consteval auto operator""_UZ

@@ -3,9 +3,8 @@
 #pragma once
 
 #include "clone_macros.hpp" // import *
-#include "encoding.hpp"     // import c8srtombs
 #include "meta.hpp" // import Find_and_replace_all_t, Find_and_replace_all_t_t, Find_and_replace_target
-#include "utility_extras.hpp" // import dependent_false_v, unify_ptr_to_ref, unify_ref_to_ptr
+#include "utility_extras.hpp" // import dependent_false_v, f::unify_ptr_to_ref, f::unify_ref_to_ptr
 #include <cassert>  // import assert
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as
 #include <functional> // import std::invoke
@@ -19,7 +18,7 @@ concept Cloneable_by = requires(P const &ptr, F &&func) {
   requires std::convertible_to <
       std::add_pointer_t<std::remove_cv_t<
           std::remove_pointer_t<decltype(std::to_address(ptr))>>>,
-  decltype(std::to_address(unify_ref_to_ptr(
+  decltype(std::to_address(f::unify_ref_to_ptr(
       std::invoke(std::forward<F>(func), *std::to_address(ptr))))) > ;
 };
 template <typename F, typename P>
@@ -60,7 +59,7 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
     static_assert(!std::is_rvalue_reference_v<decltype(init)>,
                   u8"Clone function should not return a xvalue");
     // T/smart_pointer<T> -> T/smart_pointer<T>, T* -> T*, T& -> T*; T&& -> T
-    return unify_ref_to_ptr(std::forward<decltype(init)>(init));
+    return f::unify_ref_to_ptr(std::forward<decltype(init)>(init));
   }()};
   // clang-format off
 // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
@@ -71,26 +70,26 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
     return std::unique_ptr<std::remove_pointer_t<ret_type>>{ret};
   } else if constexpr (!std::same_as<decltype(ret.release()), void>) {
     using raw_type =
-        std::remove_pointer_t<decltype(unify_ref_to_ptr(ret.release()))>;
+        std::remove_pointer_t<decltype(f::unify_ref_to_ptr(ret.release()))>;
     if constexpr (requires {
                     typename ret_type::deleter_type;
                     requires !std::same_as<decltype(ret.get_deleter()), void>;
                   }) {
-      auto &&deleter{unify_ptr_to_ref(ret.get_deleter())};
+      auto &&deleter{f::unify_ptr_to_ref(ret.get_deleter())};
       using deleter_type = typename ret_type::deleter_type;
       if constexpr (std::is_reference_v<deleter_type>) {
         static_assert(std::is_lvalue_reference_v<decltype(deleter)>,
                       u8"get_deleter() should return a lvalue or pointer");
         return std::unique_ptr<raw_type, deleter_type>{
-            unify_ref_to_ptr(ret.release()), deleter};
+            f::unify_ref_to_ptr(ret.release()), deleter};
       } else {
-        auto const released{unify_ref_to_ptr(
+        auto const released{f::unify_ref_to_ptr(
             ret.release())}; // happens before stealing the deleter
         return std::unique_ptr<raw_type, deleter_type>{released,
                                                        std::move(deleter)};
       }
     } else {
-      return std::unique_ptr<raw_type>{unify_ref_to_ptr(ret.release())};
+      return std::unique_ptr<raw_type>{f::unify_ref_to_ptr(ret.release())};
     }
   } else {
     return ret; // fallback
@@ -105,6 +104,7 @@ using clone_deleter_t =
                                   F>::deleter_type;
 } // namespace detail
 
+namespace f {
 template <typename P, Cloner_of<P> F,
           typename Return = Find_and_replace_all_t<
               P, detail::clone_element_t<P, F>, Clone_auto_element_t<>>>
@@ -202,6 +202,7 @@ auto clone_shared [[nodiscard]] (P const &ptr) -> decltype(auto) {
   return clone_shared<decltype((default_clone_function<P>)), P, RElement>(
       ptr, default_clone_function<P>);
 }
+} // namespace f
 } // namespace artccel::core::util
 
 #endif
