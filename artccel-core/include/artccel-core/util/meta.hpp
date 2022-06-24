@@ -14,6 +14,8 @@ namespace artccel::core::util {
 namespace detail {
 template <typename T>
 consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
+// internal linkage as it may be different
+// propagate internal linkage to callers if necessary
 #ifndef _MSC_VER
   // clang-format off
 // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
