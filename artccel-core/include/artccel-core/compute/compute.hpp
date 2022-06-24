@@ -528,7 +528,7 @@ public:
 
   auto operator()() const -> R override {
     std::shared_lock const guard{mutex_};
-    return bound_(Bound_action::compute).value();
+    return *bound_(Bound_action::compute);
   }
   template <template <typename...> typename Tuple, typename... Args>
   requires std::invocable<decltype(function_), Args...>
@@ -545,9 +545,8 @@ public:
   auto operator<<=(Tuple<Args...> &&t_args) -> R {
     return util::f::forward_apply(
         [this](Args &&...args) mutable -> decltype(auto) {
-          return bind(util::Enum_bitset{} | Compute_option::empty,
-                      std::forward<Args>(args)...)
-              .value();
+          return *bind(util::Enum_bitset{} | Compute_option::empty,
+                       std::forward<Args>(args)...);
         },
         std::forward<Tuple<Args...>>(t_args));
   }
@@ -555,7 +554,7 @@ public:
     reset(util::Enum_bitset{} | Compute_option::defer);
   }
   auto operator<<=([[maybe_unused]] Reset_t /*unused*/) -> R {
-    return reset(util::Enum_bitset{} | Compute_option::empty).value();
+    return *reset(util::Enum_bitset{} | Compute_option::empty);
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
