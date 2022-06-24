@@ -7,7 +7,7 @@
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define ARTCCEL_GENERATE_CLONE_FUNCTION_0(ptr_name, expr)                      \
   [](auto const &(ptr_name)) -> decltype(auto) {                               \
-    constexpr struct {                                                         \
+    constexpr static struct {                                                  \
       constexpr auto operator()                                                \
           [[deprecated, nodiscard]] (decltype(ptr_name)(ptr_name)) const       \
           -> decltype(auto) {                                                  \
