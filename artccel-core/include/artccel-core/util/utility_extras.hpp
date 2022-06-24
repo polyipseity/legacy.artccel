@@ -2,12 +2,12 @@
 #define ARTCCEL_CORE_UTIL_UTILITY_EXTRAS_HPP
 #pragma once
 
-#include <cassert>     // import assert
-#include <concepts>    // import std::invocable
+#include <cassert> // import assert
+#include <concepts> // import std::copy_constructible, std::invocable, std::move_constructible
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
-#include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_nothrow_invocable_v, std::is_copy_constructible_v, std::is_move_constructible_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
+#include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 namespace artccel::core::util {
@@ -83,22 +83,18 @@ public:
   operator auto const &() const &noexcept(noexcept(value_)) {
     return value_;
   }
-  template <typename = void>
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  [[nodiscard]] explicit(Explicit) constexpr operator auto() &&noexcept(
-      noexcept(std::move(value_)) &&
-      std::is_nothrow_move_constructible_v<
-          std::decay_t<decltype(std::move(value_))>>) requires
-      std::is_move_constructible_v<T> {
-    return std::move(value_);
-  }
-  template <typename = void>
   [[nodiscard]] explicit(Explicit) constexpr
   // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-  operator auto() const &&noexcept(noexcept(value_) &&
-                                   std::is_nothrow_move_constructible_v<
-                                       std::decay_t<decltype(value_)>>) requires
-      std::is_copy_constructible_v<T> {
+  operator T() &&noexcept(noexcept(std::move(value_)) &&
+                          std::is_nothrow_move_constructible_v<T>) requires
+      std::move_constructible<T> {
+    return std::move(value_);
+  }
+  [[nodiscard]] explicit(Explicit) constexpr
+  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  operator T() const &&noexcept(
+      noexcept(value_) && std::is_nothrow_move_constructible_v<T>) requires
+      std::copy_constructible<T> {
     return value_;
   }
 
