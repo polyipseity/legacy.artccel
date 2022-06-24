@@ -374,7 +374,8 @@ protected:
     return *this;
   };
   Compute_value(Compute_value &&other) noexcept
-      : mutex_{other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr},
+      : mutex_{other.mutex_.value_ ? std::make_unique<std::shared_mutex>()
+                                   : nullptr},
         value_{std::move(other.value_)} {}
   auto operator=(Compute_value &&right) noexcept -> Compute_value & {
     Compute_value{std::move(right)}.swap(*this);
@@ -594,7 +595,8 @@ protected:
     return *this;
   };
   Compute_function(Compute_function &&other) noexcept
-      : mutex_{other.mutex_ ? std::make_unique<std::shared_mutex>() : nullptr},
+      : mutex_{other.mutex_.value_ ? std::make_unique<std::shared_mutex>()
+                                   : nullptr},
         function_{std::move(other.function_)}, bound_{std::move(other.bound_)} {
   }
   auto operator=(Compute_function &&right) noexcept -> Compute_function & {
