@@ -96,32 +96,27 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
   }
 }
 template <typename P, Cloner_of<P> F>
-using clone_element_t = typename std::pointer_traits<std::invoke_result_t<
-    decltype(detail::clone_raw<P, F>), P, F>>::element_type;
+using clone_element_t = typename std::pointer_traits<
+    std::invoke_result_t<decltype(clone_raw<P, F>), P, F>>::element_type;
 template <typename P, Cloner_of<P> F>
-using clone_deleter_t =
-    typename std::invoke_result_t<decltype(detail::clone_raw<P, F>), P,
-                                  F>::deleter_type;
-} // namespace detail
-
-namespace f {
+using clone_deleter_t = typename std::invoke_result_t<decltype(clone_raw<P, F>),
+                                                      P, F>::deleter_type;
 template <typename P, Cloner_of<P> F,
-          typename Return = Find_and_replace_all_t<
-              P, detail::clone_element_t<P, F>, Clone_auto_element_t<>>>
-requires(!std::derived_from<
-             detail::clone_element_t<P, F>,
-             std::enable_shared_from_this<detail::clone_element_t<P, F>>> ||
-         std::derived_from<
-             Find_and_replace_all_t_t<Return, Clone_auto_element_t, int>,
-             std::shared_ptr<int>>) constexpr auto clone
-    [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P const &ptr, F &&func)
-    -> decltype(auto) {
+          typename Return = Find_and_replace_all_t<P, clone_element_t<P, F>,
+                                                   Clone_auto_element_t<>>>
+requires(
+    !std::derived_from<clone_element_t<P, F>,
+                       std::enable_shared_from_this<clone_element_t<P, F>>> ||
+    std::derived_from<
+        Find_and_replace_all_t_t<Return, Clone_auto_element_t, int>,
+        std::shared_ptr<int>>) constexpr auto clone
+    [[nodiscard]] (P const &ptr, F &&func) -> decltype(auto) {
   using return_type = Find_and_replace_all_t_t<
       Find_and_replace_all_t_t<Return, Clone_auto_deleter_t,
-                               detail::clone_deleter_t<P, F>>,
-      Clone_auto_element_t, detail::clone_element_t<P, F>>;
-  auto ret{detail::clone_raw(
-      ptr, func)}; // std::shared_ptr<?>, std::unique_ptr<?, ?>, T
+                               clone_deleter_t<P, F>>,
+      Clone_auto_element_t, clone_element_t<P, F>>;
+  auto ret{
+      clone_raw(ptr, func)}; // std::shared_ptr<?>, std::unique_ptr<?, ?>, T
   if constexpr (std::is_reference_v<return_type>) {
     return return_type{*ret.release()};
   } else if constexpr (std::is_pointer_v<return_type>) {
@@ -136,7 +131,7 @@ requires(!std::derived_from<
     auto &deleter{
         ret.get_deleter()}; // std::unique_ptr<T, D>::get_deleter() -> D&
     constexpr auto is_deleter_reference{
-        std::is_reference_v<detail::clone_deleter_t<P, F>>};
+        std::is_reference_v<clone_deleter_t<P, F>>};
     if constexpr (is_deleter_reference &&
                   std::constructible_from<return_type, decltype(ret.release()),
                                           decltype(deleter)>) {
@@ -170,17 +165,30 @@ requires(!std::derived_from<
     }
   }
 }
-template <Cloneable_by_default_clone_function P>
+} // namespace detail
+
+namespace f {
+template <typename P, Cloner_of<P> F, typename Return = void>
+constexpr auto clone
+    [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P const &ptr, F &&func)
+    -> decltype(auto) {
+  if constexpr (std::same_as<Return, void>) {
+    return detail::clone(ptr, std::forward<F>(func));
+  } else {
+    return detail::clone<P, F, Return>(ptr, std::forward<F>(func));
+  }
+}
+template <Cloneable_by_default_clone_function P, typename Return = void>
 constexpr auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P const &ptr)
 -> decltype(auto) {
-  return clone(ptr, default_clone_function<P>);
+  return clone<P, decltype((default_clone_function<P>)), Return>(
+      ptr, default_clone_function<P>);
 }
 template <typename P, Cloner_of<P> F,
           typename RElement = Clone_auto_element_t<>,
           typename RDeleter = Clone_auto_deleter_t<>>
 auto clone_unique [[nodiscard]] (P const &ptr, F &&func) -> decltype(auto) {
-  // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-  return clone<P, F, std::unique_ptr<RElement, RDeleter>>(
+  return detail::clone<P, F, std::unique_ptr<RElement, RDeleter>>(
       ptr, std::forward<F>(func));
 }
 template <Cloneable_by_default_clone_function P,
@@ -193,8 +201,8 @@ auto clone_unique [[nodiscard]] (P const &ptr) -> decltype(auto) {
 template <typename P, Cloner_of<P> F,
           typename RElement = Clone_auto_element_t<>>
 auto clone_shared [[nodiscard]] (P const &ptr, F &&func) -> decltype(auto) {
-  // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-  return clone<P, F, std::shared_ptr<RElement>>(ptr, std::forward<F>(func));
+  return detail::clone<P, F, std::shared_ptr<RElement>>(ptr,
+                                                        std::forward<F>(func));
 }
 template <Cloneable_by_default_clone_function P,
           typename RElement = Clone_auto_element_t<>>
