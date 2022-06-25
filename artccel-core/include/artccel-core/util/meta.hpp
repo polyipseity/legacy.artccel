@@ -28,20 +28,23 @@ consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 constexpr static struct alignas(64) {
-  std::string_view const control_type_name{/*u8*/ "int"};
-  std::string_view const control{raw_type_name<int>()};
-  std::size_t const junk_prefix{control.find(control_type_name)};
-  std::size_t const junk_suffix{control.size() - junk_prefix -
-                                control_type_name.size()};
+private:
+  std::string_view const control_type_name_{/*u8*/ "int"};
+  std::string_view const control_{raw_type_name<int>()};
+
+public:
+  std::size_t const junk_prefix_{control_.find(control_type_name_)};
+  std::size_t const junk_suffix_{control_.size() - junk_prefix_ -
+                                 control_type_name_.size()};
 } type_name_format{};
 template <typename T>
 constexpr static auto type_name_storage{[] {
-  if constexpr (type_name_format.junk_prefix == std::string_view::npos) {
+  if constexpr (type_name_format.junk_prefix_ == std::string_view::npos) {
     return std::to_array(/*u8*/ "<type name unavailable>");
   } else {
     constexpr std::string_view type_name{
-        std::cbegin(raw_type_name<T>()) + type_name_format.junk_prefix,
-        std::cend(raw_type_name<T>()) - type_name_format.junk_suffix};
+        std::cbegin(raw_type_name<T>()) + type_name_format.junk_prefix_,
+        std::cend(raw_type_name<T>()) - type_name_format.junk_suffix_};
     std::array<char, type_name.size() + null_terminator_size> ret{};
     std::copy_n(std::cbegin(type_name), type_name.size(), std::begin(ret));
     return ret;
