@@ -33,41 +33,44 @@ constexpr auto cuchar_mbrtoc_surrogate{-3_UZ};
 constexpr auto cuchar_crtomb_surrogate{0_UZ};
 constexpr auto cuchar_crtomb_error{-1_UZ};
 
-template <typename CharT>
-auto mbrtoc(CharT &output, std::string_view input,
+template <typename UTFCharT>
+auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
             std::mbstate_t &state) noexcept {
-  if constexpr (std::same_as<CharT, char16_t>) {
-    return std::mbrtoc16(&output, std::cbegin(input), input.size(), &state);
-  } else if constexpr (std::same_as<CharT, char32_t>) {
-    return std::mbrtoc32(&output, std::cbegin(input), input.size(), &state);
+  if constexpr (std::same_as<UTFCharT, char16_t>) {
+    return std::mbrtoc16(&utf_out, std::cbegin(loc_enc), loc_enc.size(),
+                         &state);
+  } else if constexpr (std::same_as<UTFCharT, char32_t>) {
+    return std::mbrtoc32(&utf_out, std::cbegin(loc_enc), loc_enc.size(),
+                         &state);
   } else {
-    static_assert(dependent_false_v<CharT>, u8"Unimplemented");
+    static_assert(dependent_false_v<UTFCharT>, u8"Unimplemented");
   }
 }
-template <typename CharT>
-auto crtomb(std::span<char, MB_LEN_MAX> output, CharT input,
+template <typename UTFCharT>
+auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
             std::mbstate_t &state) noexcept {
-  if constexpr (std::same_as<CharT, char16_t>) {
-    return std::c16rtomb(output.data(), input, &state);
-  } else if constexpr (std::same_as<CharT, char32_t>) {
-    return std::c32rtomb(output.data(), input, &state);
+  if constexpr (std::same_as<UTFCharT, char16_t>) {
+    return std::c16rtomb(loc_enc_out.data(), utf, &state);
+  } else if constexpr (std::same_as<UTFCharT, char32_t>) {
+    return std::c32rtomb(loc_enc_out.data(), utf, &state);
   } else {
-    static_assert(dependent_false_v<CharT>, u8"Unimplemented");
+    static_assert(dependent_false_v<UTFCharT>, u8"Unimplemented");
   }
 }
 
-auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) noexcept {
+auto mbrlen_unspecialized_null(std::string_view loc_enc,
+                               std::mbstate_t &state) noexcept {
   auto const old_state{state};
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
-  auto const result{std::mbrlen(std::cbegin(mbs), mbs.size(), &state)};
+  auto const result{std::mbrlen(std::cbegin(loc_enc), loc_enc.size(), &state)};
   // clang-format off
   // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
   /* clang-format on */ if (result == cwchar_mbrlen_null) [[unlikely]] {
-    auto const null_len_max{std::min(std::size_t{MB_LEN_MAX}, mbs.size())};
+    auto const null_len_max{std::min(std::size_t{MB_LEN_MAX}, loc_enc.size())};
     for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
       auto state_copy{old_state};
       // NOLINTNEXTLINE(concurrency-mt-unsafe)
-      if (std::mbrlen(std::cbegin(mbs), null_len, &state_copy) ==
+      if (std::mbrlen(std::cbegin(loc_enc), null_len, &state_copy) ==
           cwchar_mbrlen_null) {
         return null_len;
       }
@@ -80,25 +83,25 @@ auto mbrlen_null(std::string_view mbs, std::mbstate_t &state) noexcept {
   return result;
 }
 
-template <typename CharT>
-auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
-  std::basic_string<CharT> result{};
+template <typename UTFCharT>
+auto loc_enc_to_utf(std::string_view loc_enc) -> std::basic_string<UTFCharT> {
+  std::basic_string<UTFCharT> result{};
   std::mbstate_t state{};
-  while (!mbs.empty()) {
+  while (!loc_enc.empty()) {
     auto old_state{state};
-    CharT out_c{u8'\0'}; // not written to if the next character is null
-    auto processed{mbrtoc(out_c, mbs, state)};
+    UTFCharT utf_c{u8'\0'}; // not written to if the next character is null
+    auto processed{mbrtoc(utf_c, loc_enc, state)};
     switch (processed) {
       [[unlikely]] case cuchar_mbrtoc_error :
           // NOLINTNEXTLINE(concurrency-mt-unsafe)
           throw std::invalid_argument{std::strerror(errno)};
       [[unlikely]] case cuchar_mbrtoc_incomplete
           : throw std::invalid_argument{
-                f::c8srtombs(u8"Incomplete byte sequence")};
+                f::utf8_to_loc_enc(u8"Incomplete byte sequence")};
     case cuchar_mbrtoc_surrogate:
       break;
       [[unlikely]] case cuchar_mbrtoc_null
-          : switch (processed = mbrlen_null(mbs, old_state)) {
+          : switch (processed = mbrlen_unspecialized_null(loc_enc, old_state)) {
         [[unlikely]] case cwchar_mbrlen_null : [[fallthrough]];
         [[unlikely]] case cwchar_mbrlen_error : [[fallthrough]];
         [[unlikely]] case cwchar_mbrlen_incomplete :
@@ -110,23 +113,24 @@ auto mbsrtocs(std::string_view mbs) -> std::basic_string<CharT> {
       }
       [[fallthrough]];
     default:
-      mbs.remove_prefix(processed);
+      loc_enc.remove_prefix(processed);
       break;
     }
-    result.push_back(out_c);
+    result.push_back(utf_c);
   }
-  for (CharT out_c{}; mbrtoc(out_c, mbs, state) == cuchar_mbrtoc_surrogate;) {
-    result.push_back(out_c); // complete surrogate pair of the last character
+  for (UTFCharT utf_c{};
+       mbrtoc(utf_c, loc_enc, state) == cuchar_mbrtoc_surrogate;) {
+    result.push_back(utf_c); // complete surrogate pair of the last character
   }
   return result;
 }
-template <typename CharT>
-auto csrtombs(std::basic_string_view<CharT> cs_) -> std::string {
+template <typename UTFCharT>
+auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) -> std::string {
   std::string result{};
   std::mbstate_t state{};
-  std::array<char, MB_LEN_MAX> out_mb{};
-  for (auto const in_c : std::as_const(cs_)) {
-    auto const processed{crtomb(out_mb, in_c, state)};
+  std::array<char, MB_LEN_MAX> loc_enc{};
+  for (auto const utf_c : std::as_const(utf)) {
+    auto const processed{crtomb(loc_enc, utf_c, state)};
     switch (processed) {
       [[unlikely]] case cuchar_crtomb_error :
           // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -134,7 +138,7 @@ auto csrtombs(std::basic_string_view<CharT> cs_) -> std::string {
     case cuchar_crtomb_surrogate:
       [[fallthrough]];
     default:
-      result.append(std::cbegin(out_mb), processed);
+      result.append(std::cbegin(loc_enc), processed);
       break;
     }
   }
@@ -146,63 +150,71 @@ namespace f {
 // NOLINTNEXTLINE(misc-unused-using-decls)
 using literals::operator""_UZ;
 
-auto c8s_compatrtoc8s(std::string_view c8s_compat) -> std::u8string {
-  return {std::cbegin(c8s_compat), std::cend(c8s_compat)};
+auto utf8_compat_to_utf8(std::string_view utf8_compat) -> std::u8string {
+  return {std::cbegin(utf8_compat), std::cend(utf8_compat)};
 }
-auto c8srtoc8s_compat(std::u8string_view c8s) -> std::string {
-  return {std::cbegin(c8s), std::cend(c8s)};
+auto utf8_to_utf8_compat(std::u8string_view utf8) -> std::string {
+  return {std::cbegin(utf8), std::cend(utf8)};
 }
 
-auto c8srtoc16s(std::u8string_view c8s) -> std::u16string {
+auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
   return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
       .from_bytes(
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(std::cbegin(c8s)), // defined behavior
+          reinterpret_cast<char const *>(std::cbegin(utf8)), // defined behavior
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(std::cend(c8s))); // defined behavior
+          reinterpret_cast<char const *>(std::cend(utf8))); // defined behavior
 }
-auto c8srtoc16s(char8_t c8s) -> std::u16string {
-  return c8srtoc16s({&c8s, 1_UZ});
+auto utf8_to_utf16(char8_t utf8) -> std::u16string {
+  return utf8_to_utf16({&utf8, 1_UZ});
 }
-auto c16srtoc8s(std::u16string_view c16s) -> std::u8string {
-  return c8s_compatrtoc8s(
+auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
+  return utf8_compat_to_utf8(
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-          .to_bytes(std::cbegin(c16s), std::cend(c16s)));
+          .to_bytes(std::cbegin(utf16), std::cend(utf16)));
 }
-auto c16srtoc8s(char16_t c16s) -> std::u8string {
-  return c16srtoc8s({&c16s, 1_UZ});
+auto utf16_to_utf8(char16_t utf16) -> std::u8string {
+  return utf16_to_utf8({&utf16, 1_UZ});
 }
 
-auto mbsrtoc8s(std::string_view mbs) -> std::u8string {
+auto loc_enc_to_utf8(std::string_view loc_enc) -> std::u8string {
   // TODO: use std::mbrtoc8
-  return c16srtoc8s(mbsrtoc16s(mbs));
+  return utf16_to_utf8(loc_enc_to_utf16(loc_enc));
 }
-auto mbsrtoc8s(char mbs) -> std::u8string { return mbsrtoc8s({&mbs, 1_UZ}); }
-auto mbsrtoc16s(std::string_view mbs) -> std::u16string {
-  return detail::mbsrtocs<char16_t>(mbs);
+auto loc_enc_to_utf8(char loc_enc) -> std::u8string {
+  return loc_enc_to_utf8({&loc_enc, 1_UZ});
 }
-auto mbsrtoc16s(char mbs) -> std::u16string { return mbsrtoc16s({&mbs, 1_UZ}); }
-auto mbsrtoc32s(std::string_view mbs) -> std::u32string {
-  return detail::mbsrtocs<char32_t>(mbs);
+auto loc_enc_to_utf16(std::string_view loc_enc) -> std::u16string {
+  return detail::loc_enc_to_utf<char16_t>(loc_enc);
 }
-auto mbsrtoc32s(char mbs) -> std::u32string { return mbsrtoc32s({&mbs, 1_UZ}); }
+auto loc_enc_to_utf16(char loc_enc) -> std::u16string {
+  return loc_enc_to_utf16({&loc_enc, 1_UZ});
+}
+auto loc_enc_to_utf32(std::string_view loc_enc) -> std::u32string {
+  return detail::loc_enc_to_utf<char32_t>(loc_enc);
+}
+auto loc_enc_to_utf32(char loc_enc) -> std::u32string {
+  return loc_enc_to_utf32({&loc_enc, 1_UZ});
+}
 
-auto c8srtombs(std::u8string_view c8s) -> std::string {
+auto utf8_to_loc_enc(std::u8string_view utf8) -> std::string {
   // TODO: use std::c8rtomb
-  return c16srtombs(c8srtoc16s(c8s));
+  return utf16_to_loc_enc(utf8_to_utf16(utf8));
 }
-auto c8srtombs(char8_t c8s) -> std::string { return c8srtombs({&c8s, 1_UZ}); }
-auto c16srtombs(std::u16string_view c16s) -> std::string {
-  return detail::csrtombs(c16s);
+auto utf8_to_loc_enc(char8_t utf8) -> std::string {
+  return utf8_to_loc_enc({&utf8, 1_UZ});
 }
-auto c16srtombs(char16_t c16s) -> std::string {
-  return c16srtombs({&c16s, 1_UZ});
+auto utf16_to_loc_enc(std::u16string_view utf16) -> std::string {
+  return detail::utf_to_loc_enc(utf16);
 }
-auto c32srtombs(std::u32string_view c32s) -> std::string {
-  return detail::csrtombs(c32s);
+auto utf16_to_loc_enc(char16_t utf16) -> std::string {
+  return utf16_to_loc_enc({&utf16, 1_UZ});
 }
-auto c32srtombs(char32_t c32s) -> std::string {
-  return c32srtombs({&c32s, 1_UZ});
+auto utf32_to_loc_enc(std::u32string_view utf32) -> std::string {
+  return detail::utf_to_loc_enc(utf32);
+}
+auto utf32_to_loc_enc(char32_t utf32) -> std::string {
+  return utf32_to_loc_enc({&utf32, 1_UZ});
 }
 } // namespace f
 } // namespace artccel::core::util

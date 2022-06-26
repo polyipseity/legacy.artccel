@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_UTIL_META_HPP
 #pragma once
 
-#include "encoding.hpp"  // import f::mbsrtoc8s
+#include "encoding.hpp"  // import f::loc_enc_to_utf8
 #include "semantics.hpp" // import null_terminator_size
 #include <algorithm>     // import std::copy_n
 #include <array> // import std::array, std::begin, std::cbegin, std::cend, std::to_array
@@ -119,17 +119,17 @@ using Find_and_replace_all_t_t = Find_and_replace_all_t<
 
 namespace f {
 template <typename T>
-consteval static auto type_name_mbs_data [[nodiscard]] () noexcept {
+consteval static auto type_name_loc_enc_data [[nodiscard]] () noexcept {
   return detail::type_name_storage<T>;
 }
 template <typename T>
-consteval static auto type_name_mbs [[nodiscard]] () noexcept {
+consteval static auto type_name_loc_enc [[nodiscard]] () noexcept {
   return std::string_view{std::cbegin(detail::type_name_storage<T>),
                           std::cend(detail::type_name_storage<T>) -
                               null_terminator_size};
 }
 template <typename T> static auto type_name [[nodiscard]] () {
-  return f::mbsrtoc8s(type_name_mbs<T>());
+  return f::loc_enc_to_utf8(type_name_loc_enc<T>());
 }
 } // namespace f
 } // namespace artccel::core::util

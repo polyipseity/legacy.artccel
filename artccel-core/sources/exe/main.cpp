@@ -1,6 +1,6 @@
 #include <algorithm>                               // import std::transform
 #include <artccel-core/util/containers_extras.hpp> // import artccel::core::util::f::const_span
-#include <artccel-core/util/encoding.hpp> // import util::f::mbsrtoc8s
+#include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8
 #include <gsl/gsl>                        // import gsl::not_null, gsl::zstring
 #include <iostream>    // import std::ios_base::sync_with_stdio
 #include <locale>      // import std::locale, std::locale::global
@@ -19,7 +19,7 @@ auto main(std::span<std::string_view const> args) -> int {
     std::vector<std::pair<std::u8string const, std::string_view const>> init{};
     init.reserve(args.size());
     for (auto const arg : std::as_const(args)) {
-      init.emplace_back(util::f::mbsrtoc8s(arg), arg);
+      init.emplace_back(util::f::loc_enc_to_utf8(arg), arg);
     }
     return init;
   }()};

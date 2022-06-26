@@ -6,26 +6,26 @@
 #include <string_view> // import std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 
 namespace artccel::core::util::f {
-auto c8s_compatrtoc8s(std::string_view c8s_compat) -> std::u8string;
-auto c8srtoc8s_compat(std::u8string_view c8s) -> std::string;
+auto utf8_compat_to_utf8(std::string_view utf8_compat) -> std::u8string;
+auto utf8_to_utf8_compat(std::u8string_view utf8) -> std::string;
 
-auto c8srtoc16s(std::u8string_view c8s) -> std::u16string;
-auto c8srtoc16s(char8_t c8s) -> std::u16string;
-auto c16srtoc8s(std::u16string_view c16s) -> std::u8string;
-auto c16srtoc8s(char16_t c16s) -> std::u8string;
+auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string;
+auto utf8_to_utf16(char8_t utf8) -> std::u16string;
+auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string;
+auto utf16_to_utf8(char16_t utf16) -> std::u8string;
 
-auto mbsrtoc8s(std::string_view mbs) -> std::u8string;
-auto mbsrtoc8s(char mbs) -> std::u8string;
-auto mbsrtoc16s(std::string_view mbs) -> std::u16string;
-auto mbsrtoc16s(char mbs) -> std::u16string;
-auto mbsrtoc32s(std::string_view mbs) -> std::u32string;
-auto mbsrtoc32s(char mbs) -> std::u32string;
-auto c8srtombs(std::u8string_view c8s) -> std::string;
-auto c8srtombs(char8_t c8s) -> std::string;
-auto c16srtombs(std::u16string_view c16s) -> std::string;
-auto c16srtombs(char16_t c16s) -> std::string;
-auto c32srtombs(std::u32string_view c32s) -> std::string;
-auto c32srtombs(char32_t c32s) -> std::string;
+auto loc_enc_to_utf8(std::string_view loc_enc) -> std::u8string;
+auto loc_enc_to_utf8(char loc_enc) -> std::u8string;
+auto loc_enc_to_utf16(std::string_view loc_enc) -> std::u16string;
+auto loc_enc_to_utf16(char loc_enc) -> std::u16string;
+auto loc_enc_to_utf32(std::string_view loc_enc) -> std::u32string;
+auto loc_enc_to_utf32(char loc_enc) -> std::u32string;
+auto utf8_to_loc_enc(std::u8string_view utf8) -> std::string;
+auto utf8_to_loc_enc(char8_t utf8) -> std::string;
+auto utf16_to_loc_enc(std::u16string_view utf16) -> std::string;
+auto utf16_to_loc_enc(char16_t utf16) -> std::string;
+auto utf32_to_loc_enc(std::u32string_view utf32) -> std::string;
+auto utf32_to_loc_enc(char32_t utf32) -> std::string;
 } // namespace artccel::core::util::f
 
 #endif
