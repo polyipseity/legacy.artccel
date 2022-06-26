@@ -128,6 +128,9 @@ public:
     swap(c_in_, other.c_in_);
     swap(return_, other.return_);
   }
+  friend constexpr void swap(Compute_out &left, Compute_out &right) noexcept {
+    left.swap(right);
+  }
   Compute_out(Compute_out const &other) noexcept(
       noexcept(decltype(c_in_){other.c_in_}, decltype(return_){other.return_}))
       : c_in_{other.c_in_}, return_{other.return_} {}
@@ -144,10 +147,6 @@ public:
   };
 };
 template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
-template <std::copyable R>
-constexpr void swap(Compute_out<R> &left, Compute_out<R> &right) noexcept {
-  left.swap(right);
-}
 
 template <std::copyable R, R V>
 class Compute_constant : public Compute_in<Compute_constant<R, V>, R> {

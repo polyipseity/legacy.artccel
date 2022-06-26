@@ -36,6 +36,10 @@ public:
     swap(value_, other.value_);
     swap(flag_, other.flag_);
   }
+  friend constexpr void swap(Semiregular_once_flag &left,
+                             Semiregular_once_flag &right) noexcept {
+    left.swap(right);
+  }
   Semiregular_once_flag(Semiregular_once_flag const &other)
       : flag_{other.flag_} {
     if (flag_) {
@@ -57,10 +61,6 @@ public:
   }
 };
 static_assert(std::semiregular<Semiregular_once_flag>);
-constexpr void swap(Semiregular_once_flag &left,
-                    Semiregular_once_flag &right) noexcept {
-  left.swap(right);
-}
 
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Null_lockable {
