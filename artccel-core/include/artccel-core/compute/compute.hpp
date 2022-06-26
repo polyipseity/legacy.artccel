@@ -69,7 +69,7 @@ public:
   auto operator=(Compute_io &&) = delete;
 
 protected:
-  constexpr Compute_io() noexcept = default;
+  explicit constexpr Compute_io() noexcept = default;
 };
 
 template <typename Derived, std::copyable R>
@@ -100,7 +100,7 @@ private:
   R return_{};
 
 public:
-  constexpr Compute_out() noexcept = default;
+  explicit constexpr Compute_out() noexcept = default;
   explicit Compute_out(Compute_in_c<R> auto const &c_in)
       : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
 
@@ -154,14 +154,14 @@ class Compute_constant : public Compute_in<Compute_constant<R, V>, R> {
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
-    consteval Friend() noexcept = default;
+    explicit consteval Friend() noexcept = default;
   };
 
 public:
   using return_type = typename Compute_constant::return_type;
   constexpr static auto value_{V};
   template <typename... Args>
-  constexpr explicit Compute_constant([[maybe_unused]] Friend /*unused*/,
+  explicit constexpr Compute_constant([[maybe_unused]] Friend /*unused*/,
                                       Args &&...args)
       : Compute_constant{std::forward<Args>(args)...} {}
 
@@ -200,7 +200,7 @@ public:
   auto operator=(Compute_constant &&) = delete;
 
 protected:
-  constexpr Compute_constant() noexcept = default;
+  explicit constexpr Compute_constant() noexcept = default;
 };
 
 template <std::copyable R, auto F>
@@ -210,14 +210,14 @@ class Compute_function_constant
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
-    consteval Friend() noexcept = default;
+    explicit consteval Friend() noexcept = default;
   };
 
 public:
   using return_type = typename Compute_function_constant::return_type;
   constexpr static auto function_{F};
   template <typename... Args>
-  constexpr explicit Compute_function_constant(
+  explicit constexpr Compute_function_constant(
       [[maybe_unused]] Friend /*unused*/, Args &&...args)
       : Compute_function_constant{std::forward<Args>(args)...} {}
 
@@ -256,7 +256,7 @@ public:
   auto operator=(Compute_function_constant &&) = delete;
 
 protected:
-  constexpr Compute_function_constant() noexcept = default;
+  explicit constexpr Compute_function_constant() noexcept = default;
 };
 
 template <std::copyable R>
@@ -264,7 +264,7 @@ class Compute_value : public Compute_in<Compute_value<R>, R> {
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
-    consteval Friend() noexcept = default;
+    explicit consteval Friend() noexcept = default;
   };
 
 public:
@@ -281,7 +281,7 @@ protected:
   explicit Compute_value(R value)
       : Compute_value{util::Enum_bitset{} | Compute_option::concurrent,
                       std::move(value)} {}
-  Compute_value(Compute_options const &options, R value)
+  explicit Compute_value(Compute_options const &options, R value)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::shared_mutex>()
                    : nullptr},
@@ -382,10 +382,11 @@ protected:
     return *this;
   };
 
-  Compute_value(Compute_value const &other,
-                std::remove_cv_t<decltype(mutex_)>
-                    mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
-                                             decltype(value_){other.value_}))
+  explicit Compute_value(
+      Compute_value const &other,
+      std::remove_cv_t<decltype(mutex_)>
+          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
+                                   decltype(value_){other.value_}))
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
@@ -395,7 +396,7 @@ class Compute_function<R(TArgs...)>
 private:
   // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
-    consteval Friend() noexcept = default;
+    explicit consteval Friend() noexcept = default;
   };
 
 public:
@@ -425,7 +426,8 @@ protected:
                          std::forward<Args>(args)...} {}
   template <typename F, typename... Args>
   requires std::invocable<F, Args...>
-  Compute_function(Compute_options const &options, F &&function, Args &&...args)
+  explicit Compute_function(Compute_options const &options, F &&function,
+                            Args &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::shared_mutex>()
                    : nullptr},
@@ -453,7 +455,7 @@ protected:
             });
             return ret;
           case Bound_action::reset:
-            flag = {};
+            flag = util::Semiregular_once_flag{};
             return std::optional<R>{};
           default:
             // clang-format off
@@ -603,7 +605,7 @@ protected:
     return *this;
   };
 
-  Compute_function(
+  explicit Compute_function(
       Compute_function const &other,
       std::remove_cv_t<decltype(mutex_)>
           mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},

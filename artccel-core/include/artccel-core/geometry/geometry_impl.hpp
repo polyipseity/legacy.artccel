@@ -79,7 +79,7 @@ private:
   std::array<compute::Compute_out<double>, D> position_{};
 
 public:
-  Point() noexcept = default;
+  explicit Point() noexcept = default;
   template <
       std::convertible_to<typename decltype(position_)::value_type>... Position>
   requires(sizeof...(Position) == D) explicit Point(Position... position)

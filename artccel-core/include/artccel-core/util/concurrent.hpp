@@ -18,7 +18,7 @@ private:
   bool flag_{false};
 
 public:
-  constexpr Semiregular_once_flag() noexcept = default;
+  explicit constexpr Semiregular_once_flag() noexcept = default;
 
   template <typename Callable, typename... Args>
   void call_once(Callable &&func, Args &&...args) {
@@ -64,7 +64,7 @@ constexpr void swap(Semiregular_once_flag &left,
 
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Null_lockable {
-  consteval Null_lockable() noexcept = default;
+  explicit consteval Null_lockable() noexcept = default;
 
   // named requirement: BasicLockable
 
