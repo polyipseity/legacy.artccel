@@ -623,7 +623,7 @@ Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Out_t {
   explicit consteval Out_t() noexcept = default;
-  auto operator<<(Compute_in_any_c auto const &right) {
+  auto operator<<(Compute_in_any_c auto const &right) const {
     return Compute_out{right};
   }
 };

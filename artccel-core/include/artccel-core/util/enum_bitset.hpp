@@ -48,7 +48,7 @@ constexpr void check_bitset(std::bitset<N> const &valid,
 struct Enum_bitset {
   explicit consteval Enum_bitset() noexcept = default;
   constexpr auto operator| [[nodiscard]] (
-      auto right) noexcept requires std::is_enum_v<decltype(right)> {
+      auto right) const noexcept requires std::is_enum_v<decltype(right)> {
     return Bitset_of<decltype(right)>{f::to_underlying(right)};
   }
 };
