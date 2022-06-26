@@ -13,9 +13,9 @@
 namespace artccel::core::f {
 auto main(std::span<std::string_view const> args) -> int {
   std::ios_base::sync_with_stdio(false);
-  std::locale::global(
-      std::locale{/*u8*/ ""}); // use user-preferred locale to convert args
   auto const norm_args{[args] {
+    std::locale::global(
+        std::locale{/*u8*/ ""}); // use user-preferred locale to convert args
     std::vector<std::pair<std::u8string const, std::string_view const>> init{};
     init.reserve(args.size());
     for (auto const arg : std::as_const(args)) {
