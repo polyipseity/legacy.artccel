@@ -16,14 +16,14 @@ template <typename T>
 consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 // internal linkage as it may be different
 // propagate internal linkage to callers if necessary
-#ifndef _MSC_VER
-  // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-  /* clang-format on */ return __PRETTY_FUNCTION__;
-#else
+#ifdef _MSC_VER
   // clang-format off
 // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
   /* clang-format on */ return __FUNCSIG__;
+#else
+  // clang-format off
+// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
+  /* clang-format on */ return __PRETTY_FUNCTION__;
 #endif
 }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
