@@ -2,11 +2,12 @@
 #define ARTCCEL_CORE_UTIL_INTERVAL_HPP
 #pragma once
 
-#include "utility_extras.hpp" // import Delegate
-#include <cassert>            // import assert
-#include <compare>            // import std::partial_ordering
-#include <concepts> // import std::move_constructible, std::same_as, std::totally_ordered
-#include <type_traits> // import std::decay_t, std::is_base_of_v, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
+#include "concepts_extras.hpp" // import Derived_from_but_not
+#include "utility_extras.hpp"  // import Delegate
+#include <cassert>             // import assert
+#include <compare>             // import std::partial_ordering
+#include <concepts>    // import std::move_constructible, std::totally_ordered
+#include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::move
 
 namespace artccel::core::util {
@@ -14,12 +15,10 @@ template <std::totally_ordered T> struct Bound;
 template <std::totally_ordered T, T V> struct Open_bound;
 template <std::totally_ordered T, T V> struct Closed_bound;
 template <std::totally_ordered T> struct Unbounded;
-template <typename L, typename R>
-requires std::is_base_of_v<Bound<typename L::type>, L> &&
-    (!std::same_as<L, Bound<typename L::type>>)&&std::is_base_of_v<
-        Bound<typename L::type>, R> &&
-    (!std::same_as<R, Bound<typename L::type>>)&&std::move_constructible<
-        typename L::type> class Interval;
+template <typename L, Derived_from_but_not<Bound<typename L::type>> R>
+requires Derived_from_but_not<L, Bound<typename L::type>> &&
+    std::move_constructible<typename L::type>
+class Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Dynamic_interval_t {
   explicit consteval Dynamic_interval_t() noexcept = default;
@@ -78,7 +77,7 @@ protected:
 
 template <std::totally_ordered T, T V>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Open_bound : private Bound<T> {
+struct Open_bound : public Bound<T> {
   using type = typename Open_bound::type;
   constexpr static auto value_{V};
   explicit consteval Open_bound() noexcept = default;
@@ -145,7 +144,7 @@ private:
 
 template <std::totally_ordered T, T V>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Closed_bound : private Bound<T> {
+struct Closed_bound : public Bound<T> {
   using type = typename Closed_bound::type;
   constexpr static auto value_{V};
   explicit consteval Closed_bound() noexcept = default;
@@ -220,7 +219,7 @@ private:
 };
 
 // NOLINTNEXTLINE(altera-struct-pack-align)
-template <std::totally_ordered T> struct Unbounded : private Bound<T> {
+template <std::totally_ordered T> struct Unbounded : public Bound<T> {
   using type = typename Unbounded::type;
   explicit consteval Unbounded() noexcept = default;
   friend constexpr auto operator==(Unbounded const &left [[maybe_unused]],
@@ -286,13 +285,10 @@ template <std::totally_ordered T> struct Unbounded : private Bound<T> {
   }
 };
 
-template <typename L, typename R>
-requires std::is_base_of_v<Bound<typename L::type>, L> &&
-    (!std::same_as<L, Bound<typename L::type>>)&&std::is_base_of_v<
-        Bound<typename L::type>, R> &&
-    (!std::same_as<R, Bound<typename L::type>>)&&std::move_constructible<
-        typename L::type> class Interval
-    : public Delegate<typename L::type, false> {
+template <typename L, Derived_from_but_not<Bound<typename L::type>> R>
+requires Derived_from_but_not<L, Bound<typename L::type>> &&
+    std::move_constructible<typename L::type>
+class Interval : public Delegate<typename L::type, false> {
 public:
   using left = L;
   using right = R;
