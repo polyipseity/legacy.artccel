@@ -82,6 +82,9 @@
 		"locale": "cpp",
 		"bitset": "cpp",
 		"propagate_const": "cpp",
-		"shared_mutex": "cpp"
+		"shared_mutex": "cpp",
+		"source_location": "cpp",
+		"numbers": "cpp",
+		"semaphore": "cpp"
 	}
 }
