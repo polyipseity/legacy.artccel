@@ -1,5 +1,5 @@
-#include <algorithm>                      // import std::min
-#include <array>                          // import std::array
+#include <algorithm> // import std::min
+#include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
 #include <artccel-core/util/encoding.hpp> // interface
 #include <artccel-core/util/polyfill.hpp> // import literals::operator""_UZ
 #include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
@@ -12,7 +12,7 @@
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
 #include <locale>    // import std::wstring_convert
-#include <span>      // import std::cbegin, std::cend, std::span
+#include <span>      // import std::span
 #include <stdexcept> // import std::invalid_argument
 #include <string> // import std::basic_string, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
@@ -37,10 +37,10 @@ template <typename UTFCharT>
 auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
             std::mbstate_t &state) noexcept {
   if constexpr (std::same_as<UTFCharT, char16_t>) {
-    return std::mbrtoc16(&utf_out, std::cbegin(loc_enc), loc_enc.size(),
+    return std::mbrtoc16(&utf_out, std::cbegin(loc_enc), std::size(loc_enc),
                          &state);
   } else if constexpr (std::same_as<UTFCharT, char32_t>) {
-    return std::mbrtoc32(&utf_out, std::cbegin(loc_enc), loc_enc.size(),
+    return std::mbrtoc32(&utf_out, std::cbegin(loc_enc), std::size(loc_enc),
                          &state);
   } else {
     static_assert(dependent_false_v<UTFCharT>, u8"Unimplemented");
@@ -50,9 +50,9 @@ template <typename UTFCharT>
 auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
             std::mbstate_t &state) noexcept {
   if constexpr (std::same_as<UTFCharT, char16_t>) {
-    return std::c16rtomb(loc_enc_out.data(), utf, &state);
+    return std::c16rtomb(std::data(loc_enc_out), utf, &state);
   } else if constexpr (std::same_as<UTFCharT, char32_t>) {
-    return std::c32rtomb(loc_enc_out.data(), utf, &state);
+    return std::c32rtomb(std::data(loc_enc_out), utf, &state);
   } else {
     static_assert(dependent_false_v<UTFCharT>, u8"Unimplemented");
   }
@@ -62,11 +62,13 @@ auto mbrlen_unspecialized_null(std::string_view loc_enc,
                                std::mbstate_t &state) noexcept {
   auto const old_state{state};
   // NOLINTNEXTLINE(concurrency-mt-unsafe)
-  auto const result{std::mbrlen(std::cbegin(loc_enc), loc_enc.size(), &state)};
+  auto const result{
+      std::mbrlen(std::cbegin(loc_enc), std::size(loc_enc), &state)};
   // clang-format off
   // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
   /* clang-format on */ if (result == cwchar_mbrlen_null) [[unlikely]] {
-    auto const null_len_max{std::min(std::size_t{MB_LEN_MAX}, loc_enc.size())};
+    auto const null_len_max{
+        std::min(std::size_t{MB_LEN_MAX}, std::size(loc_enc))};
     for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
       auto state_copy{old_state};
       // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -86,7 +88,7 @@ auto mbrlen_unspecialized_null(std::string_view loc_enc,
 template <typename UTFCharT> auto loc_enc_to_utf(std::string_view loc_enc) {
   std::basic_string<UTFCharT> result{};
   std::mbstate_t state{};
-  while (!loc_enc.empty()) {
+  while (!std::empty(loc_enc)) {
     auto old_state{state};
     UTFCharT utf_c{u8'\0'}; // not written to if the next character is null
     auto processed{mbrtoc(utf_c, loc_enc, state)};

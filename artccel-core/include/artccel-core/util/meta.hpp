@@ -5,7 +5,7 @@
 #include "encoding.hpp"  // import f::loc_enc_to_utf8
 #include "semantics.hpp" // import null_terminator_size
 #include <algorithm>     // import std::copy_n
-#include <array> // import std::array, std::begin, std::cbegin, std::cend, std::to_array
+#include <array> // import std::array, std::begin, std::cbegin, std::cend, std::size, std::to_array
 #include <concepts>    // import std::same_as
 #include <cstddef>     // import std::size_t
 #include <string_view> // import std::string_view
@@ -34,8 +34,8 @@ private:
 
 public:
   std::size_t const junk_prefix_{control_.find(control_type_name_)};
-  std::size_t const junk_suffix_{control_.size() - junk_prefix_ -
-                                 control_type_name_.size()};
+  std::size_t const junk_suffix_{std::size(control_) - junk_prefix_ -
+                                 std::size(control_type_name_)};
 } type_name_format{};
 template <typename T>
 constexpr static auto type_name_storage{[] {
@@ -45,9 +45,9 @@ constexpr static auto type_name_storage{[] {
     constexpr std::string_view type_name{
         std::cbegin(raw_type_name<T>()) + type_name_format.junk_prefix_,
         std::cend(raw_type_name<T>()) - type_name_format.junk_suffix_};
-    std::array<char, type_name.size() + null_terminator_size> ret{};
-    std::copy_n(std::cbegin(type_name), type_name.size(), std::begin(ret));
-    return ret;
+    std::array<char, std::size(type_name) + null_terminator_size> init{};
+    std::copy_n(std::cbegin(type_name), std::size(init), std::begin(init));
+    return init;
   }
 }()};
 
