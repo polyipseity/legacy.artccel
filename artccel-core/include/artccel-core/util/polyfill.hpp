@@ -15,7 +15,7 @@ constexpr auto to_underlying [[nodiscard]] (
 } // namespace f
 
 namespace literals {
-consteval auto operator""_UZ
+constexpr auto operator""_UZ
     // NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
     [[nodiscard]] (unsigned long long value) noexcept {
   return std::size_t{value}; // TODO: C++23: UZ
