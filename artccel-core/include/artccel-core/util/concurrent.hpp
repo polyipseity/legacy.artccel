@@ -31,13 +31,13 @@ public:
   }
 
   ~Semiregular_once_flag() noexcept = default;
-  constexpr void swap(Semiregular_once_flag &other) noexcept {
+  void swap(Semiregular_once_flag &other) noexcept {
     using std::swap;
     swap(value_, other.value_);
     swap(flag_, other.flag_);
   }
-  friend constexpr void swap(Semiregular_once_flag &left,
-                             Semiregular_once_flag &right) noexcept {
+  friend void swap(Semiregular_once_flag &left,
+                   Semiregular_once_flag &right) noexcept {
     left.swap(right);
   }
   Semiregular_once_flag(Semiregular_once_flag const &other)
