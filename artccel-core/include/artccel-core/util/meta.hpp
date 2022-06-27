@@ -4,7 +4,7 @@
 
 #include "encoding.hpp"  // import f::loc_enc_to_utf8
 #include "semantics.hpp" // import null_terminator_size
-#include <algorithm>     // import std::copy_n
+#include <algorithm>     // import std::ranges::copy
 #include <array> // import std::array, std::begin, std::cbegin, std::cend, std::size, std::to_array
 #include <concepts>    // import std::same_as
 #include <cstddef>     // import std::size_t
@@ -44,7 +44,7 @@ constexpr static auto type_name_storage{[] {
         std::cbegin(raw_type_name<T>()) + type_name_format.junk_prefix_,
         std::cend(raw_type_name<T>()) - type_name_format.junk_suffix_};
     std::array<char, std::size(type_name) + null_terminator_size> init{};
-    std::copy_n(std::cbegin(type_name), std::size(init), std::begin(init));
+    std::ranges::copy(type_name, std::begin(init));
     return init;
   }
 }()};

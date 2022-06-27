@@ -1,4 +1,4 @@
-#include <algorithm> // import std::min
+#include <algorithm> // import std::min, std::ranges::for_each
 #include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
 #include <artccel-core/util/encoding.hpp> // interface
 #include <artccel-core/util/polyfill.hpp> // import literals::operator""_UZ
@@ -125,19 +125,20 @@ auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
   std::string result{};
   std::mbstate_t state{};
   std::array<char, MB_LEN_MAX> loc_enc{};
-  for (auto const utf_c : std::as_const(utf)) {
-    auto const processed{crtomb(loc_enc, utf_c, state)};
-    switch (processed) {
-      [[unlikely]] case cuchar_crtomb_error :
-          // NOLINTNEXTLINE(concurrency-mt-unsafe)
-          throw std::invalid_argument{std::strerror(errno)};
-    case cuchar_crtomb_surrogate:
-      [[fallthrough]];
-    default:
-      result.append(std::cbegin(loc_enc), processed);
-      break;
-    }
-  }
+  std::ranges::for_each(
+      std::as_const(utf), [&result, &state, &loc_enc](auto utf_c) {
+        auto const processed{crtomb(loc_enc, utf_c, state)};
+        switch (processed) {
+          [[unlikely]] case cuchar_crtomb_error :
+              // NOLINTNEXTLINE(concurrency-mt-unsafe)
+              throw std::invalid_argument{std::strerror(errno)};
+        case cuchar_crtomb_surrogate:
+          [[fallthrough]];
+        default:
+          result.append(std::cbegin(loc_enc), processed);
+          break;
+        }
+      });
   return result;
 }
 } // namespace detail
