@@ -32,15 +32,13 @@ constexpr void check_bitset(std::bitset<N> const &valid,
                             std::u8string_view msg_prefix,
                             std::bitset<N> const &value) noexcept {
 #ifndef NDEBUG
-  if (auto const valid_value{valid & value};
-      // clang-format off
-      // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
-      /* clang-format on */ valid_value != value) [[unlikely]] {
+  // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
+  if (auto const valid_value{valid & value}; valid_value != value)
+      [[unlikely]] {
     std::cerr << f::utf8_as_utf8_compat(msg_prefix) << u8": "_as_utf8_compat
               << (value ^ valid_value) << u8'\n'_as_utf8_compat;
-    // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(false);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+    assert(false);
   }
 #endif
 }

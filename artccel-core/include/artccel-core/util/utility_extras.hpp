@@ -36,9 +36,8 @@ constexpr auto unify_ptr_to_ref(T &&value) noexcept -> decltype(auto) {
   // (callsite) -> (return)
   if constexpr (std::is_pointer_v<std::remove_reference_t<T>>) {
     // t* -> t&, t*& -> t&, t*&& -> t&
-    // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(value && u8"value == nullptr");
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+    assert(value && u8"value == nullptr");
     return *value; // *v is t&
   } else {
     // t -> t, t& -> t&, t&& -> t
@@ -100,24 +99,24 @@ public:
   T value_; // NOLINT(misc-non-private-member-variables-in-classes)
 
   [[nodiscard]] explicit(Explicit) constexpr
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   operator auto &() &noexcept(noexcept(value_)) {
     return value_;
   }
   [[nodiscard]] explicit(Explicit) constexpr
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   operator auto const &() const &noexcept(noexcept(value_)) {
     return value_;
   }
   [[nodiscard]] explicit(Explicit) constexpr
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   operator T() &&noexcept(noexcept(std::move(value_)) &&
                           std::is_nothrow_move_constructible_v<T>) requires
       std::move_constructible<T> {
     return std::move(value_);
   }
   [[nodiscard]] explicit(Explicit) constexpr
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   operator T() const &&noexcept(
       noexcept(value_) && std::is_nothrow_move_constructible_v<T>) requires
       std::copy_constructible<T> {

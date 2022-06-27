@@ -131,7 +131,7 @@ private:
 public:
   constexpr Nullable_lockable() noexcept
       : Nullable_lockable{std::make_unique<L>()} {}
-  // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   constexpr Nullable_lockable(type value) noexcept
       : Nullable_lockable::Delegate{std::move(value)} {}
 

@@ -70,9 +70,9 @@ concept Cloneable_by_default_clone_function =
 namespace detail {
 template <typename P, Cloner_of<P> F>
 constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
-  // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-  /* clang-format on */ assert(ptr && u8"ptr == nullptr");
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+  assert(ptr && u8"ptr == nullptr");
   auto ret{[&ptr, &func] {
     decltype(auto) init{
         std::invoke(std::forward<F>(func), *std::to_address(ptr))};
@@ -82,9 +82,9 @@ constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
     // T/smart_pointer<T> -> T/smart_pointer<T>, T* -> T*, T& -> T*; T&& -> T
     return f::unify_ref_to_ptr(std::forward<decltype(init)>(init));
   }()};
-  // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-  /* clang-format on */ assert(ret && u8"ret == nullptr");
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+  assert(ret && u8"ret == nullptr");
   using ret_type = decltype(ret);
   static_assert(!std::is_reference_v<ret_type>, u8"Unexpected");
   if constexpr (std::is_pointer_v<ret_type>) {

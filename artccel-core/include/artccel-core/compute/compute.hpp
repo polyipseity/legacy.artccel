@@ -457,9 +457,8 @@ protected:
             flag = util::Semiregular_once_flag{};
             return std::optional<R>{};
           default:
-            // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-            /* clang-format on */ assert(false);
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+            assert(false);
             break;
           }
         }};

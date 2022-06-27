@@ -20,7 +20,6 @@
 
 namespace artccel::core::util {
 namespace detail {
-// NOLINTNEXTLINE(misc-unused-using-decls)
 using literals::operator""_UZ;
 
 constexpr auto cwchar_mbrlen_null{0_UZ};
@@ -61,12 +60,11 @@ auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
 auto mbrlen_unspecialized_null(std::string_view loc_enc,
                                std::mbstate_t &state) noexcept {
   auto const old_state{state};
-  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   auto const result{
+      // NOLINTNEXTLINE(concurrency-mt-unsafe)
       std::mbrlen(std::cbegin(loc_enc), std::size(loc_enc), &state)};
-  // clang-format off
-  // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
-  /* clang-format on */ if (result == cwchar_mbrlen_null) [[unlikely]] {
+  // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
+  if (result == cwchar_mbrlen_null) [[unlikely]] {
     auto const null_len_max{
         std::min(std::size_t{MB_LEN_MAX}, std::size(loc_enc))};
     for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
@@ -77,10 +75,8 @@ auto mbrlen_unspecialized_null(std::string_view loc_enc,
         return null_len;
       }
     }
-    // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-    /* clang-format on */ assert(
-        false && u8"Could not find the length of the null character");
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+    assert(false && u8"Could not find the length of the null character");
   }
   return result;
 }
@@ -106,10 +102,9 @@ template <typename UTFCharT> auto loc_enc_to_utf(std::string_view loc_enc) {
         [[unlikely]] case cwchar_mbrlen_null : [[fallthrough]];
         [[unlikely]] case cwchar_mbrlen_error : [[fallthrough]];
         [[unlikely]] case cwchar_mbrlen_incomplete :
-            // clang-format off
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
-            /* clang-format on */ assert(
-                false && u8"Could not find the length of the null character");
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+            assert(false &&
+                   u8"Could not find the length of the null character");
         break;
       }
       [[fallthrough]];
@@ -148,7 +143,6 @@ auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
 } // namespace detail
 
 namespace f {
-// NOLINTNEXTLINE(misc-unused-using-decls)
 using literals::operator""_UZ;
 
 auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string {

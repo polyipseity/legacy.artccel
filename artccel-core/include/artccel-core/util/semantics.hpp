@@ -6,7 +6,6 @@
 #include <gsl/gsl>      // import gsl::basic_zstring, gsl::dynamic_extent
 
 namespace artccel::core::util {
-// NOLINTNEXTLINE(misc-unused-using-decls)
 using literals::operator""_UZ;
 
 constexpr inline auto null_terminator_size{1_UZ};
