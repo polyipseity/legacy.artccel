@@ -83,8 +83,7 @@ auto mbrlen_unspecialized_null(std::string_view loc_enc,
   return result;
 }
 
-template <typename UTFCharT>
-auto loc_enc_to_utf(std::string_view loc_enc) -> std::basic_string<UTFCharT> {
+template <typename UTFCharT> auto loc_enc_to_utf(std::string_view loc_enc) {
   std::basic_string<UTFCharT> result{};
   std::mbstate_t state{};
   while (!loc_enc.empty()) {
@@ -125,7 +124,7 @@ auto loc_enc_to_utf(std::string_view loc_enc) -> std::basic_string<UTFCharT> {
   return result;
 }
 template <typename UTFCharT>
-auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) -> std::string {
+auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
   std::string result{};
   std::mbstate_t state{};
   std::array<char, MB_LEN_MAX> loc_enc{};
