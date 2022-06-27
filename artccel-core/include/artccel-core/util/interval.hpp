@@ -6,7 +6,7 @@
 #include "utility_extras.hpp"  // import Delegate
 #include <cassert>             // import assert
 #include <compare>             // import std::partial_ordering
-#include <concepts>    // import std::move_constructible, std::totally_ordered
+#include <concepts>            // import std::totally_ordered
 #include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::move
 
@@ -16,8 +16,7 @@ template <std::totally_ordered T, T V> struct Open_bound;
 template <std::totally_ordered T, T V> struct Closed_bound;
 template <std::totally_ordered T> struct Unbounded;
 template <typename L, Derived_from_but_not<Bound<typename L::type>> R>
-requires Derived_from_but_not<L, Bound<typename L::type>> &&
-    std::move_constructible<typename L::type>
+requires Derived_from_but_not<L, Bound<typename L::type>>
 class Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Dynamic_interval_t {
@@ -286,8 +285,7 @@ template <std::totally_ordered T> struct Unbounded : public Bound<T> {
 };
 
 template <typename L, Derived_from_but_not<Bound<typename L::type>> R>
-requires Derived_from_but_not<L, Bound<typename L::type>> &&
-    std::move_constructible<typename L::type>
+requires Derived_from_but_not<L, Bound<typename L::type>>
 class Interval : public Delegate<typename L::type, false> {
 public:
   using left = L;
