@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
 #pragma once
 
-#include "encoding.hpp" // import f::utf8_to_utf8_compat, literals::encoding::operator""_as_utf8_compat
+#include "encoding.hpp" // import f::utf8_as_utf8_compat, literals::encoding::operator""_as_utf8_compat
 #include "polyfill.hpp" // import f::to_underlying
 #include <bitset>       // import std::bitset
 #include <cassert>      // import assert
@@ -36,7 +36,7 @@ constexpr void check_bitset(std::bitset<N> const &valid,
       // clang-format off
       // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
       /* clang-format on */ valid_value != value) [[unlikely]] {
-    std::cerr << f::utf8_to_utf8_compat(msg_prefix) << u8": "_as_utf8_compat
+    std::cerr << f::utf8_as_utf8_compat(msg_prefix) << u8": "_as_utf8_compat
               << (value ^ valid_value) << u8'\n'_as_utf8_compat;
     // clang-format off
 // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)

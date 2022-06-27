@@ -149,10 +149,10 @@ namespace f {
 // NOLINTNEXTLINE(misc-unused-using-decls)
 using literals::operator""_UZ;
 
-auto utf8_compat_to_utf8(std::string_view utf8_compat) -> std::u8string {
+auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string {
   return {std::cbegin(utf8_compat), std::cend(utf8_compat)};
 }
-auto utf8_to_utf8_compat(std::u8string_view utf8) -> std::string {
+auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
   return {std::cbegin(utf8), std::cend(utf8)};
 }
 
@@ -168,7 +168,7 @@ auto utf8_to_utf16(char8_t utf8) -> std::u16string {
   return utf8_to_utf16({&utf8, 1_UZ});
 }
 auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
-  return utf8_compat_to_utf8(
+  return utf8_compat_as_utf8(
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
           .to_bytes(std::cbegin(utf16), std::cend(utf16)));
 }

@@ -43,8 +43,8 @@ constexpr auto operator""_as_utf8_compat [[nodiscard]] (char8_t utf8) {
 } // namespace literals::encoding
 
 namespace f {
-auto utf8_compat_to_utf8(std::string_view utf8_compat) -> std::u8string;
-auto utf8_to_utf8_compat(std::u8string_view utf8) -> std::string;
+auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string;
+auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string;
 
 auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string;
 auto utf8_to_utf16(char8_t utf8) -> std::u16string;
