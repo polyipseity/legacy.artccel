@@ -83,7 +83,7 @@ public:
   template <
       std::convertible_to<typename decltype(position_)::value_type>... Position>
   requires(sizeof...(Position) == D) explicit Point(Position... position)
-      : position_{std::move(position)...} {}
+      : position_{{std::move(position)...}} {}
   auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> gsl::owner<interface::Point *> override {
     return new Point{*this};
