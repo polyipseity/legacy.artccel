@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
 #pragma once
 
-#include "encoding.hpp" // import f::utf8_to_loc_enc
+#include "encoding.hpp" // import f::utf8_to_utf8_compat, literals::encoding::operator""_as_utf8_compat
 #include "polyfill.hpp" // import f::to_underlying
 #include <bitset>       // import std::bitset
 #include <cassert>      // import assert
@@ -22,6 +22,8 @@ requires std::is_enum_v<E>
 using Bitset_of = std::bitset<CHAR_BIT * sizeof(E)>;
 
 namespace f {
+using literals::encoding::operator""_as_utf8_compat;
+
 consteval auto next_bitmask [[nodiscard]] (std::uint64_t bitmask) {
   return bitmask == empty_bitmask ? std::uint64_t{1} : bitmask << 1U;
 }
@@ -34,8 +36,8 @@ constexpr void check_bitset(std::bitset<N> const &valid,
       // clang-format off
       // NOLINTNEXTLINE(google-readability-braces-around-statements, hicpp-braces-around-statements, readability-braces-around-statements)
       /* clang-format on */ valid_value != value) [[unlikely]] {
-    std::cerr << f::utf8_to_loc_enc(msg_prefix) << f::utf8_to_loc_enc(u8": ")
-              << (value ^ valid_value) << f::utf8_to_loc_enc(u8'\n');
+    std::cerr << f::utf8_to_utf8_compat(msg_prefix) << u8": "_as_utf8_compat
+              << (value ^ valid_value) << u8'\n'_as_utf8_compat;
     // clang-format off
 // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay, hicpp-no-array-decay)
     /* clang-format on */ assert(false);
