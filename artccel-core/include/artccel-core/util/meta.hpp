@@ -49,71 +49,67 @@ constexpr static auto type_name_storage{[] {
   }
 }()};
 
-template <typename T, typename Find, typename Replace>
-struct Find_and_replace_all;
-enum class Find_and_replace_target : bool {
+template <typename T, typename Find, typename Replace> struct Replace_all;
+enum class Replace_target : bool {
   self = false,
   container = true,
 };
 template <typename NotFound, typename Find, typename Replace>
 requires(!std::same_as<NotFound, Find>)
     // NOLINTNEXTLINE(altera-struct-pack-align)
-    struct Find_and_replace_all<NotFound, Find, Replace> {
+    struct Replace_all<NotFound, Find, Replace> {
   using type = NotFound;
 };
 template <typename Find, typename Replace>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Find_and_replace_all<Find, Find, Replace> {
+struct Replace_all<Find, Find, Replace> {
   using type = Replace;
 };
-template <template <Find_and_replace_target> typename Find, typename Replace>
+template <template <Replace_target> typename Find, typename Replace>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Find_and_replace_all<Find<Find_and_replace_target::self>,
-                            Find<Find_and_replace_target::self>, Replace> {
+struct Replace_all<Find<Replace_target::self>, Find<Replace_target::self>,
+                   Replace> {
   using type = Replace;
 };
 template <template <typename> typename T,
-          template <Find_and_replace_target> typename Find, typename Replace>
+          template <Replace_target> typename Find, typename Replace>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Find_and_replace_all<T<Find<Find_and_replace_target::container>>,
-                            Find<Find_and_replace_target::container>, Replace> {
+struct Replace_all<T<Find<Replace_target::container>>,
+                   Find<Replace_target::container>, Replace> {
   using type = Replace;
 };
 template <template <typename...> typename T, typename Find, typename Replace,
           typename... TArgs>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Find_and_replace_all<T<TArgs...>, Find, Replace> {
-  using type = T<typename Find_and_replace_all<TArgs, Find, Replace>::type...>;
+struct Replace_all<T<TArgs...>, Find, Replace> {
+  using type = T<typename Replace_all<TArgs, Find, Replace>::type...>;
 };
 template <typename T, typename Find, typename Replace>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Find_and_replace_all<T *, Find, Replace> {
-  using type = typename Find_and_replace_all<T, Find, Replace>::type *;
+struct Replace_all<T *, Find, Replace> {
+  using type = typename Replace_all<T, Find, Replace>::type *;
 };
 template <typename T, typename Find, typename Replace>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Find_and_replace_all<T &, Find, Replace> {
-  using type = typename Find_and_replace_all<T, Find, Replace>::type &;
+struct Replace_all<T &, Find, Replace> {
+  using type = typename Replace_all<T, Find, Replace>::type &;
 };
 template <typename T, typename Find, typename Replace>
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Find_and_replace_all<T &&, Find, Replace> {
-  using type = typename Find_and_replace_all<T, Find, Replace>::type &&;
+struct Replace_all<T &&, Find, Replace> {
+  using type = typename Replace_all<T, Find, Replace>::type &&;
 };
 } // namespace detail
 
-using Find_and_replace_target = detail::Find_and_replace_target;
+using Replace_target = detail::Replace_target;
 template <typename T, typename Find, typename Replace>
-using Find_and_replace_all = detail::Find_and_replace_all<T, Find, Replace>;
+using Replace_all = detail::Replace_all<T, Find, Replace>;
 template <typename T, typename Find, typename Replace>
-using Find_and_replace_all_t =
-    typename Find_and_replace_all<T, Find, Replace>::type;
-template <typename T, template <Find_and_replace_target> typename Find,
-          typename Replace>
-using Find_and_replace_all_t_t = Find_and_replace_all_t<
-    Find_and_replace_all_t<T, Find<Find_and_replace_target::container>,
-                           Replace>,
-    Find<Find_and_replace_target::self>, Replace>;
+using Replace_all_t = typename Replace_all<T, Find, Replace>::type;
+template <typename T, template <Replace_target> typename Find, typename Replace>
+using Replace_all_t_t =
+    Replace_all_t<Replace_all_t<T, Find<Replace_target::container>, Replace>,
+                  Find<Replace_target::self>, Replace>;
 
 namespace f {
 template <typename T>

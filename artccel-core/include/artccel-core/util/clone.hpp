@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_UTIL_CLONE_HPP
 #pragma once
 
-#include "meta.hpp" // import Find_and_replace_all_t, Find_and_replace_all_t_t, Find_and_replace_target
+#include "meta.hpp" // import Replace_all_t, Replace_all_t_t, Replace_target
 #include "utility_extras.hpp" // import dependent_false_v, f::unify_ptr_to_ref, f::unify_ref_to_ptr
 #include <cassert>  // import assert
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as
@@ -44,18 +44,16 @@ concept Cloneable_by = requires(P const &ptr, F &&func) {
 };
 template <typename F, typename P>
 concept Cloner_of = Cloneable_by<P, F>;
-template <Find_and_replace_target = Find_and_replace_target::self>
-struct Clone_auto_element_t {};
+template <Replace_target = Replace_target::self> struct Clone_auto_element_t {};
 // NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_element_t<Find_and_replace_target::self>;
+extern template struct Clone_auto_element_t<Replace_target::self>;
 // NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_element_t<Find_and_replace_target::container>;
-template <Find_and_replace_target = Find_and_replace_target::self>
-struct Clone_auto_deleter_t {};
+extern template struct Clone_auto_element_t<Replace_target::container>;
+template <Replace_target = Replace_target::self> struct Clone_auto_deleter_t {};
 // NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_deleter_t<Find_and_replace_target::self>;
+extern template struct Clone_auto_deleter_t<Replace_target::self>;
 // NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_deleter_t<Find_and_replace_target::container>;
+extern template struct Clone_auto_deleter_t<Replace_target::container>;
 template <typename P>
 constexpr auto default_clone_function{[]() noexcept {
   constexpr struct {
@@ -127,18 +125,16 @@ template <typename P, Cloner_of<P> F>
 using clone_deleter_t = typename std::invoke_result_t<decltype(clone_raw<P, F>),
                                                       P, F>::deleter_type;
 template <typename P, Cloner_of<P> F,
-          typename Return = Find_and_replace_all_t<P, clone_element_t<P, F>,
-                                                   Clone_auto_element_t<>>>
+          typename Return =
+              Replace_all_t<P, clone_element_t<P, F>, Clone_auto_element_t<>>>
 requires(
     !std::derived_from<clone_element_t<P, F>,
                        std::enable_shared_from_this<clone_element_t<P, F>>> ||
-    std::derived_from<
-        Find_and_replace_all_t_t<Return, Clone_auto_element_t, int>,
-        std::shared_ptr<int>>) constexpr auto clone
+    std::derived_from<Replace_all_t_t<Return, Clone_auto_element_t, int>,
+                      std::shared_ptr<int>>) constexpr auto clone
     [[nodiscard]] (P const &ptr, F &&func) -> decltype(auto) {
-  using return_type = Find_and_replace_all_t_t<
-      Find_and_replace_all_t_t<Return, Clone_auto_deleter_t,
-                               clone_deleter_t<P, F>>,
+  using return_type = Replace_all_t_t<
+      Replace_all_t_t<Return, Clone_auto_deleter_t, clone_deleter_t<P, F>>,
       Clone_auto_element_t, clone_element_t<P, F>>;
   auto ret{
       clone_raw(ptr, func)}; // std::shared_ptr<?>, std::unique_ptr<?, ?>, T
