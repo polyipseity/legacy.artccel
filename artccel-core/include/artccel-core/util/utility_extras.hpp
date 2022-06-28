@@ -2,15 +2,16 @@
 #define ARTCCEL_CORE_UTIL_UTILITY_EXTRAS_HPP
 #pragma once
 
-#include "polyfill.hpp" // import literals::operator""_UZ
-#include <array>        // import std::array
-#include <cassert>      // import assert
+#include "containers_extras.hpp" // import f::to_array_cv
+#include "polyfill.hpp"          // import literals::operator""_UZ
+#include <array>                 // import std::array
+#include <cassert>               // import assert
 #include <concepts> // import std::copy_constructible, std::invocable, std::move_constructible
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
 #include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
-#include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::make_index_sequence, std::move
+#include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 namespace artccel::core::util {
 using literals::operator""_UZ;
@@ -68,27 +69,6 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
         std::forward<Args>(std::get<I>(std::forward<TArgs>(t_args)))...);
   }
   (std::index_sequence_for<Args...>{});
-}
-
-template <typename T, std::size_t N>
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-constexpr auto to_array_cv(T (&array)[N]) {
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  return [&array]<std::size_t... I>(
-      [[maybe_unused]] std::index_sequence<I...> /*unused*/) {
-    return std::array<T, N>{{array[I]...}};
-  }
-  (std::make_index_sequence<N>{});
-}
-template <typename T, std::size_t N>
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-constexpr auto to_array_cv(T (&&array)[N]) {
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  return [&array]<std::size_t... I>(
-      [[maybe_unused]] std::index_sequence<I...> /*unused*/) {
-    return std::array<T, N>{{std::move(array[I])...}};
-  }
-  (std::make_index_sequence<N>{});
 }
 } // namespace f
 
