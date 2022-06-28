@@ -115,10 +115,6 @@ using Replace_all_t_t =
 
 namespace f {
 template <typename T>
-consteval static auto type_name_loc_enc_data [[nodiscard]] () noexcept {
-  return detail::type_name_storage<T>;
-}
-template <typename T>
 consteval static auto type_name_loc_enc [[nodiscard]] () noexcept {
   return std::string_view{std::cbegin(detail::type_name_storage<T>),
                           std::size(detail::type_name_storage<T>) -
@@ -126,7 +122,8 @@ consteval static auto type_name_loc_enc [[nodiscard]] () noexcept {
 }
 template <typename T> consteval static auto type_name [[nodiscard]] () {
   // better hope that the literal encoding is UTF-8
-  return f::utf8_compat_as_utf8<Template_string{type_name_loc_enc_data<T>()}>();
+  return f::utf8_compat_as_utf8<Template_string{
+      detail::type_name_storage<T>}>();
 }
 } // namespace f
 } // namespace artccel::core::util
