@@ -324,10 +324,10 @@ private:
   constexpr static void
   check(type const &value) noexcept(noexcept(L{} < value && u8"L >(=) value",
                                              value < R{} && u8"value >(=) R")) {
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-assert(L{} < value && u8"L >(=) value");
-// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-assert(value < R{} && u8"value >(=) R");
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+    assert(L{} < value && u8"L >(=) value");
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+    assert(value < R{} && u8"value >(=) R");
   }
 };
 } // namespace artccel::core::util
