@@ -2,13 +2,15 @@
 #define ARTCCEL_CORE_UTIL_META_HPP
 #pragma once
 
-#include "encoding.hpp"  // import f::loc_enc_to_utf8
-#include "semantics.hpp" // import null_terminator_size
-#include <algorithm>     // import std::ranges::copy
+#include "containers_extras.hpp" // import f::const_array
+#include "encoding.hpp"          // import f::loc_enc_to_utf8
+#include "semantics.hpp"         // import null_terminator_size
+#include <algorithm>             // import std::ranges::copy
 #include <array> // import std::array, std::begin, std::cbegin, std::cend, std::size, std::to_array
 #include <concepts>    // import std::same_as
 #include <cstddef>     // import std::size_t
 #include <string_view> // import std::string_view
+#include <utility>     // import std::move
 
 namespace artccel::core::util {
 namespace detail {
@@ -45,7 +47,7 @@ constexpr static auto type_name_storage{[] {
         std::cend(raw_type_name<T>()) - type_name_format.junk_suffix_};
     std::array<char, std::size(type_name) + null_terminator_size> init{};
     std::ranges::copy(type_name, std::begin(init));
-    return init;
+    return f::const_array(std::move(init));
   }
 }()};
 

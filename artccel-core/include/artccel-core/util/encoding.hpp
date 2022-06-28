@@ -2,12 +2,14 @@
 #define ARTCCEL_CORE_UTIL_ENCODING_HPP
 #pragma once
 
-#include "semantics.hpp"      // import null_terminator_size
-#include "utility_extras.hpp" // import Template_string
-#include <algorithm>          // import std::ranges::transform
+#include "containers_extras.hpp" // import f::const_array
+#include "semantics.hpp"         // import null_terminator_size
+#include "utility_extras.hpp"    // import Template_string
+#include <algorithm>             // import std::ranges::transform
 #include <array> // import std::array, std::begin, std::cbegin, std::size
 #include <string> // import std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
+#include <utility>     // import std::move
 
 namespace artccel::core::util {
 namespace literals::encoding {
@@ -18,7 +20,7 @@ constexpr inline auto reinterpretation_storage{[] {
   std::ranges::transform(Str.data_, std::begin(init), [](auto chr) noexcept {
     return static_cast<AsCharT>(chr);
   });
-  return init;
+  return f::const_array(std::move(init));
 }()};
 } // namespace detail
 template <Template_string Str>
