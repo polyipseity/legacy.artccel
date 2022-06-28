@@ -147,10 +147,10 @@ namespace f {
 using literals::operator""_UZ;
 
 auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string {
-  return {std::cbegin(utf8_compat), std::size(utf8_compat)};
+  return {std::cbegin(utf8_compat), std::cend(utf8_compat)};
 }
 auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
-  return {std::cbegin(utf8), std::size(utf8)};
+  return {std::cbegin(utf8), std::cend(utf8)};
 }
 
 auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
