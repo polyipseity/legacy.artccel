@@ -187,9 +187,9 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_constant *> override {
-    util::f::check_bitset(Compute_constant::clone_valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        Compute_constant::clone_valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
     return new Compute_constant{/* *this */};
   };
   constexpr ~Compute_constant() noexcept override = default;
@@ -243,9 +243,9 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function_constant *> override {
-    util::f::check_bitset(Compute_function_constant::clone_valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        Compute_function_constant::clone_valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
     return new Compute_function_constant{/* *this */};
   };
   constexpr ~Compute_function_constant() noexcept override = default;
@@ -287,9 +287,9 @@ protected:
         value_{std::move(value)} {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::concurrent};
-    util::f::check_bitset(valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
   }
 
 private:
@@ -298,7 +298,8 @@ private:
       [[nodiscard]] (Compute_options const &options, Args &&...args) {
     constexpr static auto valid_options{~Compute_option::concurrent};
     util::f::check_bitset(
-        valid_options, u8"Unnecessary "s + util::f::type_name<Compute_option>(),
+        valid_options,
+        u8"Unnecessary "s.append(util::f::type_name<Compute_option>()),
         options);
     return create_const_1(options, std::forward<Args>(args)...);
   }
@@ -346,9 +347,9 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_value *> override {
-    util::f::check_bitset(Compute_value::clone_valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        Compute_value::clone_valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
     return new Compute_value{*this, (options | Compute_option::concurrent).any()
                                         ? std::make_unique<std::shared_mutex>()
                                         : nullptr};
@@ -435,9 +436,9 @@ protected:
                     std::forward<Args>(args)...)} {
     constexpr static auto valid_options{Compute_option::concurrent |
                                         Compute_option::defer};
-    util::f::check_bitset(valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
   }
   template <typename... Args>
   requires std::invocable<decltype(function_), Args...>
@@ -474,7 +475,8 @@ private:
       [[nodiscard]] (Compute_options const &options, Args &&...args) {
     constexpr static auto valid_options{~Compute_option::concurrent};
     util::f::check_bitset(
-        valid_options, u8"Unnecessary "s + util::f::type_name<Compute_option>(),
+        valid_options,
+        u8"Unnecessary "s.append(util::f::type_name<Compute_option>()),
         options);
     return create_const_1(options, std::forward<Args>(args)...);
   }
@@ -506,9 +508,9 @@ public:
       -> std::optional<R> {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::defer};
-    util::f::check_bitset(valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
     auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
     bound_ = bind(invoke, function_, std::forward<Args>(args)...);
@@ -517,9 +519,9 @@ public:
   auto reset(Compute_options const &options) -> std::optional<R> {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::defer};
-    util::f::check_bitset(valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
     auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
     bound_(Bound_action::reset);
@@ -564,9 +566,9 @@ public:
   auto clone [[deprecated(/*u8*/ "Unsafe"),
                nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function *> override {
-    util::f::check_bitset(Compute_function::clone_valid_options,
-                          u8"Ignored "s + util::f::type_name<Compute_option>(),
-                          options);
+    util::f::check_bitset(
+        Compute_function::clone_valid_options,
+        u8"Ignored "s.append(util::f::type_name<Compute_option>()), options);
     return new Compute_function{*this,
                                 (options | Compute_option::concurrent).any()
                                     ? std::make_unique<std::shared_mutex>()

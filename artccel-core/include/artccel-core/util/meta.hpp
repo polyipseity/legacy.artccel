@@ -3,7 +3,7 @@
 #pragma once
 
 #include "containers_extras.hpp" // import f::const_array
-#include "encoding.hpp"          // import f::loc_enc_to_utf8
+#include "encoding.hpp"          // import f::utf8_compat_as_utf8
 #include "semantics.hpp"         // import null_terminator_size
 #include <algorithm>             // import std::ranges::copy
 #include <array> // import std::array, std::begin, std::cbegin, std::cend, std::size, std::to_array
@@ -124,8 +124,9 @@ consteval static auto type_name_loc_enc [[nodiscard]] () noexcept {
                           std::size(detail::type_name_storage<T>) -
                               null_terminator_size};
 }
-template <typename T> static auto type_name [[nodiscard]] () {
-  return f::loc_enc_to_utf8(type_name_loc_enc<T>());
+template <typename T> consteval static auto type_name [[nodiscard]] () {
+  // better hope that the literal encoding is UTF-8
+  return f::utf8_compat_as_utf8<Template_string{type_name_loc_enc_data<T>()}>();
 }
 } // namespace f
 } // namespace artccel::core::util
