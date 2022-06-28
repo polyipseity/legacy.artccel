@@ -8,7 +8,7 @@
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as
 #include <functional> // import std::invoke
 #include <memory> // import std::enable_shared_from_this, std::pointer_traits, std::shared_ptr, std::to_address, std::unique_pto_addresstr
-#include <type_traits> // import std::add_pointer_t, std::invoke_result_t, std::is_lvalue_reference_v, std::is_rvalue_reference_v, std::is_pointer_v, std::is_reference_v, std::remove_cv_t, std::remove_pointer_t
+#include <type_traits> // import std::invoke_result_t, std::is_lvalue_reference_v, std::is_rvalue_reference_v, std::is_pointer_v, std::is_reference_v, std::remove_cv_t, std::remove_pointer_t
 #include <utility>     // import std::forward, std::move
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -37,8 +37,8 @@ namespace artccel::core::util {
 template <typename P, typename F>
 concept Cloneable_by = requires(P const &ptr, F &&func) {
   requires std::convertible_to <
-      std::add_pointer_t<std::remove_cv_t<
-          std::remove_pointer_t<decltype(std::to_address(ptr))>>>,
+      std::remove_cv_t<
+          std::remove_pointer_t<decltype(std::to_address(ptr))>>*,
   decltype(std::to_address(f::unify_ref_to_ptr(
       std::invoke(std::forward<F>(func), *std::to_address(ptr))))) > ;
 };
