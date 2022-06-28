@@ -119,7 +119,7 @@ consteval static auto type_name_loc_enc_data [[nodiscard]] () noexcept {
 template <typename T>
 consteval static auto type_name_loc_enc [[nodiscard]] () noexcept {
   return std::string_view{std::cbegin(detail::type_name_storage<T>),
-                          std::cend(detail::type_name_storage<T>) -
+                          std::size(detail::type_name_storage<T>) -
                               null_terminator_size};
 }
 template <typename T> static auto type_name [[nodiscard]] () {
