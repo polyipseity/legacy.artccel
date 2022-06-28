@@ -46,12 +46,16 @@ template <typename F, typename P>
 concept Cloner_of = Cloneable_by<P, F>;
 template <Find_and_replace_target = Find_and_replace_target::self>
 struct Clone_auto_element_t {};
-template <> struct Clone_auto_element_t<Find_and_replace_target::self>;
-template <> struct Clone_auto_element_t<Find_and_replace_target::container>;
+// NOLINTNEXTLINE(altera-struct-pack-align)
+extern template struct Clone_auto_element_t<Find_and_replace_target::self>;
+// NOLINTNEXTLINE(altera-struct-pack-align)
+extern template struct Clone_auto_element_t<Find_and_replace_target::container>;
 template <Find_and_replace_target = Find_and_replace_target::self>
 struct Clone_auto_deleter_t {};
-template <> struct Clone_auto_deleter_t<Find_and_replace_target::self>;
-template <> struct Clone_auto_deleter_t<Find_and_replace_target::container>;
+// NOLINTNEXTLINE(altera-struct-pack-align)
+extern template struct Clone_auto_deleter_t<Find_and_replace_target::self>;
+// NOLINTNEXTLINE(altera-struct-pack-align)
+extern template struct Clone_auto_deleter_t<Find_and_replace_target::container>;
 template <typename P>
 constexpr auto default_clone_function{[]() noexcept {
   constexpr struct {
