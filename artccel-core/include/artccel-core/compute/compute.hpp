@@ -115,12 +115,14 @@ public:
     }
     return return_;
   }
-  auto operator>>(R &right) const
-      noexcept(noexcept(R{right = *this()}) &&
-               std::is_nothrow_move_constructible_v<R>) -> R {
-    return right = *this();
+  friend auto operator>>(Compute_out const &left, R &right) noexcept(
+      noexcept(R{right = left()}) && std::is_nothrow_move_constructible_v<R>)
+      -> R {
+    return right = left();
   }
-  auto operator>>=(R &right) -> R { return right = *this(Extract_t{}); }
+  friend auto operator>>=(Compute_out &left, R &right) -> R {
+    return right = left(Extract_t{});
+  }
 
   ~Compute_out() noexcept override = default;
   constexpr void swap(Compute_out &other) noexcept {
@@ -329,15 +331,19 @@ public:
     std::shared_lock const guard{mutex_};
     return value_;
   }
-  auto operator<<(R const &value) -> R { return *this << R{value}; }
-  auto operator<<(R &&value) -> R {
-    std::lock_guard const guard{mutex_};
-    return std::exchange(value_, std::move(value));
+  friend auto operator<<(Compute_value &left, R const &value) -> R {
+    return left << R{value};
   }
-  auto operator<<=(R const &value) -> R { return *this <<= R{value}; }
-  auto operator<<=(R &&value) -> R {
-    std::lock_guard const guard{mutex_};
-    return value_ = std::move(value);
+  friend auto operator<<(Compute_value &left, R &&value) -> R {
+    std::lock_guard const guard{left.mutex_};
+    return std::exchange(left.value_, std::move(value));
+  }
+  friend auto operator<<=(Compute_value &left, R const &value) -> R {
+    return left <<= R{value};
+  }
+  friend auto operator<<=(Compute_value &left, R &&value) -> R {
+    std::lock_guard const guard{left.mutex_};
+    return left.value_ = std::move(value);
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
@@ -534,29 +540,32 @@ public:
   }
   template <template <typename...> typename Tuple, typename... Args>
   requires std::invocable<decltype(function_), Args...>
-  void operator<<(Tuple<Args...> &&t_args) {
+  friend void operator<<(Compute_function &left, Tuple<Args...> &&t_args) {
     util::f::forward_apply(
-        [this](Args &&...args) mutable {
-          bind(util::Enum_bitset{} | Compute_option::defer,
-               std::forward<Args>(args)...);
+        [&left](Args &&...args) mutable {
+          left.bind(util::Enum_bitset{} | Compute_option::defer,
+                    std::forward<Args>(args)...);
         },
         std::forward<Tuple<Args...>>(t_args));
   }
   template <template <typename...> typename Tuple, typename... Args>
   requires std::invocable<decltype(function_), Args...>
-  auto operator<<=(Tuple<Args...> &&t_args) -> R {
+  friend auto operator<<=(Compute_function &left, Tuple<Args...> &&t_args)
+      -> R {
     return util::f::forward_apply(
-        [this](Args &&...args) mutable -> decltype(auto) {
-          return *bind(util::Enum_bitset{} | Compute_option::empty,
-                       std::forward<Args>(args)...);
+        [&left](Args &&...args) mutable -> decltype(auto) {
+          return *left.bind(util::Enum_bitset{} | Compute_option::empty,
+                            std::forward<Args>(args)...);
         },
         std::forward<Tuple<Args...>>(t_args));
   }
-  void operator<<([[maybe_unused]] Reset_t /*unused*/) {
-    reset(util::Enum_bitset{} | Compute_option::defer);
+  friend void operator<<(Compute_function &left,
+                         [[maybe_unused]] Reset_t /*unused*/) {
+    left.reset(util::Enum_bitset{} | Compute_option::defer);
   }
-  auto operator<<=([[maybe_unused]] Reset_t /*unused*/) -> R {
-    return *reset(util::Enum_bitset{} | Compute_option::empty);
+  friend auto operator<<=(Compute_function &left,
+                          [[maybe_unused]] Reset_t /*unused*/) -> R {
+    return *left.reset(util::Enum_bitset{} | Compute_option::empty);
   }
 
   auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
@@ -624,7 +633,8 @@ Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Out_t {
   explicit consteval Out_t() noexcept = default;
-  auto operator<<(Compute_in_any_c auto const &right) const {
+  friend auto operator<<(Out_t const &left [[maybe_unused]],
+                         Compute_in_any_c auto const &right) {
     return Compute_out{right};
   }
 };
