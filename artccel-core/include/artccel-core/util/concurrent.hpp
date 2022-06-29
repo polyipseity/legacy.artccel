@@ -3,12 +3,13 @@
 #pragma once
 
 #include "utility_extras.hpp" // import Delegate
-#include <chrono>      // import std::chrono::duration, std::chrono::time_point
-#include <concepts>    // import std::semiregular, std::same_as
-#include <memory>      // import std::make_unique, std::unique_ptr
-#include <mutex>       // import std::call_once, std::once_flag
-#include <type_traits> // import std::is_nothrow_move_constructible_v
-#include <utility>     // import std::forward, std::move, std::swap
+#include <chrono>   // import std::chrono::duration, std::chrono::time_point
+#include <concepts> // import std::semiregular, std::same_as
+#include <memory>   // import std::make_unique, std::unique_ptr
+#include <mutex> // import std::call_once, std::mutex, std::once_flag, std::recursive_mutex, std::recursive_timed_mutex, std::timed_mutex
+#include <shared_mutex> // import std::shared_mutex, std::shared_timed_mutex
+#include <type_traits>  // import std::is_nothrow_move_constructible_v
+#include <utility> // import std::declval, std::forward, std::move, std::swap
 
 namespace artccel::core::util {
 class Semiregular_once_flag {
@@ -137,26 +138,26 @@ public:
 
   // named requirement: BasicLockable
 
-  constexpr void lock() const
-      noexcept(noexcept(this->value_->lock(),
-                        null_lockable.lock())) requires requires {
-    { this->value_->lock() } -> std::same_as<void>;
+  template <typename = void>
+  requires requires {
+    { std::declval<type>()->lock() } -> std::same_as<void>;
     { null_lockable.lock() } -> std::same_as<void>;
   }
-  {
+  constexpr void lock() const
+      noexcept(noexcept(this->value_->lock(), null_lockable.lock())) {
     if (this->value_) {
       this->value_->lock();
     } else {
       null_lockable.lock();
     }
   }
-  constexpr void unlock() const
-      noexcept(noexcept(this->value_->unlock(),
-                        null_lockable.unlock())) requires requires {
-    { this->value_->unlock() } -> std::same_as<void>;
+  template <typename = void>
+  requires requires {
+    { std::declval<type>()->unlock() } -> std::same_as<void>;
     { null_lockable.unlock() } -> std::same_as<void>;
   }
-  {
+  constexpr void unlock() const
+      noexcept(noexcept(this->value_->unlock(), null_lockable.unlock())) {
     if (this->value_) {
       this->value_->unlock();
     } else {
@@ -166,15 +167,15 @@ public:
 
   // named requirement: BasicLockable <- Lockable
 
+  template <typename = void>
+  requires requires {
+    { std::declval<type>()->try_lock() } -> std::same_as<bool>;
+    { null_lockable.try_lock() } -> std::same_as<bool>;
+  }
   constexpr auto try_lock [[nodiscard]] () const
       noexcept(noexcept(bool{this->value_->try_lock()},
                         bool{null_lockable.try_lock()}) &&
-               std::is_nothrow_move_constructible_v<bool>)
-          -> bool requires requires {
-    { this->value_->try_lock() } -> std::same_as<bool>;
-    { null_lockable.try_lock() } -> std::same_as<bool>;
-  }
-  {
+               std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
       return this->value_->try_lock();
     }
@@ -184,32 +185,42 @@ public:
   // named requirement: BasicLockable <- Lockable <- TimedLockable
 
   template <typename Rep, typename Period>
+  requires requires {
+    {
+      std::declval<type>()->try_lock_for(
+          std::declval<std::chrono::duration<Rep, Period>>())
+      } -> std::same_as<bool>;
+    {
+      null_lockable.try_lock_for(
+          std::declval<std::chrono::duration<Rep, Period>>())
+      } -> std::same_as<bool>;
+  }
   constexpr auto try_lock_for
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
       noexcept(noexcept(bool{this->value_->try_lock_for(rel_time)},
                         bool{null_lockable.try_lock_for(rel_time)}) &&
-               std::is_nothrow_move_constructible_v<bool>)
-          -> bool requires requires {
-    { this->value_->try_lock_for(rel_time) } -> std::same_as<bool>;
-    { null_lockable.try_lock_for(rel_time) } -> std::same_as<bool>;
-  }
-  {
+               std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
       return this->value_->try_lock_for(rel_time);
     }
     return null_lockable.try_lock_for(rel_time);
   }
   template <typename Clock, typename Duration>
+  requires requires {
+    {
+      std::declval<type>()->try_lock_until(
+          std::declval<std::chrono::time_point<Clock, Duration>>())
+      } -> std::same_as<bool>;
+    {
+      null_lockable.try_lock_until(
+          std::declval<std::chrono::time_point<Clock, Duration>>())
+      } -> std::same_as<bool>;
+  }
   constexpr auto try_lock_until [[nodiscard]] (
       std::chrono::time_point<Clock, Duration> const &abs_time) const
       noexcept(noexcept(bool{this->value_->try_lock_until(abs_time)},
                         bool{null_lockable.try_lock_until(abs_time)}) &&
-               std::is_nothrow_move_constructible_v<bool>)
-          -> bool requires requires {
-    { this->value_->try_lock_until(abs_time) } -> std::same_as<bool>;
-    { null_lockable.try_lock_until(abs_time) } -> std::same_as<bool>;
-  }
-  {
+               std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
       return this->value_->try_lock_until(abs_time);
     }
@@ -218,40 +229,42 @@ public:
 
   // named requirement: SharedLockable
 
-  constexpr void lock_shared() const
-      noexcept(noexcept(this->value_->lock_shared(),
-                        null_lockable.lock_shared())) requires requires {
-    { this->value_->lock_shared() } -> std::same_as<void>;
+  template <typename = void>
+  requires requires {
+    { std::declval<type>()->lock_shared() } -> std::same_as<void>;
     { null_lockable.lock_shared() } -> std::same_as<void>;
   }
-  {
+  constexpr void lock_shared() const
+      noexcept(noexcept(this->value_->lock_shared(),
+                        null_lockable.lock_shared())) {
     if (this->value_) {
       this->value_->lock_shared();
     } else {
       null_lockable.lock_shared();
     }
   }
+  template <typename = void>
+  requires requires {
+    { std::declval<type>()->try_lock_shared() } -> std::same_as<bool>;
+    { null_lockable.try_lock_shared() } -> std::same_as<bool>;
+  }
   constexpr auto try_lock_shared [[nodiscard]] () const
       noexcept(noexcept(bool{this->value_->try_lock_shared()},
                         bool{null_lockable.try_lock_shared()}) &&
-               std::is_nothrow_move_constructible_v<bool>)
-          -> bool requires requires {
-    { this->value_->try_lock_shared() } -> std::same_as<bool>;
-    { null_lockable.try_lock_shared() } -> std::same_as<bool>;
-  }
-  {
+               std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
       return this->value_->try_lock_shared();
     }
     return null_lockable.try_lock_shared();
   }
-  constexpr void unlock_shared() const
-      noexcept(noexcept(this->value_->unlock_shared(),
-                        null_lockable.unlock_shared())) requires requires {
-    { this->value_->unlock_shared() } -> std::same_as<void>;
+  template <typename = void>
+  requires requires {
+    { std::declval<type>()->unlock_shared() } -> std::same_as<void>;
     { null_lockable.unlock_shared() } -> std::same_as<void>;
   }
-  {
+  constexpr void unlock_shared() const
+      noexcept(noexcept(this->value_->unlock_shared(),
+                        null_lockable.unlock_shared())) {
     if (this->value_) {
       this->value_->unlock_shared();
     } else {
@@ -262,6 +275,16 @@ public:
   // named requirement: SharedLockable <- SharedTimedLockable
 
   template <typename Rep, typename Period>
+  requires requires {
+    {
+      std::declval<type>()->try_lock_shared_for(
+          std::declval<std::chrono::duration<Rep, Period>>())
+      } -> std::same_as<bool>;
+    {
+      null_lockable.try_lock_shared_for(
+          std::declval<std::chrono::duration<Rep, Period>>())
+      } -> std::same_as<bool>;
+  }
   constexpr auto try_lock_shared_for
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
       noexcept(noexcept(bool{this->value_->try_lock_shared_for(rel_time)},
@@ -273,6 +296,16 @@ public:
     return null_lockable.try_lock_shared_for(rel_time);
   }
   template <typename Clock, typename Duration>
+  requires requires {
+    {
+      std::declval<type>()->try_lock_shared_until(
+          std::declval<std::chrono::time_point<Clock, Duration>>())
+      } -> std::same_as<bool>;
+    {
+      null_lockable.try_lock_shared_until(
+          std::declval<std::chrono::time_point<Clock, Duration>>())
+      } -> std::same_as<bool>;
+  }
   constexpr auto try_lock_shared_until [[nodiscard]] (
       std::chrono::time_point<Clock, Duration> const &abs_time) const
       noexcept(noexcept(bool{this->value_->try_lock_shared_until(abs_time)},
@@ -284,6 +317,12 @@ public:
     return null_lockable.try_lock_shared_until(abs_time);
   }
 };
+extern template class Nullable_lockable<std::mutex>;
+extern template class Nullable_lockable<std::timed_mutex>;
+extern template class Nullable_lockable<std::recursive_mutex>;
+extern template class Nullable_lockable<std::recursive_timed_mutex>;
+extern template class Nullable_lockable<std::shared_mutex>;
+extern template class Nullable_lockable<std::shared_timed_mutex>;
 } // namespace artccel::core::util
 
 #endif
