@@ -52,7 +52,7 @@ constexpr static auto type_name_storage{[] {
 }()};
 
 template <typename T, typename Find, typename Replace> struct Replace_all;
-enum class Replace_target : bool {
+enum struct Replace_target : bool {
   self = false,
   container = true,
 };

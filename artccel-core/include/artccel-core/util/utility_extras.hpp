@@ -18,7 +18,7 @@
 namespace artccel::core::util {
 using literals::operator""_UZ;
 
-template <typename T, bool Explicit = true> class Delegate;
+template <typename T, bool Explicit = true> struct Delegate;
 template <typename CharT, std::size_t N> struct Template_string;
 
 template <typename> constexpr inline auto dependent_false_v{false};
@@ -74,8 +74,7 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
 }
 } // namespace f
 
-template <typename T, bool Explicit> class Delegate {
-public:
+template <typename T, bool Explicit> struct Delegate {
   using type = T;
   // public members to be a structual type
   T value_; // NOLINT(misc-non-private-member-variables-in-classes)

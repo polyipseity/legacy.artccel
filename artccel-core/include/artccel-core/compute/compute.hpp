@@ -413,7 +413,7 @@ public:
       : Compute_function{std::forward<Args>(args)...} {}
 
 protected:
-  enum class Bound_action : bool {
+  enum struct Bound_action : bool {
     compute = false,
     reset = true,
   };
