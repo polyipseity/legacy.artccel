@@ -67,9 +67,8 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
   Errno_guard const errno_guard{};
   std::basic_string<UTFCharT> result{};
   std::mbstate_t state{};
-  while (!std::empty(loc_enc)) {
-    auto old_state{state};
-    UTFCharT utf_c{u8'\0'}; // not written to if the next character is null
+  for (auto old_state{state}; !std::empty(loc_enc); old_state = state) {
+    UTFCharT utf_c{}; // not written to if the next character is null
     switch (auto processed{mbrtoc(utf_c, loc_enc, state)}) {
       [[unlikely]] case cuchar_mbrtoc_error : {
         std::system_error errno_exc{errno, std::generic_category()};
