@@ -12,6 +12,15 @@ constexpr auto to_underlying [[nodiscard]] (
   // TODO: C++23: std::to_underlying
   return static_cast<std::underlying_type_t<decltype(enum_)>>(enum_);
 }
+inline void unreachable [[noreturn]] () noexcept {
+  // TODO: C++23: std::unreachable
+#ifdef __GNUC__ // GCC, Clang, ICC
+  __builtin_unreachable();
+#elif defined _MSC_VER // MSVC // TODO: C++23: #elifdef
+  __assume(false);
+#endif
+  // with [[noreturn]], an empty body also invokes undefined behavior
+}
 } // namespace f
 
 namespace literals {

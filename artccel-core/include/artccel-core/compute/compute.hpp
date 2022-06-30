@@ -5,8 +5,8 @@
 #include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::enum_bitset_operators, util::f::check_bitset, util::f::next_bitmask
 #include "../util/meta.hpp"        // import util::f::type_name
+#include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
-#include <cassert>                    // import assert
 #include <cinttypes>                  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function, std::invoke
@@ -464,9 +464,7 @@ protected:
             flag = util::Semiregular_once_flag{};
             return std::optional<R>{};
           default:
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-            assert(false);
-            break;
+            util::f::unreachable();
           }
         }};
     if (invoke) {
