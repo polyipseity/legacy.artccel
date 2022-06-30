@@ -4,7 +4,8 @@
 #include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
 #include <artccel-core/util/cerrno_extras.hpp> // import Errno_guard
 #include <artccel-core/util/exception_extras.hpp> // import f::throw_multiple_as_nested
-#include <artccel-core/util/polyfill.hpp> // import literals::operator""_UZ
+#include <artccel-core/util/polyfill.hpp>  // import literals::operator""_UZ
+#include <artccel-core/util/semantics.hpp> // import null_terminator_size
 #include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
 #include <cassert>                              // import assert
 #include <cerrno>                               // import errno
@@ -112,6 +113,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
             assert(false &&
                    u8"Could not find the length of the null character");
+        processed = null_terminator_size;
         break;
       }
       [[fallthrough]];
