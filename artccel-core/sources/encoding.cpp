@@ -93,12 +93,12 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
   while (!std::empty(loc_enc)) {
     auto old_state{state};
     UTFCharT utf_c{u8'\0'}; // not written to if the next character is null
-    auto processed{mbrtoc(utf_c, loc_enc, state)};
-    switch (processed) {
-      [[unlikely]] case cuchar_mbrtoc_error
-          : std::system_error errno_exc{errno, std::generic_category()};
-      f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
-                                  std::move(errno_exc));
+    switch (auto processed{mbrtoc(utf_c, loc_enc, state)}) {
+      [[unlikely]] case cuchar_mbrtoc_error : {
+        std::system_error errno_exc{errno, std::generic_category()};
+        f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
+                                    std::move(errno_exc));
+      }
       [[unlikely]] case cuchar_mbrtoc_incomplete
           : throw std::invalid_argument{
                 f::utf8_to_loc_enc(u8"Incomplete byte sequence")};
@@ -135,12 +135,12 @@ static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
   std::array<char, MB_LEN_MAX> loc_enc{};
   std::ranges::for_each(
       std::as_const(utf), [&result, &state, &loc_enc](auto utf_c) {
-        auto const processed{crtomb(loc_enc, utf_c, state)};
-        switch (processed) {
-          [[unlikely]] case cuchar_crtomb_error
-              : std::system_error errno_exc{errno, std::generic_category()};
-          f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
-                                      std::move(errno_exc));
+        switch (auto const processed{crtomb(loc_enc, utf_c, state)}) {
+          [[unlikely]] case cuchar_crtomb_error : {
+            std::system_error errno_exc{errno, std::generic_category()};
+            f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
+                                        std::move(errno_exc));
+          }
         case cuchar_crtomb_surrogate:
           [[fallthrough]];
         default:
