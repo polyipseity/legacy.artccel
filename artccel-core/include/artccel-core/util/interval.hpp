@@ -321,13 +321,13 @@ public:
   }
 
 private:
-  constexpr static void
-  check(type const &value) noexcept(noexcept(L{} < value && u8"L >(=) value",
-                                             value < R{} && u8"value >(=) R")) {
+  constexpr static void check(type const &value) noexcept(
+      noexcept(L{} < value && u8"value is outside the lower bound",
+               value < R{} && u8"value is outside the upper bound")) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(L{} < value && u8"L >(=) value");
+    assert(L{} < value && u8"value is outside the lower bound");
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(value < R{} && u8"value >(=) R");
+    assert(value < R{} && u8"value is outside the upper bound");
   }
 };
 } // namespace artccel::core::util
