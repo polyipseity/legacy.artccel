@@ -62,30 +62,6 @@ static auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
   }
 }
 
-static auto mbrlen_unspecialized_null(std::string_view loc_enc,
-                                      std::mbstate_t &state) noexcept {
-  auto const old_state{state};
-  auto const result{
-      // NOLINTNEXTLINE(concurrency-mt-unsafe)
-      std::mbrlen(std::cbegin(loc_enc), std::size(loc_enc), &state)};
-  // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
-  if (result == cwchar_mbrlen_null) [[unlikely]] {
-    auto const null_len_max{
-        std::min(std::size_t{MB_LEN_MAX}, std::size(loc_enc))};
-    for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
-      auto state_copy{old_state};
-      // NOLINTNEXTLINE(concurrency-mt-unsafe)
-      if (std::mbrlen(std::cbegin(loc_enc), null_len, &state_copy) ==
-          cwchar_mbrlen_null) {
-        return null_len;
-      }
-    }
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(false && u8"Could not find the length of the null character");
-  }
-  return result;
-}
-
 template <typename UTFCharT>
 static auto loc_enc_to_utf(std::string_view loc_enc) {
   Errno_guard const errno_guard{};
@@ -105,18 +81,26 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
                 f::utf8_to_loc_enc(u8"Incomplete byte sequence")};
     case cuchar_mbrtoc_surrogate:
       break;
-      [[unlikely]] case cuchar_mbrtoc_null
-          : switch (processed = mbrlen_unspecialized_null(loc_enc, old_state)) {
-        [[unlikely]] case cwchar_mbrlen_null : [[fallthrough]];
-        [[unlikely]] case cwchar_mbrlen_error : [[fallthrough]];
-        [[unlikely]] case cwchar_mbrlen_incomplete :
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-            assert(false &&
-                   u8"Could not find the length of the null character");
+      [[unlikely]] case cuchar_mbrtoc_null : {
+        auto const null_len_max{
+            std::min(std::size_t{MB_LEN_MAX}, std::size(loc_enc))};
+        for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
+          if (auto old_state_copy{old_state};
+              // NOLINTNEXTLINE(concurrency-mt-unsafe)
+              std::mbrlen(std::cbegin(loc_enc), null_len, &old_state_copy) ==
+              cwchar_mbrlen_null
+              // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
+              ) [[likely]] {
+            processed = null_len;
+            goto has_null_len;
+          }
+        }
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+        assert(false && u8"Could not find the length of the null character");
         processed = null_terminator_size;
-        break;
+      has_null_len:
+        [[fallthrough]];
       }
-      [[fallthrough]];
     default:
       loc_enc.remove_prefix(processed);
       break;
