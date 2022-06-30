@@ -38,7 +38,7 @@ constexpr void check_bitset(std::bitset<N> const &valid,
     std::cerr << f::utf8_as_utf8_compat(msg_prefix) << u8": "_as_utf8_compat
               << (value ^ valid_value) << u8'\n'_as_utf8_compat;
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(false);
+    assert(false && u8"value has invalid bits set to 1");
   }
 #endif
 }
