@@ -3,7 +3,8 @@
 #include <algorithm> // import std::min, std::ranges::for_each
 #include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
 #include <artccel-core/util/cerrno_extras.hpp> // import Errno_guard
-#include <artccel-core/util/polyfill.hpp>      // import literals::operator""_UZ
+#include <artccel-core/util/exception_extras.hpp> // import f::throw_multiple_as_nested
+#include <artccel-core/util/polyfill.hpp> // import literals::operator""_UZ
 #include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
 #include <cassert>                              // import assert
 #include <cerrno>                               // import errno
@@ -19,7 +20,7 @@
 #include <string> // import std::basic_string, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 #include <system_error> // import std::generic_category, std::system_error
-#include <utility>      // import std::as_const
+#include <utility>      // import std::as_const, std::move
 
 namespace artccel::core::util {
 namespace detail {
@@ -94,11 +95,10 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
     UTFCharT utf_c{u8'\0'}; // not written to if the next character is null
     auto processed{mbrtoc(utf_c, loc_enc, state)};
     switch (processed) {
-      [[unlikely]] case cuchar_mbrtoc_error : try {
-        throw std::system_error{errno, std::generic_category()};
-      } catch (std::system_error const &exception) {
-        std::throw_with_nested(std::invalid_argument{exception.what()});
-      }
+      [[unlikely]] case cuchar_mbrtoc_error
+          : std::system_error &&errno_exc{errno, std::generic_category()};
+      f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
+                                  std::move(errno_exc));
       [[unlikely]] case cuchar_mbrtoc_incomplete
           : throw std::invalid_argument{
                 f::utf8_to_loc_enc(u8"Incomplete byte sequence")};
@@ -137,11 +137,10 @@ static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
       std::as_const(utf), [&result, &state, &loc_enc](auto utf_c) {
         auto const processed{crtomb(loc_enc, utf_c, state)};
         switch (processed) {
-          [[unlikely]] case cuchar_crtomb_error : try {
-            throw std::system_error{errno, std::generic_category()};
-          } catch (std::system_error const &exception) {
-            std::throw_with_nested(std::invalid_argument{exception.what()});
-          }
+          [[unlikely]] case cuchar_crtomb_error
+              : std::system_error &&errno_exc{errno, std::generic_category()};
+          f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
+                                      std::move(errno_exc));
         case cuchar_crtomb_surrogate:
           [[fallthrough]];
         default:
