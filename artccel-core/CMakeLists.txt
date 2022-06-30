@@ -7,6 +7,7 @@ include("${ROOT_DIR}/build_auto/init.cmake")
 add_library(artccel-core SHARED
 	"sources/cerrno_extras.cpp"
 	"sources/encoding.cpp"
+	"sources/main_hooks.cpp"
 	"sources/template_instantiations.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
