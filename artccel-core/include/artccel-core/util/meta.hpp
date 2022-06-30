@@ -18,12 +18,14 @@ template <typename T>
 consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 // internal linkage as it may be different
 // propagate internal linkage to callers if necessary
-#ifdef _MSC_VER
+#ifdef __GNUC__ // GCC, Clang, ICC
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
+  return __PRETTY_FUNCTION__;
+#elif defined _MSC_VER // MSVC // TODO: C++23: #elifdef
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
   return __FUNCSIG__;
 #else
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-  return __PRETTY_FUNCTION__;
+  return /*u8*/ "";
 #endif
 }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
