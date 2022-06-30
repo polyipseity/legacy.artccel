@@ -24,19 +24,19 @@ namespace artccel::core::util {
 namespace detail {
 using literals::operator""_UZ;
 
-constexpr auto cwchar_mbrlen_null{0_UZ};
-constexpr auto cwchar_mbrlen_error{-1_UZ};
-constexpr auto cwchar_mbrlen_incomplete{-2_UZ};
-constexpr auto cuchar_mbrtoc_null{0_UZ};
-constexpr auto cuchar_mbrtoc_error{-1_UZ};
-constexpr auto cuchar_mbrtoc_incomplete{-2_UZ};
-constexpr auto cuchar_mbrtoc_surrogate{-3_UZ};
-constexpr auto cuchar_crtomb_surrogate{0_UZ};
-constexpr auto cuchar_crtomb_error{-1_UZ};
+constexpr static auto cwchar_mbrlen_null{0_UZ};
+constexpr static auto cwchar_mbrlen_error{-1_UZ};
+constexpr static auto cwchar_mbrlen_incomplete{-2_UZ};
+constexpr static auto cuchar_mbrtoc_null{0_UZ};
+constexpr static auto cuchar_mbrtoc_error{-1_UZ};
+constexpr static auto cuchar_mbrtoc_incomplete{-2_UZ};
+constexpr static auto cuchar_mbrtoc_surrogate{-3_UZ};
+constexpr static auto cuchar_crtomb_surrogate{0_UZ};
+constexpr static auto cuchar_crtomb_error{-1_UZ};
 
 template <typename UTFCharT>
-auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
-            std::mbstate_t &state) noexcept {
+static auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
+                   std::mbstate_t &state) noexcept {
   if constexpr (std::same_as<UTFCharT, char16_t>) {
     return std::mbrtoc16(&utf_out, std::cbegin(loc_enc), std::size(loc_enc),
                          &state);
@@ -48,8 +48,8 @@ auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
   }
 }
 template <typename UTFCharT>
-auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
-            std::mbstate_t &state) noexcept {
+static auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
+                   std::mbstate_t &state) noexcept {
   if constexpr (std::same_as<UTFCharT, char16_t>) {
     return std::c16rtomb(std::data(loc_enc_out), utf, &state);
   } else if constexpr (std::same_as<UTFCharT, char32_t>) {
@@ -59,8 +59,8 @@ auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
   }
 }
 
-auto mbrlen_unspecialized_null(std::string_view loc_enc,
-                               std::mbstate_t &state) noexcept {
+static auto mbrlen_unspecialized_null(std::string_view loc_enc,
+                                      std::mbstate_t &state) noexcept {
   auto const old_state{state};
   auto const result{
       // NOLINTNEXTLINE(concurrency-mt-unsafe)
@@ -83,7 +83,8 @@ auto mbrlen_unspecialized_null(std::string_view loc_enc,
   return result;
 }
 
-template <typename UTFCharT> auto loc_enc_to_utf(std::string_view loc_enc) {
+template <typename UTFCharT>
+static auto loc_enc_to_utf(std::string_view loc_enc) {
   Errno_guard const errno_guard{};
   std::basic_string<UTFCharT> result{};
   std::mbstate_t state{};
@@ -126,7 +127,7 @@ template <typename UTFCharT> auto loc_enc_to_utf(std::string_view loc_enc) {
   return result;
 }
 template <typename UTFCharT>
-auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
+static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
   Errno_guard const errno_guard{};
   std::string result{};
   std::mbstate_t state{};
