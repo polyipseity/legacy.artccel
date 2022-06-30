@@ -37,10 +37,9 @@ namespace artccel::core::util {
 template <typename P, typename F>
 concept Cloneable_by = requires(P const &ptr, F &&func) {
   requires std::convertible_to <
-      std::remove_cv_t<
-          std::remove_pointer_t<decltype(std::to_address(ptr))>>*,
-  decltype(std::to_address(f::unify_ref_to_ptr(
-      std::invoke(std::forward<F>(func), *std::to_address(ptr))))) > ;
+      std::remove_cv_t<std::remove_pointer_t<decltype(std::to_address(ptr))>>
+  *, decltype(std::to_address(f::unify_ref_to_ptr(
+         std::invoke(std::forward<F>(func), *std::to_address(ptr))))) > ;
 };
 template <typename F, typename P>
 concept Cloner_of = Cloneable_by<P, F>;
@@ -72,7 +71,6 @@ concept Cloneable_by_default_clone_function =
 namespace detail {
 template <typename P, Cloner_of<P> F>
 constexpr auto clone_raw [[nodiscard]] (P const &ptr, F &&func) {
-
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
   assert(ptr && u8"ptr == nullptr");
   auto ret{[&ptr, &func] {
