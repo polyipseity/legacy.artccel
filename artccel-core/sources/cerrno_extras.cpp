@@ -2,6 +2,7 @@
 #include <cerrno>                              // import errno
 
 namespace artccel::core::util {
+Errno_guard::Errno_guard() noexcept = default;
 auto Errno_guard::err_no [[nodiscard]] () const noexcept -> Errno_t {
   return err_no_;
 }

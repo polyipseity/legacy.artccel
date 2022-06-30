@@ -16,7 +16,7 @@ private:
   bool released_{false};
 
 public:
-  Errno_guard() noexcept = default;
+  Errno_guard() noexcept;
   ~Errno_guard() noexcept;
   auto err_no [[nodiscard]] () const noexcept -> Errno_t;
   auto release() noexcept -> Errno_t;
