@@ -96,7 +96,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
     auto processed{mbrtoc(utf_c, loc_enc, state)};
     switch (processed) {
       [[unlikely]] case cuchar_mbrtoc_error
-          : std::system_error &&errno_exc{errno, std::generic_category()};
+          : std::system_error errno_exc{errno, std::generic_category()};
       f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
                                   std::move(errno_exc));
       [[unlikely]] case cuchar_mbrtoc_incomplete
@@ -138,7 +138,7 @@ static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
         auto const processed{crtomb(loc_enc, utf_c, state)};
         switch (processed) {
           [[unlikely]] case cuchar_crtomb_error
-              : std::system_error &&errno_exc{errno, std::generic_category()};
+              : std::system_error errno_exc{errno, std::generic_category()};
           f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
                                       std::move(errno_exc));
         case cuchar_crtomb_surrogate:
