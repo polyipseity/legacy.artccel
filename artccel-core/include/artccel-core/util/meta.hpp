@@ -14,7 +14,7 @@
 
 namespace artccel::core::util {
 namespace detail {
-template <typename T>
+template <typename T /* needs to be named */>
 consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 // internal linkage as it may be different
 // propagate internal linkage to callers if necessary
@@ -31,8 +31,8 @@ consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 constexpr static struct alignas(64) {
 private:
-  std::string_view const control_type_name_{/*u8*/ "int"};
-  std::string_view const control_{raw_type_name<int>()};
+  std::string_view const control_type_name_{/*u8*/ "char32_t"};
+  std::string_view const control_{raw_type_name<char32_t>()};
 
 public:
   std::size_t const junk_prefix_{control_.find(control_type_name_)};
