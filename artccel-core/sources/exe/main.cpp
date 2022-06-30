@@ -10,8 +10,8 @@
 #include <utility>     // import std::pair
 #include <vector>      // import std::vector
 
-namespace artccel::core::f {
-auto main(std::span<std::string_view const> args) -> int {
+namespace artccel::core::detail {
+static auto main(std::span<std::string_view const> args) -> int {
   std::ios_base::sync_with_stdio(false);
   auto const norm_args{[args] {
     std::locale::global(
@@ -28,10 +28,10 @@ auto main(std::span<std::string_view const> args) -> int {
   std::clog.flush();
   return 0;
 }
-} // namespace artccel::core::f
+} // namespace artccel::core::detail
 
 auto main(int argc, gsl::zstring argv[]) -> int {
-  return artccel::core::f::main(
+  return artccel::core::detail::main(
       [args{artccel::core::util::f::const_span(argv, argv + argc)}] {
         std::vector<std::string_view> init(std::size(args));
         std::ranges::transform(args, std::begin(init),
