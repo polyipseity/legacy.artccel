@@ -1,7 +1,8 @@
+#include <artccel-core/util/encoding.hpp> // interface
+
 #include <algorithm> // import std::min, std::ranges::for_each
 #include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
 #include <artccel-core/util/cerrno_extras.hpp> // import Errno_guard
-#include <artccel-core/util/encoding.hpp>      // interface
 #include <artccel-core/util/polyfill.hpp>      // import literals::operator""_UZ
 #include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
 #include <cassert>                              // import assert

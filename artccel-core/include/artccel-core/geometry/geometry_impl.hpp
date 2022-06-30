@@ -2,9 +2,10 @@
 #define ARTCCEL_CORE_GEOMETRY_GEOMETRY_IMPL_HPP
 #pragma once
 
+#include "geometry.hpp" // interface
+
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
-#include "geometry.hpp"          // interface
 #include <array>                 // import std::array
 #include <cinttypes>             // import std::int8_t
 #include <concepts>              // import std::convertible_to
