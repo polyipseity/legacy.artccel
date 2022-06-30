@@ -5,6 +5,7 @@ set(ROOT_DIR "${PROJECT_SOURCE_DIR}/../")
 include("${ROOT_DIR}/build_auto/init.cmake")
 
 add_library(artccel-core SHARED
+	"sources/cerrno_extras.cpp"
 	"sources/encoding.cpp"
 	"sources/template_instantiations.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
