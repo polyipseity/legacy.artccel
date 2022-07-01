@@ -30,7 +30,7 @@ consteval auto next_bitmask [[nodiscard]] (std::uint64_t bitmask) {
 template <std::size_t N>
 constexpr void check_bitset(std::bitset<N> const &valid,
                             std::u8string_view msg_prefix,
-                            std::bitset<N> const &value) noexcept {
+                            std::bitset<N> const &value) {
 #ifndef NDEBUG
   // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
   if (auto const valid_value{valid & value}; valid_value != value)
