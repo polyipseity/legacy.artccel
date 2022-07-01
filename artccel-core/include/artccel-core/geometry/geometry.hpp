@@ -41,8 +41,7 @@ public:
     return dynamic_cast<util::Observer_ptr<T const>>(
         try_get_quality(typeid(T)));
   }
-  virtual auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> gsl::owner<Geometry *> = 0;
+  virtual auto clone [[nodiscard]] () const -> gsl::owner<Geometry *> = 0;
   virtual ~Geometry() noexcept = default;
   Geometry(Geometry const &) = delete;
   auto operator=(Geometry const &) = delete;
@@ -61,8 +60,7 @@ protected:
 
 class Primitive : public virtual Geometry {
 public:
-  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> gsl::owner<Primitive *> override = 0;
+  auto clone [[nodiscard]] () const -> gsl::owner<Primitive *> override = 0;
   ~Primitive() noexcept override = default;
   Primitive(Primitive const &) = delete;
   auto operator=(Primitive const &) = delete;
@@ -75,8 +73,7 @@ protected:
 
 class Point : public virtual Primitive {
 public:
-  auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
-      -> gsl::owner<Point *> override = 0;
+  auto clone [[nodiscard]] () const -> gsl::owner<Point *> override = 0;
   ~Point() noexcept override = default;
   Point(Point const &) = delete;
   auto operator=(Point const &) = delete;

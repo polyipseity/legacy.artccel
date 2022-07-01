@@ -87,13 +87,11 @@ class Compute_in : public Compute_io<R>,
                    public std::enable_shared_from_this<Derived> {
 public:
   using return_type = typename Compute_in::return_type;
-  virtual auto clone_unmodified
-      [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  virtual auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_in *> = 0;
   constexpr static auto clone_valid_options{Compute_option::concurrent |
                                             Compute_option::defer};
-  virtual auto clone [[deprecated(/*u8*/ "Unsafe"),
-                       nodiscard]] (Compute_options const &options) const
+  virtual auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_in *> = 0;
 
 protected:
@@ -192,12 +190,11 @@ public:
     return value_;
   }
 
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_constant *> override {
     return new Compute_constant{/* *this */};
   };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
+  auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_constant *> override {
     util::f::check_bitset(
         Compute_constant::clone_valid_options,
@@ -248,12 +245,11 @@ public:
     return std::invoke(F);
   }
 
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_function_constant *> override {
     return new Compute_function_constant{/* *this */};
   };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
+  auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function_constant *> override {
     util::f::check_bitset(
         Compute_function_constant::clone_valid_options,
@@ -356,12 +352,11 @@ public:
     return left.value_ = std::move(value);
   }
 
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_value *> override {
     return new Compute_value{*this};
   };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
+  auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_value *> override {
     util::f::check_bitset(
         Compute_value::clone_valid_options,
@@ -576,12 +571,11 @@ public:
     return *left.reset(util::Enum_bitset{} | Compute_option::empty);
   }
 
-  auto clone_unmodified [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
+  auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_function *> override {
     return new Compute_function{*this};
   };
-  auto clone [[deprecated(/*u8*/ "Unsafe"),
-               nodiscard]] (Compute_options const &options) const
+  auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function *> override {
     util::f::check_bitset(
         Compute_function::clone_valid_options,

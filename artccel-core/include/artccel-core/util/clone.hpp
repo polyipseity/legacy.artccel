@@ -16,7 +16,7 @@
   [](auto const &(ptr_name)) -> decltype(auto) {                               \
     constexpr static struct {                                                  \
       constexpr auto operator()                                                \
-          [[deprecated, nodiscard]] (decltype(ptr_name)(ptr_name)) const       \
+          [[nodiscard]] (decltype(ptr_name)(ptr_name)) const                   \
           -> decltype(auto) {                                                  \
         return expr;                                                           \
       }                                                                        \
@@ -24,7 +24,7 @@
     private:                                                                   \
       char const align [[maybe_unused]]{};                                     \
     } func{};                                                                  \
-    return std::invoke(func, ptr_name);                                        \
+    return func(ptr_name);                                                     \
   }
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define ARTCCEL_GENERATE_CLONE_FUNCTION(ptr_name, expr)                        \
@@ -56,13 +56,10 @@ extern template struct Clone_auto_deleter_t<Replace_target::container>;
 template <typename P>
 constexpr auto default_clone_function{[]() noexcept {
   constexpr struct {
-    constexpr auto operator() [[deprecated, nodiscard]] (
+    constexpr auto operator() [[nodiscard]] (
         typename std::pointer_traits<P>::element_type const &ptr) const
         -> decltype(auto) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
       return ptr.clone();
-#pragma GCC diagnostic pop
     }
   } init{};
   return init;
@@ -191,9 +188,7 @@ requires(
 
 namespace f {
 template <typename P, Cloner_of<P> F, typename Return = void>
-constexpr auto clone
-    [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P const &ptr, F &&func)
-    -> decltype(auto) {
+constexpr auto clone [[nodiscard]] (P const &ptr, F &&func) -> decltype(auto) {
   if constexpr (std::same_as<Return, void>) {
     return detail::clone(ptr, std::forward<F>(func));
   } else {
@@ -201,8 +196,7 @@ constexpr auto clone
   }
 }
 template <Cloneable_by_default_clone_function P, typename Return = void>
-constexpr auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] (P const &ptr)
--> decltype(auto) {
+constexpr auto clone [[nodiscard]] (P const &ptr) -> decltype(auto) {
   return clone<P, decltype((default_clone_function<P>)), Return>(
       ptr, default_clone_function<P>);
 }
