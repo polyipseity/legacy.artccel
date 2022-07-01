@@ -30,14 +30,14 @@ include(CPack)
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(in/Config.cmake
-  "${PROJECT_BINARY_DIR}/Config.cmake"
-  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake"
-  NO_SET_AND_CHECK_MACRO
-  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+	"${PROJECT_BINARY_DIR}/Config.cmake"
+	INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake"
+	NO_SET_AND_CHECK_MACRO
+	NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
 write_basic_package_version_file(
-  "${PROJECT_BINARY_DIR}/ConfigVersion.cmake"
-  VERSION "${artccel_VERSION}"
-  COMPATIBILITY AnyNewerVersion
+	"${PROJECT_BINARY_DIR}/ConfigVersion.cmake"
+	VERSION "${artccel_VERSION}"
+	COMPATIBILITY AnyNewerVersion
 )
 install(FILES "${PROJECT_BINARY_DIR}/Config.cmake" "${PROJECT_BINARY_DIR}/ConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
