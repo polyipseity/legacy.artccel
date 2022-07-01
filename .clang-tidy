@@ -9,6 +9,9 @@ Checks: >
   -altera-unroll-loops,
   -altera-id-dependent-backward-branch,
   -google-readability-todo
-WarningsAsErrors: "*"
+# 'llvm-header-guard' dislikes Windows-style paths
+WarningsAsErrors: >
+  *,
+  -llvm-header-guard
 HeaderFilterRegex: .
 FormatStyle: LLVM
