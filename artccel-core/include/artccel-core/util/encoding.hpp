@@ -14,7 +14,7 @@
 namespace artccel::core::util {
 namespace detail {
 template <typename AsCharT, Template_string Str>
-constexpr inline auto reinterpretation_storage{[] {
+constexpr auto reinterpretation_storage{[] {
   std::array<AsCharT, std::size(Str.data_)> init{};
   std::ranges::transform(
       std::as_const(Str.data_), std::begin(init),

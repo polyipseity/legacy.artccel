@@ -17,8 +17,7 @@ struct array_size<std::array<T, N>> {
 };
 } // namespace detail
 
-template <typename T>
-constexpr inline auto array_size_v{detail::array_size<T>::value};
+template <typename T> constexpr auto array_size_v{detail::array_size<T>::value};
 
 namespace f {
 template <typename... Args>

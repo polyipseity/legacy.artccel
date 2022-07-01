@@ -21,7 +21,7 @@ using literals::operator""_UZ;
 template <typename T, bool Explicit = true> struct Delegate;
 template <typename CharT, std::size_t N> struct Template_string;
 
-template <typename> constexpr inline auto dependent_false_v{false};
+template <typename> constexpr auto dependent_false_v{false};
 
 namespace f {
 template <typename T> constexpr auto unify_ref_to_ptr(T &&value) noexcept {
