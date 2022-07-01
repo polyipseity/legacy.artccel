@@ -8,10 +8,11 @@ Checks: >
   -fuchsia-trailing-return,
   -altera-unroll-loops,
   -altera-id-dependent-backward-branch,
-  -google-readability-todo
+  -google-readability-todo,
 # 'llvm-header-guard' dislikes Windows-style paths
 WarningsAsErrors: >
   *,
-  -llvm-header-guard
+  -clang-diagnostic-unknown-pragmas,
+  -llvm-header-guard,
 HeaderFilterRegex: .
 FormatStyle: LLVM
