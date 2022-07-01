@@ -4,7 +4,7 @@
 #include <artccel-core/util/containers_extras.hpp> // import util::f::const_span
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8
 #include <functional>                     // import std::function
-#include <gsl/gsl>                        // import gsl::czstring, gsl::not_null
+#include <gsl/gsl> // import gsl::czstring, gsl::final_action, gsl::not_null
 #include <iostream> // import std::clog, std::cout, std::ios_base::sync_with_stdio
 #include <locale>   // import std::locale, std::locale::global
 #include <span>     // import std::begin, std::size, std::span
@@ -29,16 +29,17 @@ auto safe_main(
 auto main_setup(Arguments_t args) -> Main_setup_result {
   std::ios_base::sync_with_stdio(false);
   auto norm_args{[args] {
-    std::locale::global(
-        std::locale{/*u8*/ ""}); // use user-preferred locale to convert args
     std::vector<std::pair<std::u8string const, std::string_view const>> init{};
     init.reserve(std::size(args));
+    auto const prev_loc{std::locale::global(
+        std::locale{/*u8*/ ""})}; // use user-preferred locale to convert args
+    gsl::final_action const finalizer{
+        [&prev_loc] { std::locale::global(prev_loc); }};
     std::ranges::for_each(args, [&init](auto arg) {
       init.emplace_back(util::f::loc_enc_to_utf8(arg), arg);
     });
     return init;
   }()};
-  std::locale::global(std::locale{/*u8*/ "C.UTF-8"});
   return {std::move(norm_args)};
 }
 auto main_cleanup(Arguments_t args [[maybe_unused]]) -> Main_cleanup_result {
