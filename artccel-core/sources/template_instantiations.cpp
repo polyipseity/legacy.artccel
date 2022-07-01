@@ -1,5 +1,5 @@
-#include <artccel-core/util/clone.hpp> // import Clone_auto_deleter_t, Clone_auto_element_t
-#include <artccel-core/util/concurrent.hpp> // import Nullable_lockable
+#include <artccel-core/util/clone.hpp> // interface, import Clone_auto_deleter_t, Clone_auto_element_t
+#include <artccel-core/util/concurrent.hpp> // interface, import Nullable_lockable
 #include <artccel-core/util/meta.hpp>       // import Replace_target
 #include <mutex> // import std::mutex, std::recursive_mutex, std::recursive_timed_mutex, std::timed_mutex
 #include <shared_mutex> // import std::shared_mutex, std::shared_timed_mutex
