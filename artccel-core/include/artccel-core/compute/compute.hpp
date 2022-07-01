@@ -52,9 +52,13 @@ template <typename T>
 concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
 
 namespace detail {
-template <typename T> constinit extern std::u8string_view const odr_type_name;
-template <>
-constinit extern std::u8string_view const odr_type_name<Compute_option>;
+template <typename T> struct Odr_type_name {
+  constinit static std::u8string_view const value;
+};
+// NOLINTNEXTLINE(altera-struct-pack-align)
+extern template struct Odr_type_name<Compute_option>;
+template <typename T>
+constexpr auto const &Odr_type_name_v{Odr_type_name<T>::value};
 } // namespace detail
 
 enum struct Compute_option : std::uint8_t {
@@ -197,7 +201,7 @@ public:
       -> gsl::owner<Compute_constant *> override {
     util::f::check_bitset(
         Compute_constant::clone_valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
     return new Compute_constant{/* *this */};
   };
   constexpr ~Compute_constant() noexcept override = default;
@@ -253,7 +257,7 @@ public:
       -> gsl::owner<Compute_function_constant *> override {
     util::f::check_bitset(
         Compute_function_constant::clone_valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
     return new Compute_function_constant{/* *this */};
   };
   constexpr ~Compute_function_constant() noexcept override = default;
@@ -297,7 +301,7 @@ protected:
                                         Compute_option::concurrent};
     util::f::check_bitset(
         valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
   }
 
 private:
@@ -307,7 +311,7 @@ private:
     constexpr static auto valid_options{~Compute_option::concurrent};
     util::f::check_bitset(
         valid_options,
-        u8"Unnecessary "s.append(detail::odr_type_name<Compute_option>),
+        u8"Unnecessary "s.append(detail::Odr_type_name_v<Compute_option>),
         options);
     return create_const_1(options, std::forward<Args>(args)...);
   }
@@ -361,7 +365,7 @@ public:
       -> gsl::owner<Compute_value *> override {
     util::f::check_bitset(
         Compute_value::clone_valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
     return new Compute_value{*this, (options | Compute_option::concurrent).any()
                                         ? std::make_unique<std::shared_mutex>()
                                         : nullptr};
@@ -450,7 +454,7 @@ protected:
                                         Compute_option::defer};
     util::f::check_bitset(
         valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
   }
   template <typename... Args>
   requires std::invocable<decltype(function_), Args...>
@@ -486,7 +490,7 @@ private:
     constexpr static auto valid_options{~Compute_option::concurrent};
     util::f::check_bitset(
         valid_options,
-        u8"Unnecessary "s.append(detail::odr_type_name<Compute_option>),
+        u8"Unnecessary "s.append(detail::Odr_type_name_v<Compute_option>),
         options);
     return create_const_1(options, std::forward<Args>(args)...);
   }
@@ -520,7 +524,7 @@ public:
                                         Compute_option::defer};
     util::f::check_bitset(
         valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
     auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
     bound_ = bind(invoke, function_, std::forward<Args>(args)...);
@@ -531,7 +535,7 @@ public:
                                         Compute_option::defer};
     util::f::check_bitset(
         valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
     auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
     bound_(Bound_action::reset);
@@ -581,7 +585,7 @@ public:
       -> gsl::owner<Compute_function *> override {
     util::f::check_bitset(
         Compute_function::clone_valid_options,
-        u8"Ignored "s.append(detail::odr_type_name<Compute_option>), options);
+        u8"Ignored "s.append(detail::Odr_type_name_v<Compute_option>), options);
     return new Compute_function{*this,
                                 (options | Compute_option::concurrent).any()
                                     ? std::make_unique<std::shared_mutex>()
