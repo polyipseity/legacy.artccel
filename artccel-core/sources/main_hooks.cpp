@@ -28,7 +28,7 @@ auto safe_main(
 
 auto main_setup(Arguments_t args) -> Main_setup_result {
   std::ios_base::sync_with_stdio(false);
-  auto norm_args{[args] {
+  return {[args] {
     std::vector<std::pair<std::u8string const, std::string_view const>> init{};
     init.reserve(std::size(args));
     auto const prev_loc{std::locale::global(
@@ -40,7 +40,6 @@ auto main_setup(Arguments_t args) -> Main_setup_result {
     });
     return init;
   }()};
-  return {std::move(norm_args)};
 }
 auto main_cleanup(Arguments_t args [[maybe_unused]]) -> Main_cleanup_result {
   std::cout.flush();
