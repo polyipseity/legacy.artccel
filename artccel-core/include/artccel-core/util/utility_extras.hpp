@@ -89,18 +89,20 @@ template <typename T, bool Explicit> struct Delegate {
   operator auto const &() const &noexcept(noexcept(value_)) {
     return value_;
   }
+  template <typename = void>
+  requires std::move_constructible<T>
   [[nodiscard]] explicit(Explicit) constexpr
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   operator T() &&noexcept(noexcept(std::move(value_)) &&
-                          std::is_nothrow_move_constructible_v<T>) requires
-      std::move_constructible<T> {
+                          std::is_nothrow_move_constructible_v<T>) {
     return std::move(value_);
   }
+  template <typename = void>
+  requires std::copy_constructible<T>
   [[nodiscard]] explicit(Explicit) constexpr
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  operator T() const &&noexcept(
-      noexcept(value_) && std::is_nothrow_move_constructible_v<T>) requires
-      std::copy_constructible<T> {
+  operator T() const &&noexcept(noexcept(value_) &&
+                                std::is_nothrow_move_constructible_v<T>) {
     return value_;
   }
 
