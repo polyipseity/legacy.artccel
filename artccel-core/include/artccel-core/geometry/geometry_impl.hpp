@@ -15,10 +15,8 @@
 #include <utility>               // import std::swap
 
 namespace artccel::core::geometry::impl {
-namespace interface = geometry;
-
 template <util::Nonnegative_interval<std::int8_t> D>
-class Geometry_impl : public virtual interface::Geometry {
+class Geometry_impl : public virtual Geometry {
 public:
   // NOLINTNEXTLINE(fuchsia-statically-constructed-objects): constexpr ctor
   constexpr static auto dimension_{D};
@@ -27,9 +25,15 @@ public:
     return D;
   }
   ~Geometry_impl() noexcept override = default;
+  auto clone [[nodiscard]] () const -> gsl::owner<Geometry *> {
+    return clone_impl();
+  }
+  virtual auto clone_impl [[nodiscard]] () const
+      -> gsl::owner<Geometry_impl *> = 0;
 
 protected:
-  using interface::Geometry::Geometry;
+#pragma warning(suppress : 4589)
+  using Geometry::Geometry;
   void swap(Geometry_impl &other [[maybe_unused]]) noexcept { using std::swap; }
   Geometry_impl(Geometry_impl const &other [[maybe_unused]]) noexcept {};
   auto operator=(Geometry_impl const &right [[maybe_unused]]) noexcept(
@@ -46,13 +50,19 @@ protected:
 };
 
 template <util::Nonnegative_interval<std::int8_t> D>
-class Primitive_impl : public virtual interface::Primitive,
-                       public Geometry_impl<D> {
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+class Primitive_impl : public virtual Primitive, public Geometry_impl<D> {
 public:
   using Primitive_impl::Geometry_impl::dimension_;
   ~Primitive_impl() noexcept override = default;
+  auto clone [[nodiscard]] () const -> gsl::owner<Primitive *> {
+    return clone_impl();
+  }
+  auto clone_impl [[nodiscard]] () const
+      -> gsl::owner<Primitive_impl *> override = 0;
 
 protected:
+#pragma warning(suppress : 4589)
   using Primitive_impl::Geometry_impl::Geometry_impl;
   void swap(Primitive_impl &other) noexcept {
     using std::swap;
@@ -76,7 +86,8 @@ protected:
 };
 
 template <util::Nonnegative_interval<std::int8_t> D>
-class Point_impl : public virtual interface::Point, public Primitive_impl<D> {
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+class Point_impl : public virtual Point, public Primitive_impl<D> {
 public:
   using Point_impl::Primitive_impl::dimension_;
 
@@ -89,10 +100,13 @@ public:
       std::convertible_to<typename decltype(position_)::value_type>... Position>
   requires(sizeof...(Position) == D) explicit Point_impl(Position... position)
       : position_{{std::move(position)...}} {}
-  auto clone [[nodiscard]] () const -> gsl::owner<Point_impl *> override {
+  ~Point_impl() noexcept override = default;
+  auto clone [[nodiscard]] () const -> gsl::owner<Point *> {
+    return clone_impl();
+  }
+  auto clone_impl [[nodiscard]] () const -> gsl::owner<Point_impl *> override {
     return new Point_impl{*this};
   }
-  ~Point_impl() noexcept override = default;
 
 protected:
   auto try_get_quality [[nodiscard]] (std::type_info const &quality_type
