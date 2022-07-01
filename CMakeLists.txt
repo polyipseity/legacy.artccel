@@ -4,8 +4,6 @@ set(ROOT_DIR "${PROJECT_SOURCE_DIR}/")
 
 include("${ROOT_DIR}/build_auto/init.cmake")
 
-set(THREADS_PREFER_PTHREAD_FLAG true)
-find_package(Threads REQUIRED)
 find_package(Microsoft.GSL 4.0.0 EXACT REQUIRED CONFIG)
 
 add_library(artccel INTERFACE)
