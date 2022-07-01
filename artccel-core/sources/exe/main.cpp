@@ -1,7 +1,7 @@
 #include <artccel-core/main_hooks.hpp> // import Arguments_t, artccel::core::f::safe_main, f::main_cleanup, f::main_setup
 
 namespace artccel::core::detail {
-static auto main(Arguments_t args) -> int {
+static auto main_0(Arguments_t args) -> int {
   [[maybe_unused]] auto const [norm_args]{f::main_setup(args)};
   [[maybe_unused]] auto const [placeholder]{f::main_cleanup(args)};
   return 0;
@@ -9,5 +9,5 @@ static auto main(Arguments_t args) -> int {
 } // namespace artccel::core::detail
 
 auto main(int argc, gsl::zstring argv[]) -> int {
-  return artccel::core::f::safe_main(artccel::core::detail::main, argc, argv);
+  return artccel::core::f::safe_main(artccel::core::detail::main_0, argc, argv);
 }
