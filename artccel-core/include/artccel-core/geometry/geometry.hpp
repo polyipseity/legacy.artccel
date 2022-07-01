@@ -25,7 +25,7 @@ public:
   auto operator=(Quality &&) = delete;
 
 protected:
-  explicit Quality() noexcept = default;
+  Quality() noexcept = default;
 };
 
 class Geometry {
@@ -49,7 +49,7 @@ public:
   auto operator=(Geometry &&) = delete;
 
 protected:
-  explicit Geometry() noexcept = default;
+  Geometry() noexcept = default;
   virtual auto try_get_quality
       [[nodiscard]] (std::type_info const &quality_type)
       -> util::Observer_ptr<Quality> = 0;

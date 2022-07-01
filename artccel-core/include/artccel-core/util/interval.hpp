@@ -64,7 +64,7 @@ template <std::totally_ordered T>
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Bound {
   using type = T;
-  explicit constexpr Bound() noexcept = default;
+  constexpr Bound() noexcept = default;
   constexpr Bound(Bound const &) noexcept = default;
   constexpr auto operator=(Bound const &) noexcept -> Bound & = default;
   constexpr Bound(Bound &&) noexcept = default;
@@ -79,7 +79,7 @@ template <std::totally_ordered T, T V>
 struct Open_bound : public Bound<T> {
   using type = typename Open_bound::type;
   constexpr static auto value_{V};
-  explicit consteval Open_bound() noexcept = default;
+  consteval Open_bound() noexcept = default;
   friend constexpr auto operator==(Open_bound const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return false;
@@ -146,7 +146,7 @@ template <std::totally_ordered T, T V>
 struct Closed_bound : public Bound<T> {
   using type = typename Closed_bound::type;
   constexpr static auto value_{V};
-  explicit consteval Closed_bound() noexcept = default;
+  consteval Closed_bound() noexcept = default;
   friend constexpr auto
   operator==(Closed_bound const &left [[maybe_unused]],
              T const &right) noexcept(noexcept(V == right) &&
@@ -220,7 +220,7 @@ private:
 // NOLINTNEXTLINE(altera-struct-pack-align)
 template <std::totally_ordered T> struct Unbounded : public Bound<T> {
   using type = typename Unbounded::type;
-  explicit consteval Unbounded() noexcept = default;
+  consteval Unbounded() noexcept = default;
   friend constexpr auto operator==(Unbounded const &left [[maybe_unused]],
                                    T const &right [[maybe_unused]]) noexcept {
     return false;

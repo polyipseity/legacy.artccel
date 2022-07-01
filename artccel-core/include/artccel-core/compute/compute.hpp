@@ -79,7 +79,7 @@ public:
   auto operator=(Compute_io &&) = delete;
 
 protected:
-  explicit constexpr Compute_io() noexcept = default;
+  constexpr Compute_io() noexcept = default;
 };
 
 template <typename Derived, std::copyable R>
@@ -108,7 +108,7 @@ private:
   R return_{};
 
 public:
-  explicit constexpr Compute_out() noexcept = default;
+  constexpr Compute_out() noexcept = default;
   explicit Compute_out(Compute_in_c<R> auto const &c_in)
       : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
 
@@ -209,7 +209,7 @@ public:
   auto operator=(Compute_constant &&) = delete;
 
 protected:
-  explicit constexpr Compute_constant() noexcept = default;
+  constexpr Compute_constant() noexcept = default;
 };
 
 template <std::copyable R, auto F>
@@ -265,7 +265,7 @@ public:
   auto operator=(Compute_function_constant &&) = delete;
 
 protected:
-  explicit constexpr Compute_function_constant() noexcept = default;
+  constexpr Compute_function_constant() noexcept = default;
 };
 
 template <std::copyable R>
@@ -471,7 +471,7 @@ protected:
             });
             return ret;
           case Bound_action::reset:
-            flag = util::Semiregular_once_flag{};
+            flag = {};
             return std::optional<R>{};
           default:
             util::f::unreachable();

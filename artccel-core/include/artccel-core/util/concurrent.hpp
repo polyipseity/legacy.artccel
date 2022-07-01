@@ -20,7 +20,7 @@ private:
   bool flag_{false};
 
 public:
-  explicit constexpr Semiregular_once_flag() noexcept = default;
+  constexpr Semiregular_once_flag() noexcept = default;
 
   template <typename Callable, typename... Args>
   void call_once(Callable &&func, Args &&...args) {
@@ -66,7 +66,7 @@ static_assert(std::semiregular<Semiregular_once_flag>);
 
 // NOLINTNEXTLINE(altera-struct-pack-align)
 struct Null_lockable {
-  explicit consteval Null_lockable() noexcept = default;
+  consteval Null_lockable() noexcept = default;
 
   // named requirement: BasicLockable
 
