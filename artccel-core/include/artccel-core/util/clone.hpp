@@ -59,7 +59,10 @@ constexpr auto default_clone_function{[]() noexcept {
     constexpr auto operator() [[deprecated, nodiscard]] (
         typename std::pointer_traits<P>::element_type const &ptr) const
         -> decltype(auto) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
       return ptr.clone();
+#pragma GCC diagnostic pop
     }
   } init{};
   return init;

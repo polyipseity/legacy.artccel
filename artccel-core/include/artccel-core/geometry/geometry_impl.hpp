@@ -88,10 +88,13 @@ public:
       std::convertible_to<typename decltype(position_)::value_type>... Position>
   requires(sizeof...(Position) == D) explicit Point_impl(Position... position)
       : position_{{std::move(position)...}} {}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   auto clone [[deprecated(/*u8*/ "Unsafe"), nodiscard]] () const
       -> gsl::owner<Point_impl *> override {
     return new Point_impl{*this};
   }
+#pragma GCC diagnostic pop
   ~Point_impl() noexcept override = default;
 
 protected:

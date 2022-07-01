@@ -6,7 +6,7 @@
 
 namespace artccel::core::util {
 namespace detail {
-static auto get_errno() noexcept { return errno; }
+static inline auto get_errno() noexcept { return errno; }
 } // namespace detail
 using Errno_t = decltype(detail::get_errno());
 

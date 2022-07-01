@@ -28,8 +28,8 @@ namespace detail {
 using literals::operator""_UZ;
 
 constexpr static auto cwchar_mbrlen_null{0_UZ};
-constexpr static auto cwchar_mbrlen_error{-1_UZ};
-constexpr static auto cwchar_mbrlen_incomplete{-2_UZ};
+constexpr static auto cwchar_mbrlen_error [[maybe_unused]]{-1_UZ};
+constexpr static auto cwchar_mbrlen_incomplete [[maybe_unused]]{-2_UZ};
 constexpr static auto cuchar_mbrtoc_null{0_UZ};
 constexpr static auto cuchar_mbrtoc_error{-1_UZ};
 constexpr static auto cuchar_mbrtoc_incomplete{-2_UZ};
