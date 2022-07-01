@@ -2,7 +2,8 @@
 #define ARTCCEL_CORE_UTIL_CONCURRENT_HPP
 #pragma once
 
-#include "utility_extras.hpp" // import Delegate
+#include "utility_extras.hpp"    // import Delegate
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 #include <chrono>   // import std::chrono::duration, std::chrono::time_point
 #include <concepts> // import std::semiregular, std::same_as
 #include <memory>   // import std::make_unique, std::unique_ptr
@@ -317,12 +318,18 @@ public:
     return null_lockable.try_lock_shared_until(abs_time);
   }
 };
-extern template class Nullable_lockable<std::mutex>;
-extern template class Nullable_lockable<std::timed_mutex>;
-extern template class Nullable_lockable<std::recursive_mutex>;
-extern template class Nullable_lockable<std::recursive_timed_mutex>;
-extern template class Nullable_lockable<std::shared_mutex>;
-extern template class Nullable_lockable<std::shared_timed_mutex>;
+extern template class ARTCCEL_CORE_EXPORT_DECLARATION
+    Nullable_lockable<std::mutex>;
+extern template class ARTCCEL_CORE_EXPORT_DECLARATION
+    Nullable_lockable<std::timed_mutex>;
+extern template class ARTCCEL_CORE_EXPORT_DECLARATION
+    Nullable_lockable<std::recursive_mutex>;
+extern template class ARTCCEL_CORE_EXPORT_DECLARATION
+    Nullable_lockable<std::recursive_timed_mutex>;
+extern template class ARTCCEL_CORE_EXPORT_DECLARATION
+    Nullable_lockable<std::shared_mutex>;
+extern template class ARTCCEL_CORE_EXPORT_DECLARATION
+    Nullable_lockable<std::shared_timed_mutex>;
 } // namespace artccel::core::util
 
 #endif

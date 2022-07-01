@@ -4,7 +4,8 @@
 
 #include "meta.hpp" // import Replace_all_t, Replace_all_t_t, Replace_target
 #include "utility_extras.hpp" // import dependent_false_v, f::unify_ptr_to_ref, f::unify_ref_to_ptr
-#include <cassert>  // import assert
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
+#include <cassert>               // import assert
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as
 #include <functional> // import std::invoke
 #include <memory> // import std::enable_shared_from_this, std::pointer_traits, std::shared_ptr, std::to_address, std::unique_pto_addresstr
@@ -44,15 +45,19 @@ concept Cloneable_by = requires(P const &ptr, F &&func) {
 template <typename F, typename P>
 concept Cloner_of = Cloneable_by<P, F>;
 template <Replace_target = Replace_target::self> struct Clone_auto_element_t {};
-// NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_element_t<Replace_target::self>;
-// NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_element_t<Replace_target::container>;
+extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
+    // NOLINTNEXTLINE(altera-struct-pack-align)
+    Clone_auto_element_t<Replace_target::self>;
+extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
+    // NOLINTNEXTLINE(altera-struct-pack-align)
+    Clone_auto_element_t<Replace_target::container>;
 template <Replace_target = Replace_target::self> struct Clone_auto_deleter_t {};
-// NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_deleter_t<Replace_target::self>;
-// NOLINTNEXTLINE(altera-struct-pack-align)
-extern template struct Clone_auto_deleter_t<Replace_target::container>;
+extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
+    // NOLINTNEXTLINE(altera-struct-pack-align)
+    Clone_auto_deleter_t<Replace_target::self>;
+extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
+    // NOLINTNEXTLINE(altera-struct-pack-align)
+    Clone_auto_deleter_t<Replace_target::container>;
 template <typename P>
 constexpr auto default_clone_function{[]() noexcept {
   constexpr struct {
