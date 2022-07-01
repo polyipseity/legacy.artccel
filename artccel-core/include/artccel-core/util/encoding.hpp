@@ -6,7 +6,7 @@
 #include "semantics.hpp"         // import null_terminator_size
 #include "utility_extras.hpp"    // import Template_string
 #include <algorithm>             // import std::ranges::transform
-#include <array> // import std::array, std::begin, std::cbegin, std::size
+#include <array> // import std::array, std::begin, std::data, std::size
 #include <string> // import std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 #include <utility>     // import std::as_const, std::move
@@ -27,7 +27,7 @@ namespace f {
 auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string;
 template <Template_string Str> consteval auto utf8_compat_as_utf8() {
   return std::u8string_view{
-      std::cbegin(detail::reinterpretation_storage<char8_t, Str>),
+      std::data(detail::reinterpretation_storage<char8_t, Str>),
       std::size(detail::reinterpretation_storage<char8_t, Str>) -
           null_terminator_size};
 }
@@ -37,7 +37,7 @@ constexpr auto utf8_compat_as_utf8(char utf8_compat) noexcept {
 auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string;
 template <Template_string Str> consteval auto utf8_as_utf8_compat() {
   return std::string_view{
-      std::cbegin(detail::reinterpretation_storage<char, Str>),
+      std::data(detail::reinterpretation_storage<char, Str>),
       std::size(detail::reinterpretation_storage<char, Str>) -
           null_terminator_size};
 }

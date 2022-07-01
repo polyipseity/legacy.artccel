@@ -44,10 +44,10 @@ template <typename UTFCharT>
 static auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
                    std::mbstate_t &state) noexcept {
   if constexpr (std::same_as<UTFCharT, char16_t>) {
-    return std::mbrtoc16(&utf_out, std::cbegin(loc_enc), std::size(loc_enc),
+    return std::mbrtoc16(&utf_out, std::data(loc_enc), std::size(loc_enc),
                          &state);
   } else if constexpr (std::same_as<UTFCharT, char32_t>) {
-    return std::mbrtoc32(&utf_out, std::cbegin(loc_enc), std::size(loc_enc),
+    return std::mbrtoc32(&utf_out, std::data(loc_enc), std::size(loc_enc),
                          &state);
   } else {
     static_assert(dependent_false_v<UTFCharT>, u8"Unimplemented");
@@ -89,7 +89,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
         for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
           if (auto old_state_copy{old_state};
               // NOLINTNEXTLINE(concurrency-mt-unsafe)
-              std::mbrlen(std::cbegin(loc_enc), null_len, &old_state_copy) ==
+              std::mbrlen(std::data(loc_enc), null_len, &old_state_copy) ==
               cwchar_mbrlen_null
               // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
               ) [[likely]] {
@@ -132,7 +132,7 @@ static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
         case cuchar_crtomb_surrogate:
           [[fallthrough]];
         default:
-          result.append(std::cbegin(loc_enc), processed);
+          result.append(std::data(loc_enc), processed);
           break;
         }
       });
@@ -157,9 +157,10 @@ auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
 #pragma clang diagnostic pop
       .from_bytes(
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(std::cbegin(utf8)), // defined behavior
+          reinterpret_cast<char const *>(std::data(utf8)), // defined behavior
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(std::cend(utf8))); // defined behavior
+          reinterpret_cast<char const *>(std::data(utf8) +
+                                         std::size(utf8))); // defined behavior
 }
 auto utf8_to_utf16(char8_t utf8) -> std::u16string {
   return utf8_to_utf16({&utf8, 1_UZ});
@@ -170,6 +171,7 @@ auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
 #pragma clang diagnostic pop
+          .to_bytes(std::data(utf16), std::data(utf16) + std::size(utf16)));
 }
 auto utf16_to_utf8(char16_t utf16) -> std::u8string {
   return utf16_to_utf8({&utf16, 1_UZ});
