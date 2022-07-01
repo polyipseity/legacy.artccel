@@ -6,6 +6,7 @@ include("${ROOT_DIR}/build_auto/init.cmake")
 
 add_library(artccel-core SHARED
 	"sources/cerrno_extras.cpp"
+	"sources/compute.cpp"
 	"sources/encoding.cpp"
 	"sources/main_hooks.cpp"
 	"sources/template_instantiations.cpp")
