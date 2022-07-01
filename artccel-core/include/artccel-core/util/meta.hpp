@@ -18,6 +18,8 @@ template <typename T /* needs to be named */>
 consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 // internal linkage as it may be different
 // propagate internal linkage to callers if necessary
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wlanguage-extension-token"
 #ifdef __GNUC__ // GCC, Clang, ICC
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
   return __PRETTY_FUNCTION__;
@@ -27,6 +29,7 @@ consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 #else
   return /*u8*/ "";
 #endif
+#pragma clang diagnostic pop
 }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 constexpr static struct alignas(64) {
@@ -38,6 +41,7 @@ public:
   std::size_t const junk_prefix_{control_.find(control_type_name_)};
   std::size_t const junk_suffix_{std::size(control_) - junk_prefix_ -
                                  std::size(control_type_name_)};
+#pragma warning(suppress : 4324)
 } type_name_format{};
 template <typename T>
 constexpr static auto type_name_storage{[] {

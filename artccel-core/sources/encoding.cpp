@@ -27,6 +27,8 @@ namespace artccel::core::util {
 namespace detail {
 using literals::operator""_UZ;
 
+#pragma warning(push)
+#pragma warning(disable : 4146)
 constexpr static auto cwchar_mbrlen_null{0_UZ};
 constexpr static auto cwchar_mbrlen_error [[maybe_unused]]{-1_UZ};
 constexpr static auto cwchar_mbrlen_incomplete [[maybe_unused]]{-2_UZ};
@@ -36,6 +38,7 @@ constexpr static auto cuchar_mbrtoc_incomplete{-2_UZ};
 constexpr static auto cuchar_mbrtoc_surrogate{-3_UZ};
 constexpr static auto cuchar_crtomb_surrogate{0_UZ};
 constexpr static auto cuchar_crtomb_error{-1_UZ};
+#pragma warning(pop)
 
 template <typename UTFCharT>
 static auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
@@ -148,7 +151,10 @@ auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
 }
 
 auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
+#pragma clang diagnostic pop
       .from_bytes(
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           reinterpret_cast<char const *>(std::cbegin(utf8)), // defined behavior
@@ -160,8 +166,10 @@ auto utf8_to_utf16(char8_t utf8) -> std::u16string {
 }
 auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
   return utf8_compat_as_utf8(
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-          .to_bytes(std::cbegin(utf16), std::cend(utf16)));
+#pragma clang diagnostic pop
 }
 auto utf16_to_utf8(char16_t utf16) -> std::u8string {
   return utf16_to_utf8({&utf16, 1_UZ});

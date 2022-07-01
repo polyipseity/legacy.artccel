@@ -68,9 +68,11 @@ public:
   auto operator=(Primitive &&) = delete;
 
 protected:
+#pragma warning(suppress : 4589)
   using Geometry::Geometry;
 };
 
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Point : public virtual Primitive {
 public:
   auto clone [[nodiscard]] () const -> gsl::owner<Point *> override = 0;
@@ -81,6 +83,7 @@ public:
   auto operator=(Point &&) = delete;
 
 protected:
+#pragma warning(suppress : 4589)
   using Primitive::Primitive;
 };
 } // namespace artccel::core::geometry
