@@ -31,8 +31,7 @@ consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 #endif
 #pragma clang diagnostic pop
 }
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-constexpr static struct alignas(64) {
+constexpr static struct alignas(std::size_t) {
 private:
   std::string_view const control_type_name_{/*u8*/ "char32_t"};
   std::string_view const control_{raw_type_name<char32_t>()};

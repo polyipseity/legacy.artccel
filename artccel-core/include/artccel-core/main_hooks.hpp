@@ -27,8 +27,7 @@ ARTCCEL_CORE_EXPORT auto main_setup(Arguments_t args) -> Main_setup_result;
 ARTCCEL_CORE_EXPORT auto main_cleanup(Arguments_t args) -> Main_cleanup_result;
 } // namespace f
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-struct alignas(32) Main_setup_result {
+struct alignas(std::pair<std::u8string, std::string_view>) Main_setup_result {
   std::vector<std::pair<std::u8string, std::string_view>> normalized_args;
 };
 struct Main_cleanup_result {
