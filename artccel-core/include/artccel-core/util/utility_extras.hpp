@@ -58,13 +58,10 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
   return
       [&func, &t_args ]<std::size_t... I>(
           [[maybe_unused]] std::index_sequence<
-              I...> /*unused*/) mutable noexcept(std::
-                                                     is_nothrow_invocable_v<
-                                                         F, Args...> &&
-                                                 std::
-                                                     is_nothrow_move_constructible_v<
-                                                         std::invoke_result_t<
-                                                             F, Args...>>)
+              I...> /*unused*/) noexcept(std::is_nothrow_invocable_v<F,
+                                                                     Args...> &&
+                                         std::is_nothrow_move_constructible_v<
+                                             std::invoke_result_t<F, Args...>>)
           ->decltype(auto) {
     return std::invoke(
         std::forward<F>(func),

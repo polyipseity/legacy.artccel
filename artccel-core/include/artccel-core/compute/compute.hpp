@@ -552,7 +552,7 @@ public:
   requires std::invocable<decltype(function_), Args...>
   friend void operator<<(Compute_function &left, Tuple<Args...> &&t_args) {
     util::f::forward_apply(
-        [&left](Args &&...args) mutable {
+        [&left](Args &&...args) {
           left.bind(util::Enum_bitset{} | Compute_option::defer,
                     std::forward<Args>(args)...);
         },
@@ -563,7 +563,7 @@ public:
   friend auto operator<<=(Compute_function &left, Tuple<Args...> &&t_args)
       -> R {
     return util::f::forward_apply(
-        [&left](Args &&...args) mutable -> decltype(auto) {
+        [&left](Args &&...args) -> decltype(auto) {
           return *left.bind(util::Enum_bitset{} | Compute_option::empty,
                             std::forward<Args>(args)...);
         },
