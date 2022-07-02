@@ -19,7 +19,6 @@ template <std::totally_ordered T> struct Unbounded;
 template <typename L, Derived_from_but_not<Bound<typename L::type>> R>
 requires Derived_from_but_not<L, Bound<typename L::type>>
 class Interval;
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct ARTCCEL_CORE_EXPORT Dynamic_interval_t {
   explicit consteval Dynamic_interval_t() noexcept = default;
 };
@@ -61,9 +60,7 @@ using Positive_interval = LO_RU_interval<T, Z>; // (0,+∞)
 template <std::totally_ordered T, T Z = T{0}>
 using Negative_interval = LU_RO_interval<T, Z>; // (-∞,0)
 
-template <std::totally_ordered T>
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct Bound {
+template <std::totally_ordered T> struct Bound {
   using type = T;
   constexpr Bound() noexcept = default;
   constexpr Bound(Bound const &) noexcept = default;
@@ -75,9 +72,7 @@ protected:
   constexpr ~Bound() noexcept = default;
 };
 
-template <std::totally_ordered T, T V>
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct Open_bound : public Bound<T> {
+template <std::totally_ordered T, T V> struct Open_bound : public Bound<T> {
   using type = typename Open_bound::type;
   constexpr static auto value_{V};
   consteval Open_bound() noexcept = default;
@@ -142,9 +137,7 @@ private:
   }
 };
 
-template <std::totally_ordered T, T V>
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct Closed_bound : public Bound<T> {
+template <std::totally_ordered T, T V> struct Closed_bound : public Bound<T> {
   using type = typename Closed_bound::type;
   constexpr static auto value_{V};
   consteval Closed_bound() noexcept = default;
@@ -218,7 +211,6 @@ private:
   }
 };
 
-// NOLINTNEXTLINE(altera-struct-pack-align)
 template <std::totally_ordered T> struct Unbounded : public Bound<T> {
   using type = typename Unbounded::type;
   consteval Unbounded() noexcept = default;

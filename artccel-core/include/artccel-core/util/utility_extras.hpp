@@ -109,9 +109,7 @@ protected:
       : value_{std::move(value)} {}
 };
 
-template <typename CharT, std::size_t N>
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct Template_string {
+template <typename CharT, std::size_t N> struct Template_string {
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   std::array<CharT const, N> data_;
 

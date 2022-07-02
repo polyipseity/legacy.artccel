@@ -10,9 +10,7 @@
 namespace artccel::core::util {
 namespace detail {
 template <typename> struct array_size;
-template <typename T, std::size_t N>
-// NOLINTNEXTLINE(altera-struct-pack-align)
-struct array_size<std::array<T, N>> {
+template <typename T, std::size_t N> struct array_size<std::array<T, N>> {
   constexpr static auto value{N};
 };
 } // namespace detail

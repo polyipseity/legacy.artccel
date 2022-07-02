@@ -6,6 +6,7 @@ Checks: >
   -fuchsia-default-arguments-calls,
   -fuchsia-default-arguments-declarations,
   -fuchsia-trailing-return,
+  -altera-struct-pack-align,
   -altera-unroll-loops,
   -altera-id-dependent-backward-branch,
   -google-readability-todo,

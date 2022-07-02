@@ -21,9 +21,6 @@
           -> decltype(auto) {                                                  \
         return expr;                                                           \
       }                                                                        \
-                                                                               \
-    private:                                                                   \
-      char const align [[maybe_unused]]{};                                     \
     } func{};                                                                  \
     return func(ptr_name);                                                     \
   }
@@ -46,17 +43,13 @@ template <typename F, typename P>
 concept Cloner_of = Cloneable_by<P, F>;
 template <Replace_target = Replace_target::self> struct Clone_auto_element_t {};
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
-    // NOLINTNEXTLINE(altera-struct-pack-align)
     Clone_auto_element_t<Replace_target::self>;
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
-    // NOLINTNEXTLINE(altera-struct-pack-align)
     Clone_auto_element_t<Replace_target::container>;
 template <Replace_target = Replace_target::self> struct Clone_auto_deleter_t {};
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
-    // NOLINTNEXTLINE(altera-struct-pack-align)
     Clone_auto_deleter_t<Replace_target::self>;
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
-    // NOLINTNEXTLINE(altera-struct-pack-align)
     Clone_auto_deleter_t<Replace_target::container>;
 template <typename P>
 constexpr auto default_clone_function{[]() noexcept {

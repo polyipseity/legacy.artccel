@@ -46,7 +46,6 @@ constexpr void check_bitset(std::bitset<N> const &valid,
 }
 } // namespace f
 
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Enum_bitset {
   explicit consteval Enum_bitset() noexcept = default;
   friend constexpr auto operator| [[nodiscard]] (

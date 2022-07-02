@@ -36,11 +36,9 @@ requires std::is_invocable_r_v<R, decltype(F)>
 class Compute_function_constant;
 template <std::copyable R> class Compute_value;
 template <typename Signature> class Compute_function;
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct ARTCCEL_CORE_EXPORT Reset_t {
   explicit consteval Reset_t() noexcept = default;
 };
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct ARTCCEL_CORE_EXPORT Extract_t {
   explicit consteval Extract_t() noexcept = default;
 };
@@ -58,7 +56,6 @@ template <typename T> struct Odr_type_name {
   constinit static std::u8string_view const value;
 };
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
-    // NOLINTNEXTLINE(altera-struct-pack-align)
     Odr_type_name<Compute_option>;
 } // namespace detail
 
@@ -162,7 +159,6 @@ template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
 template <std::copyable R, R V>
 class Compute_constant : public Compute_in<Compute_constant<R, V>, R> {
 private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
     explicit consteval Friend() noexcept = default;
   };
@@ -218,7 +214,6 @@ requires std::is_invocable_r_v<R, decltype(F)>
 class Compute_function_constant
     : public Compute_in<Compute_function_constant<R, F>, R> {
 private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
     explicit consteval Friend() noexcept = default;
   };
@@ -272,7 +267,6 @@ protected:
 template <std::copyable R>
 class Compute_value : public Compute_in<Compute_value<R>, R> {
 private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
     explicit consteval Friend() noexcept = default;
   };
@@ -410,7 +404,6 @@ template <std::copyable R, std::copyable... TArgs>
 class Compute_function<R(TArgs...)>
     : public Compute_in<Compute_function<R(TArgs...)>, R> {
 private:
-  // NOLINTNEXTLINE(altera-struct-pack-align)
   struct Friend {
     explicit consteval Friend() noexcept = default;
   };
@@ -641,7 +634,6 @@ template <typename F>
 Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
     decltype(decltype(std::function{std::declval<F>()})::operator())>;
 
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Out_t {
   explicit consteval Out_t() noexcept = default;
   friend auto operator<<(Out_t const &left [[maybe_unused]],

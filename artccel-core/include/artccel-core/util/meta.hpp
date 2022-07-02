@@ -31,7 +31,7 @@ consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 #endif
 #pragma clang diagnostic pop
 }
-constexpr static struct alignas(std::size_t) {
+constexpr static struct {
 private:
   std::string_view const control_type_name_{/*u8*/ "char32_t"};
   std::string_view const control_{raw_type_name<char32_t>()};
@@ -62,47 +62,39 @@ enum struct Replace_target : bool {
   container = true,
 };
 template <typename NotFound, typename Find, typename Replace>
-requires(!std::same_as<NotFound, Find>)
-    // NOLINTNEXTLINE(altera-struct-pack-align)
-    struct Replace_all<NotFound, Find, Replace> {
+requires(
+    !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {
   using type = NotFound;
 };
 template <typename Find, typename Replace>
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Replace_all<Find, Find, Replace> {
   using type = Replace;
 };
 template <template <Replace_target> typename Find, typename Replace>
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Replace_all<Find<Replace_target::self>, Find<Replace_target::self>,
                    Replace> {
   using type = Replace;
 };
 template <template <typename> typename T,
           template <Replace_target> typename Find, typename Replace>
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Replace_all<T<Find<Replace_target::container>>,
                    Find<Replace_target::container>, Replace> {
   using type = Replace;
 };
 template <template <typename...> typename T, typename Find, typename Replace,
           typename... TArgs>
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Replace_all<T<TArgs...>, Find, Replace> {
   using type = T<typename Replace_all<TArgs, Find, Replace>::type...>;
 };
 template <typename T, typename Find, typename Replace>
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Replace_all<T *, Find, Replace> {
   using type = typename Replace_all<T, Find, Replace>::type *;
 };
 template <typename T, typename Find, typename Replace>
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Replace_all<T &, Find, Replace> {
   using type = typename Replace_all<T, Find, Replace>::type &;
 };
 template <typename T, typename Find, typename Replace>
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct Replace_all<T &&, Find, Replace> {
   using type = typename Replace_all<T, Find, Replace>::type &&;
 };

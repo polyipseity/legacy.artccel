@@ -68,7 +68,6 @@ public:
 };
 static_assert(std::semiregular<Semiregular_once_flag>);
 
-// NOLINTNEXTLINE(altera-struct-pack-align)
 struct null_lockable_ {
   consteval null_lockable_() noexcept = default;
 
