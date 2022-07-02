@@ -186,7 +186,7 @@ requires(
 } // namespace detail
 
 namespace f {
-template <typename P, Cloner_of<P> F, typename Return = void>
+template <typename Return = void, typename P, Cloner_of<P> F>
 constexpr auto clone [[nodiscard]] (P const &ptr, F &&func) -> decltype(auto) {
   if constexpr (std::same_as<Return, void>) {
     return detail::clone(ptr, std::forward<F>(func));
@@ -194,38 +194,33 @@ constexpr auto clone [[nodiscard]] (P const &ptr, F &&func) -> decltype(auto) {
     return detail::clone<P, F, Return>(ptr, std::forward<F>(func));
   }
 }
-template <Cloneable_by_default_clone_function P, typename Return = void>
+template <typename Return = void, Cloneable_by_default_clone_function P>
 constexpr auto clone [[nodiscard]] (P const &ptr) -> decltype(auto) {
-  return clone<P, decltype((default_clone_function<P>)), Return>(
-      ptr, default_clone_function<P>);
+  return clone<Return>(ptr, default_clone_function<P>);
 }
-template <typename P, Cloner_of<P> F,
-          typename RElement = Clone_auto_element_t<>,
-          typename RDeleter = Clone_auto_deleter_t<>>
+template <typename RElement = Clone_auto_element_t<>,
+          typename RDeleter = Clone_auto_deleter_t<>, typename P,
+          Cloner_of<P> F>
 constexpr auto clone_unique [[nodiscard]] (P const &ptr, F &&func)
 -> decltype(auto) {
-  return detail::clone<P, F, std::unique_ptr<RElement, RDeleter>>(
-      ptr, std::forward<F>(func));
+  return clone<std::unique_ptr<RElement, RDeleter>>(ptr, std::forward<F>(func));
 }
-template <Cloneable_by_default_clone_function P,
-          typename RElement = Clone_auto_element_t<>,
-          typename RDeleter = Clone_auto_deleter_t<>>
+template <typename RElement = Clone_auto_element_t<>,
+          typename RDeleter = Clone_auto_deleter_t<>,
+          Cloneable_by_default_clone_function P>
 constexpr auto clone_unique [[nodiscard]] (P const &ptr) -> decltype(auto) {
-  return clone_unique<P, decltype((default_clone_function<P>)), RElement,
-                      RDeleter>(ptr, default_clone_function<P>);
+  return clone_unique<RElement, RDeleter>(ptr, default_clone_function<P>);
 }
-template <typename P, Cloner_of<P> F,
-          typename RElement = Clone_auto_element_t<>>
+template <typename RElement = Clone_auto_element_t<>, typename P,
+          Cloner_of<P> F>
 constexpr auto clone_shared [[nodiscard]] (P const &ptr, F &&func)
 -> decltype(auto) {
-  return detail::clone<P, F, std::shared_ptr<RElement>>(ptr,
-                                                        std::forward<F>(func));
+  return clone<std::shared_ptr<RElement>>(ptr, std::forward<F>(func));
 }
-template <Cloneable_by_default_clone_function P,
-          typename RElement = Clone_auto_element_t<>>
+template <typename RElement = Clone_auto_element_t<>,
+          Cloneable_by_default_clone_function P>
 constexpr auto clone_shared [[nodiscard]] (P const &ptr) -> decltype(auto) {
-  return clone_shared<decltype((default_clone_function<P>)), P, RElement>(
-      ptr, default_clone_function<P>);
+  return clone_shared<RElement>(ptr, default_clone_function<P>);
 }
 } // namespace f
 } // namespace artccel::core::util
