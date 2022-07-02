@@ -54,6 +54,7 @@ concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
 
 namespace detail {
 template <typename T> struct Odr_type_name {
+#pragma warning(suppress : 4251)
   constinit static std::u8string_view const value;
 };
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION

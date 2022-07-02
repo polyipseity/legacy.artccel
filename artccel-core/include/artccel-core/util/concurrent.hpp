@@ -19,6 +19,7 @@ template <typename L, typename NL = Null_lockable> class Nullable_lockable;
 
 class Semiregular_once_flag {
 private:
+#pragma warning(suppress : 4251)
   std::unique_ptr</* mutable */ std::once_flag> value_{
       std::make_unique<std::once_flag>()};
   bool flag_{false};
@@ -124,6 +125,7 @@ struct Null_lockable {
 };
 
 template <typename L, typename NL>
+#pragma warning(suppress : 4251)
 class Nullable_lockable : public Delegate<std::unique_ptr</* mutable */ L>> {
 public:
   using type = typename Nullable_lockable::type;
@@ -139,6 +141,13 @@ public:
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   constexpr Nullable_lockable(type value) noexcept
       : Nullable_lockable::Delegate{std::move(value)} {}
+
+  Nullable_lockable(Nullable_lockable const &) = delete;
+  auto operator=(Nullable_lockable const &) = delete;
+  constexpr Nullable_lockable(Nullable_lockable &&) noexcept = default;
+  constexpr auto operator=(Nullable_lockable &&) noexcept
+      -> Nullable_lockable & = default;
+  constexpr ~Nullable_lockable() noexcept = default;
 
   // named requirement: BasicLockable
 

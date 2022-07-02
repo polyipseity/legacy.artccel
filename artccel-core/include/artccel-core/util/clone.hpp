@@ -60,11 +60,12 @@ extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
     Clone_auto_deleter_t<Replace_target::container>;
 template <typename P>
 constexpr auto default_clone_function{[]() noexcept {
+  using ptr_element_type = typename std::pointer_traits<P>::element_type;
   constexpr struct {
-    constexpr auto operator() [[nodiscard]] (
-        typename std::pointer_traits<P>::element_type const &ptr) const
+    constexpr auto operator() [[nodiscard]] (ptr_element_type const &ptr) const
         -> decltype(auto) {
-      return ptr.clone();
+      // use std::invoke so that this function can be constexpr on MSVC
+      return std::invoke(&ptr_element_type::clone, ptr);
     }
   } init{};
   return init;

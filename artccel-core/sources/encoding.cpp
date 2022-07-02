@@ -153,14 +153,17 @@ auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
 auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma warning(push)
+#pragma warning(disable : 4996)
   return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-#pragma clang diagnostic pop
       .from_bytes(
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           reinterpret_cast<char const *>(std::data(utf8)), // defined behavior
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           reinterpret_cast<char const *>(std::data(utf8) +
                                          std::size(utf8))); // defined behavior
+#pragma warning(pop)
+#pragma clang diagnostic pop
 }
 auto utf8_to_utf16(char8_t utf8) -> std::u16string {
   return utf8_to_utf16({&utf8, 1_UZ});
@@ -169,9 +172,12 @@ auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
   return utf8_compat_as_utf8(
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma warning(push)
+#pragma warning(disable : 4996)
       std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-#pragma clang diagnostic pop
           .to_bytes(std::data(utf16), std::data(utf16) + std::size(utf16)));
+#pragma warning(pop)
+#pragma clang diagnostic pop
 }
 auto utf16_to_utf8(char16_t utf16) -> std::u8string {
   return utf16_to_utf8({&utf16, 1_UZ});
