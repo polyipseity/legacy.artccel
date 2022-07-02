@@ -20,18 +20,6 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 )
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_OUTPUT)
-
-if(IPO_SUPPORTED)
-	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
-	message(STATUS "Interprocedural optimization is enabled")
-else()
-	message(STATUS "Interprocedural optimization is not supported: ${IPO_OUTPUT}")
-endif()
-
-unset(IPO_SUPPORTED)
-
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
 include(GenerateExportHeader)
 
@@ -66,6 +54,21 @@ function(generate_preset_export_header LIBRARY_TARGET)
 		EXPORT_FILE_NAME "include/${LIBRARY_TARGET}/export.h"
 		CUSTOM_CONTENT_FROM_VARIABLE CUSTOM_EXPORT_HEADER)
 endfunction()
+
+include(CheckIPOSupported)
+
+function(enable_ipo_if_supported)
+	check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_OUTPUT)
+
+	if(IPO_SUPPORTED)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
+		message(STATUS "Interprocedural optimization is enabled")
+	else()
+		message(STATUS "Interprocedural optimization is not supported: ${IPO_OUTPUT}")
+	endif()
+endfunction()
+
+enable_ipo_if_supported()
 
 # Workaround: Make clang-tidy include non-default system headers
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
