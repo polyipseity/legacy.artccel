@@ -28,10 +28,10 @@ ARTCCEL_CORE_EXPORT auto main_cleanup(Arguments_t args) -> Main_cleanup_result;
 } // namespace f
 
 struct alignas(std::pair<std::u8string, std::string_view>) Main_setup_result {
-  std::vector<std::pair<std::u8string, std::string_view>> normalized_args;
+  std::vector<std::pair<std::u8string, std::string_view>> normalized_args_;
 };
 struct Main_cleanup_result {
-  char8_t placeholder;
+  char8_t placeholder_;
 };
 } // namespace artccel::core
 
