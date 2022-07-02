@@ -15,12 +15,12 @@ add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fvisibility=hidden>
 	$<$<CXX_COMPILER_ID:MSVC>:/W4>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 )
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
 include(GenerateExportHeader)
 
 function(generate_preset_export_header LIBRARY_TARGET)
