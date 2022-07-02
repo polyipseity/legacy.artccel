@@ -8,38 +8,37 @@ namespace artccel::core::util {
 #pragma warning(push)
 #pragma warning(disable : 4251)
 template class ARTCCEL_CORE_EXPORT_DEFINITION Nullable_lockable<std::mutex>;
+template class ARTCCEL_CORE_EXPORT_DEFINITION
+    Nullable_lockable<std::timed_mutex>;
+template class ARTCCEL_CORE_EXPORT_DEFINITION
+    Nullable_lockable<std::recursive_mutex>;
+template class ARTCCEL_CORE_EXPORT_DEFINITION
+    Nullable_lockable<std::recursive_timed_mutex>;
+template class ARTCCEL_CORE_EXPORT_DEFINITION
+    Nullable_lockable<std::shared_mutex>;
+template class ARTCCEL_CORE_EXPORT_DEFINITION
+    Nullable_lockable<std::shared_timed_mutex>;
+#pragma warning(pop)
+
+#if defined _MSC_VER && !defined __clang__
+// dumb workaround
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::mutex>::null_lockable_type
         Nullable_lockable<std::mutex>::null_lockable_;
-
-template class ARTCCEL_CORE_EXPORT_DEFINITION
-    Nullable_lockable<std::timed_mutex>;
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::timed_mutex>::null_lockable_type
         Nullable_lockable<std::timed_mutex>::null_lockable_;
-
-template class ARTCCEL_CORE_EXPORT_DEFINITION
-    Nullable_lockable<std::recursive_mutex>;
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::recursive_mutex>::null_lockable_type
         Nullable_lockable<std::recursive_mutex>::null_lockable_;
-
-template class ARTCCEL_CORE_EXPORT_DEFINITION
-    Nullable_lockable<std::recursive_timed_mutex>;
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::recursive_timed_mutex>::null_lockable_type
         Nullable_lockable<std::recursive_timed_mutex>::null_lockable_;
-
-template class ARTCCEL_CORE_EXPORT_DEFINITION
-    Nullable_lockable<std::shared_mutex>;
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::shared_mutex>::null_lockable_type
         Nullable_lockable<std::shared_mutex>::null_lockable_;
-
-template class ARTCCEL_CORE_EXPORT_DEFINITION
-    Nullable_lockable<std::shared_timed_mutex>;
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::shared_timed_mutex>::null_lockable_type
         Nullable_lockable<std::shared_timed_mutex>::null_lockable_;
-#pragma warning(pop)
+#endif
 } // namespace artccel::core::util
