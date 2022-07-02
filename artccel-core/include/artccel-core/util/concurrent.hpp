@@ -14,8 +14,8 @@
 
 namespace artccel::core::util {
 class ARTCCEL_CORE_EXPORT Semiregular_once_flag;
-struct ARTCCEL_CORE_EXPORT null_lockable_;
-template <typename L, typename NL = null_lockable_> class Nullable_lockable;
+struct ARTCCEL_CORE_EXPORT Null_lockable;
+template <typename L, typename NL = Null_lockable> class Nullable_lockable;
 
 class Semiregular_once_flag {
 private:
@@ -68,8 +68,8 @@ public:
 };
 static_assert(std::semiregular<Semiregular_once_flag>);
 
-struct null_lockable_ {
-  consteval null_lockable_() noexcept = default;
+struct Null_lockable {
+  consteval Null_lockable() noexcept = default;
 
   // named requirement: BasicLockable
 
