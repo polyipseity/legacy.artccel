@@ -28,7 +28,8 @@ namespace literals {
 ARTCCEL_CORE_EXPORT constexpr auto operator""_UZ
     // NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
     [[nodiscard]] (unsigned long long value) noexcept {
-  return std::size_t{value}; // TODO: C++23: UZ
+  // static_cast because std::size_t may not be big enough
+  return static_cast<std::size_t>(value); // TODO: C++23: UZ
 }
 } // namespace literals
 } // namespace artccel::core::util
