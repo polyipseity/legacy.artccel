@@ -73,4 +73,14 @@ enable_ipo_if_supported()
 # Workaround: Make clang-tidy include non-default system headers
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES} ${CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES})
-set(CMAKE_CXX_CLANG_TIDY clang-tidy -p "${CMAKE_BINARY_DIR}/compile_commands.json" "--config-file=${ROOT_DIR}/.clang-tidy")
+set(CMAKE_CXX_CLANG_TIDY clang-tidy
+	-p "${CMAKE_BINARY_DIR}/compile_commands.json"
+	"-line-filter=[\
+{\"name\": \"config.h\", \"lines\": [[65535, 1]]},\
+{\"name\": \"export.h\", \"lines\": [[65535, 1]]},\
+{\"name\": \".h\"},\
+{\"name\": \".hpp\"},\
+{\"name\": \".c\"},\
+{\"name\": \".cpp\"}\
+]"
+	"--config-file=${ROOT_DIR}/.clang-tidy")

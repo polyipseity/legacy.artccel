@@ -17,8 +17,7 @@ add_library(artccel-core SHARED
 	"sources/polyfill.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
 generate_preset_export_header(artccel-core)
-target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
-target_include_directories(artccel-core SYSTEM PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>)
+target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_link_libraries(artccel-core PUBLIC artccel Microsoft.GSL::GSL PRIVATE Threads::Threads)
 
 add_executable(artccel-core-exe "sources/exe/main.cpp")
