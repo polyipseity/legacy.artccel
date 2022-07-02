@@ -2,9 +2,12 @@
 #define ARTCCEL_CORE_UTIL_CERRNO_EXTRAS_HPP
 #pragma once
 
-#include <cerrno> // import errno
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <cerrno>                // import errno
 
 namespace artccel::core::util {
+class ARTCCEL_CORE_EXPORT Errno_guard;
+
 namespace detail {
 static inline auto get_errno() noexcept { return errno; }
 } // namespace detail

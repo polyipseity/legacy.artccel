@@ -2,7 +2,8 @@
 #define ARTCCEL_CORE_UTIL_POLYFILL_HPP
 #pragma once
 
-#include <cstddef>     // import std::size_t
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <cstddef>               // import std::size_t
 #include <type_traits> // import std::is_enum_v, std::underlying_type_t
 
 namespace artccel::core::util {
@@ -12,7 +13,7 @@ constexpr auto to_underlying [[nodiscard]] (
   // TODO: C++23: std::to_underlying
   return static_cast<std::underlying_type_t<decltype(enum_)>>(enum_);
 }
-inline void unreachable [[noreturn]] () noexcept {
+ARTCCEL_CORE_EXPORT inline void unreachable [[noreturn]] () noexcept {
   // TODO: C++23: std::unreachable
 #ifdef __GNUC__ // GCC, Clang, ICC
   __builtin_unreachable();
@@ -24,7 +25,7 @@ inline void unreachable [[noreturn]] () noexcept {
 } // namespace f
 
 namespace literals {
-constexpr auto operator""_UZ
+ARTCCEL_CORE_EXPORT constexpr auto operator""_UZ
     // NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
     [[nodiscard]] (unsigned long long value) noexcept {
   return std::size_t{value}; // TODO: C++23: UZ

@@ -4,28 +4,29 @@
 
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <cinttypes>             // import std::int8_t
 #include <concepts>              // import std::derived_from
 #include <gsl/gsl>               // import gsl::owner
 #include <typeinfo>              // import typeid, std::type_info
 
 namespace artccel::core::geometry {
-class Geometry;
-class Primitive;
-class Point;
+class ARTCCEL_CORE_EXPORT Geometry;
+class ARTCCEL_CORE_EXPORT Primitive;
+class ARTCCEL_CORE_EXPORT Point;
 
-class Quality;
+class ARTCCEL_CORE_EXPORT Quality;
 
 class Quality {
 public:
-  virtual ~Quality() noexcept = default;
+  virtual ~Quality() noexcept;
   Quality(Quality const &) = delete;
   auto operator=(Quality const &) = delete;
   Quality(Quality &&) = delete;
   auto operator=(Quality &&) = delete;
 
 protected:
-  Quality() noexcept = default;
+  Quality() noexcept;
 };
 
 class Geometry {
@@ -42,14 +43,14 @@ public:
         try_get_quality(typeid(T)));
   }
   auto clone [[nodiscard]] () const -> gsl::owner<Geometry *>;
-  virtual ~Geometry() noexcept = default;
+  virtual ~Geometry() noexcept;
   Geometry(Geometry const &) = delete;
   auto operator=(Geometry const &) = delete;
   Geometry(Geometry &&) = delete;
   auto operator=(Geometry &&) = delete;
 
 protected:
-  Geometry() noexcept = default;
+  Geometry() noexcept;
   virtual auto try_get_quality
       [[nodiscard]] (std::type_info const &quality_type)
       -> util::Observer_ptr<Quality> = 0;
@@ -61,7 +62,7 @@ protected:
 class Primitive : public virtual Geometry {
 public:
   auto clone [[nodiscard]] () const -> gsl::owner<Primitive *>;
-  ~Primitive() noexcept override = default;
+  ~Primitive() noexcept override;
   Primitive(Primitive const &) = delete;
   auto operator=(Primitive const &) = delete;
   Primitive(Primitive &&) = delete;
@@ -76,7 +77,7 @@ protected:
 class Point : public virtual Primitive {
 public:
   auto clone [[nodiscard]] () const -> gsl::owner<Point *>;
-  ~Point() noexcept override = default;
+  ~Point() noexcept override;
   Point(Point const &) = delete;
   auto operator=(Point const &) = delete;
   Point(Point &&) = delete;

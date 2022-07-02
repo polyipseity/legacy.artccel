@@ -2,8 +2,8 @@
 #define ARTCCEL_CORE_UTIL_CONCURRENT_HPP
 #pragma once
 
-#include "utility_extras.hpp"    // import Delegate
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
+#include "utility_extras.hpp" // import Delegate
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 #include <chrono>   // import std::chrono::duration, std::chrono::time_point
 #include <concepts> // import std::semiregular, std::same_as
 #include <memory>   // import std::make_unique, std::unique_ptr
@@ -13,6 +13,10 @@
 #include <utility> // import std::declval, std::forward, std::move, std::swap
 
 namespace artccel::core::util {
+class ARTCCEL_CORE_EXPORT Semiregular_once_flag;
+struct ARTCCEL_CORE_EXPORT Null_lockable;
+template <typename L, typename NL = Null_lockable> class Nullable_lockable;
+
 class Semiregular_once_flag {
 private:
   std::unique_ptr</* mutable */ std::once_flag> value_{
@@ -21,7 +25,6 @@ private:
 
 public:
   constexpr Semiregular_once_flag() noexcept = default;
-
   template <typename Callable, typename... Args>
   void call_once(Callable &&func, Args &&...args) {
     std::call_once(*value_, [this, &func, &args...]() noexcept(noexcept(
@@ -120,7 +123,7 @@ struct Null_lockable {
   }
 };
 
-template <typename L, typename NL = Null_lockable>
+template <typename L, typename NL>
 class Nullable_lockable : public Delegate<std::unique_ptr</* mutable */ L>> {
 public:
   using type = typename Nullable_lockable::type;

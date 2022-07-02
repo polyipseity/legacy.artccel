@@ -2,11 +2,12 @@
 #define ARTCCEL_CORE_UTIL_INTERVAL_HPP
 #pragma once
 
-#include "concepts_extras.hpp" // import Derived_from_but_not
-#include "utility_extras.hpp"  // import Delegate
-#include <cassert>             // import assert
-#include <compare>             // import std::partial_ordering
-#include <concepts>            // import std::totally_ordered
+#include "concepts_extras.hpp"   // import Derived_from_but_not
+#include "utility_extras.hpp"    // import Delegate
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <cassert>               // import assert
+#include <compare>               // import std::partial_ordering
+#include <concepts>              // import std::totally_ordered
 #include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::move
 
@@ -19,7 +20,7 @@ template <typename L, Derived_from_but_not<Bound<typename L::type>> R>
 requires Derived_from_but_not<L, Bound<typename L::type>>
 class Interval;
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Dynamic_interval_t {
+struct ARTCCEL_CORE_EXPORT Dynamic_interval_t {
   explicit consteval Dynamic_interval_t() noexcept = default;
 };
 

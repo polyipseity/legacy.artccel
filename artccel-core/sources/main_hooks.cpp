@@ -1,6 +1,6 @@
 #include <artccel-core/main_hooks.hpp> // interface
 
-#include <algorithm> // import std::ranges::for_each, std::ranges::transform
+#include <algorithm> // import std::ranges::transform
 #include <artccel-core/util/containers_extras.hpp> // import util::f::const_span
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8
 #include <functional>                     // import std::function
@@ -29,14 +29,14 @@ auto safe_main(
 auto main_setup(Arguments_t args) -> Main_setup_result {
   std::ios_base::sync_with_stdio(false);
   return {[args] {
-    std::vector<std::pair<std::u8string const, std::string_view const>> init{};
-    init.reserve(std::size(args));
+    std::vector<std::pair<std::u8string, std::string_view>> init(
+        std::size(args));
     auto const prev_loc{std::locale::global(
         std::locale{/*u8*/ ""})}; // use user-preferred locale to convert args
     gsl::final_action const finalizer{
         [&prev_loc] { std::locale::global(prev_loc); }};
-    std::ranges::for_each(args, [&init](auto arg) {
-      init.emplace_back(util::f::loc_enc_to_utf8(arg), arg);
+    std::ranges::transform(args, std::begin(init), [](auto arg) {
+      return std::pair{util::f::loc_enc_to_utf8(arg), arg};
     });
     return init;
   }()};

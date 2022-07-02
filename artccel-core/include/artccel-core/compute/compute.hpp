@@ -6,8 +6,8 @@
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::enum_bitset_operators, util::f::check_bitset, util::f::next_bitmask
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
-#include <artccel-core/export.h>      // import ARTCCEL_CORE_EXPORT_DECLARATION
-#include <cinttypes>                  // import std::uint8_t
+#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
+#include <cinttypes>  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from, std::invocable
 #include <functional> // import std::function, std::invoke
 #include <gsl/gsl>    // import gsl::owner
@@ -37,14 +37,14 @@ class Compute_function_constant;
 template <std::copyable R> class Compute_value;
 template <typename Signature> class Compute_function;
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Reset_t {
+struct ARTCCEL_CORE_EXPORT Reset_t {
   explicit consteval Reset_t() noexcept = default;
 };
 // NOLINTNEXTLINE(altera-struct-pack-align)
-struct Extract_t {
+struct ARTCCEL_CORE_EXPORT Extract_t {
   explicit consteval Extract_t() noexcept = default;
 };
-struct Out_t;
+struct ARTCCEL_CORE_EXPORT Out_t;
 
 template <typename T, typename R>
 concept Compute_in_c =

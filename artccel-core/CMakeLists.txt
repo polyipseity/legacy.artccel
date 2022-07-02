@@ -6,10 +6,15 @@ include("${ROOT_DIR}/build_auto/init.cmake")
 
 add_library(artccel-core SHARED
 	"sources/cerrno_extras.cpp"
+	"sources/clone.cpp"
 	"sources/compute.cpp"
+	"sources/concurrent.cpp"
 	"sources/encoding.cpp"
+	"sources/enum_bitset.cpp"
+	"sources/geometry.cpp"
+	"sources/interval.cpp"
 	"sources/main_hooks.cpp"
-	"sources/template_instantiations.cpp")
+	"sources/polyfill.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
 generate_preset_export_header(artccel-core)
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
