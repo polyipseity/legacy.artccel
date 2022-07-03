@@ -21,6 +21,8 @@ template class ARTCCEL_CORE_EXPORT_DEFINITION
 #pragma warning(pop)
 
 #if defined _MSC_VER && !defined __clang__
+#pragma warning(push)
+#pragma warning(disable : 5041 5259)
 // dumb workaround
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::mutex>::null_lockable_type
@@ -40,5 +42,6 @@ ARTCCEL_CORE_EXPORT_DEFINITION constexpr
 ARTCCEL_CORE_EXPORT_DEFINITION constexpr
     typename Nullable_lockable<std::shared_timed_mutex>::null_lockable_type
         Nullable_lockable<std::shared_timed_mutex>::null_lockable_;
+#pragma warning(pop)
 #endif
 } // namespace artccel::core::util

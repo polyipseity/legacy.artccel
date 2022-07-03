@@ -28,6 +28,7 @@ public:
   auto operator=(Errno_guard const &right) = delete;
   Errno_guard(Errno_guard &&other) = delete;
   auto operator=(Errno_guard &&right) = delete;
+#pragma warning(suppress : 4820)
 };
 } // namespace artccel::core::util
 

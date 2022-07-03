@@ -107,6 +107,7 @@ protected:
   explicit constexpr Delegate(T value) noexcept(noexcept(decltype(value_){
       std::move(value)}))
       : value_{std::move(value)} {}
+#pragma warning(suppress : 4625 4626)
 };
 
 template <typename CharT, std::size_t N> struct Template_string {
@@ -131,6 +132,12 @@ template <typename CharT, std::size_t N> struct Template_string {
   explicit consteval Template_string(char8_t chr) : Template_string{{{chr}}} {}
   explicit consteval Template_string(char16_t chr) : Template_string{{{chr}}} {}
   explicit consteval Template_string(char32_t chr) : Template_string{{{chr}}} {}
+
+  consteval Template_string(Template_string const &) = default;
+  auto operator=(Template_string const &) = delete;
+  Template_string(Template_string &&) = delete;
+  auto operator=(Template_string &&) = delete;
+  constexpr ~Template_string() noexcept = default;
 };
 Template_string(char chr)->Template_string<char, 1_UZ + null_terminator_size>;
 Template_string(wchar_t chr)

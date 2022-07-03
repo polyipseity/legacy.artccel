@@ -14,15 +14,24 @@ add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fvisibility=hidden>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-finput-charset=UTF-8>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fexec-charset=UTF-8>
-	$<$<CXX_COMPILER_ID:MSVC>:/W4>
+	$<$<CXX_COMPILER_ID:MSVC>:/Wall>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
+
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
+	$<$<CXX_COMPILER_ID:MSVC>:/wd4464> # relative include path contains '..'
+	$<$<CXX_COMPILER_ID:MSVC>:/wd4514> # unreferenced inline function has been removed
+
+	# pragma warning seems to be broken for below warnings
+	$<$<CXX_COMPILER_ID:MSVC>:/wd4868> # compiler may not enforce left-to-right evaluation order in braced initializer list
+	$<$<CXX_COMPILER_ID:MSVC>:/wd5045> # Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
+
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-finput-charset=UTF-8>
 	$<$<CXX_COMPILER_ID:MSVC>:/source-charset:UTF-8>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fexec-charset=UTF-8>
 	$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:UTF-8>
+
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fvisibility=hidden>
 )
 add_link_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>

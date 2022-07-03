@@ -65,6 +65,7 @@ public:
     Semiregular_once_flag{std::move(right)}.swap(*this);
     return *this;
   }
+#pragma warning(suppress : 4820)
 };
 static_assert(std::semiregular<Semiregular_once_flag>);
 

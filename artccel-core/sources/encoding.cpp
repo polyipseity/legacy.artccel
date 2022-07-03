@@ -1,3 +1,5 @@
+#pragma warning(push)
+#pragma warning(disable : 4365)
 #include <artccel-core/util/encoding.hpp> // interface
 
 #include <algorithm> // import std::min, std::ranges::for_each
@@ -22,6 +24,7 @@
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 #include <system_error> // import std::generic_category, std::system_error
 #include <utility>      // import std::as_const, std::move
+#pragma warning(pop)
 
 namespace artccel::core::util {
 namespace detail {

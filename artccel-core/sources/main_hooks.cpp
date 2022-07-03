@@ -1,3 +1,5 @@
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
 #include <artccel-core/main_hooks.hpp> // interface
 
 #include <algorithm> // import std::ranges::transform
@@ -10,6 +12,7 @@
 #include <span>     // import std::begin, std::size, std::span
 #include <string_view> // import std::string_view
 #include <vector>      // import std::vector
+#pragma warning(pop)
 
 namespace artccel::core::f {
 auto safe_main(

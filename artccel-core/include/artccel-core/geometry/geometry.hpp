@@ -59,6 +59,7 @@ protected:
       -> util::Observer_ptr<Quality const> = 0;
 };
 
+#pragma warning(suppress : 4435)
 class Primitive : public virtual Geometry {
 public:
   auto clone [[nodiscard]] () const -> gsl::owner<Primitive *>;
@@ -73,7 +74,7 @@ protected:
   using Geometry::Geometry;
 };
 
-// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+#pragma warning(suppress : 4435) // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Point : public virtual Primitive {
 public:
   auto clone [[nodiscard]] () const -> gsl::owner<Point *>;

@@ -94,6 +94,7 @@ public:
 
 protected:
   using Compute_in::Compute_io::Compute_io;
+#pragma warning(suppress : 4625 4626 5026 5027)
 };
 
 template <std::copyable R> class Compute_out : public Compute_io<R> {

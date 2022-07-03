@@ -6,7 +6,7 @@
 #include "encoding.hpp"          // import f::utf8_compat_as_utf8
 #include "semantics.hpp"         // import null_terminator_size
 #include <algorithm>             // import std::ranges::copy
-#include <array> // import std::array, std::begin, std::cbegin, std::cend, std::size, std::to_array
+#include <array> // import std::array, std::begin, std::cbegin, std::size, std::to_array
 #include <concepts>    // import std::same_as
 #include <cstddef>     // import std::size_t
 #include <string_view> // import std::string_view
@@ -47,9 +47,12 @@ constexpr static auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix_ == std::string_view::npos) {
     return std::to_array(/*u8*/ "<type name unavailable>");
   } else {
-    constexpr std::string_view type_name{
-        std::cbegin(raw_type_name<T>()) + type_name_format.junk_prefix_,
-        std::cend(raw_type_name<T>()) - type_name_format.junk_suffix_};
+    constexpr auto type_name{[] {
+      auto init{raw_type_name<T>()};
+      init.remove_prefix(type_name_format.junk_prefix_);
+      init.remove_suffix(type_name_format.junk_suffix_);
+      return init;
+    }()};
     std::array<char, std::size(type_name) + null_terminator_size> init{};
     std::ranges::copy(type_name, std::begin(init));
     return f::const_array(std::move(init));

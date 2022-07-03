@@ -47,6 +47,7 @@ protected:
     Geometry_impl{std::move(right)}.swap(*this);
     return *this;
   }
+#pragma warning(suppress : 4820)
 };
 
 template <util::Nonnegative_interval<std::int8_t> D>
@@ -82,7 +83,7 @@ protected:
     Primitive_impl{std::move(right)}.swap(*this);
     return *this;
   }
-#pragma warning(suppress : 4250)
+#pragma warning(suppress : 4250 4820)
 };
 
 template <util::Nonnegative_interval<std::int8_t> D>
@@ -141,7 +142,7 @@ protected:
     Point_impl{std::move(right)}.swap(*this);
     return *this;
   }
-#pragma warning(suppress : 4250)
+#pragma warning(suppress : 4250 4820)
 };
 } // namespace artccel::core::geometry::impl
 

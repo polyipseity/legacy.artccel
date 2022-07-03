@@ -1,5 +1,8 @@
+#pragma warning(push)
+#pragma warning(disable : 4820)
 #include <artccel-core/main_hooks.hpp> // import Arguments_t, artccel::core::f::safe_main, f::main_cleanup, f::main_setup
 #include <gsl/gsl>                     // import gsl::final_action
+#pragma warning(pop)
 
 namespace artccel::core::detail {
 static auto main_0(Arguments_t args) -> int {
