@@ -24,6 +24,9 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/source-charset:UTF-8>
 	$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:UTF-8>
 )
+add_link_options(
+	$<$<CXX_COMPILER_ID:MSVC>:/WX>
+)
 
 include(GenerateExportHeader)
 
