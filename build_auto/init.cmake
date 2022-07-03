@@ -16,9 +16,13 @@ add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fvisibility=hidden>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-finput-charset=UTF-8>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fexec-charset=UTF-8>
 	$<$<CXX_COMPILER_ID:MSVC>:/W4>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
+	$<$<CXX_COMPILER_ID:MSVC>:/source-charset:UTF-8>
+	$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:UTF-8>
 )
 
 include(GenerateExportHeader)
