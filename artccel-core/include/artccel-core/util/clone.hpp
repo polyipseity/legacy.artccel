@@ -12,25 +12,6 @@
 #include <type_traits> // import std::invoke_result_t, std::is_lvalue_reference_v, std::is_rvalue_reference_v, std::is_pointer_v, std::is_reference_v, std::remove_cv_t, std::remove_pointer_t
 #include <utility>     // import std::forward, std::move
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define ARTCCEL_GENERATE_CLONE_FUNCTION_0(ptr_name, expr)                      \
-  [](auto const &(ptr_name)) -> decltype(auto) {                               \
-    constexpr static struct {                                                  \
-      constexpr auto operator()                                                \
-          [[nodiscard]] (decltype(ptr_name)(ptr_name)) const                   \
-          -> decltype(auto) {                                                  \
-        return expr;                                                           \
-      }                                                                        \
-    } func{};                                                                  \
-    return func(ptr_name);                                                     \
-  }
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define ARTCCEL_GENERATE_CLONE_FUNCTION(ptr_name, expr)                        \
-  ARTCCEL_GENERATE_CLONE_FUNCTION_0(ptr_name, expr)
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define ARTCCEL_GENERATE_CLONE_FUNCTION_EXPR(expr)                             \
-  ARTCCEL_GENERATE_CLONE_FUNCTION_0(ptr, expr)
-
 namespace artccel::core::util {
 template <typename P, typename F>
 concept Cloneable_by = requires(P const &ptr, F &&func) {
