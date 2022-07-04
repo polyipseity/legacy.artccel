@@ -43,6 +43,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 		-Wno-c++98-compat-pedantic
 		-Wno-c++98-c++11-c++14-compat
 		-Wno-c++20-compat
+		-Wno-return-std-move-in-c++11
 		-Wno-missing-variable-declarations
 		-Wno-ctad-maybe-unsupported
 	)

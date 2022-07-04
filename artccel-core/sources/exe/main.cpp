@@ -1,15 +1,11 @@
-#pragma warning(push) // suppress <gsl/util>
-#pragma warning(disable : 4820)
-#include <artccel-core/main_hooks.hpp> // import Arguments_t, artccel::core::f::safe_main, f::main_cleanup, f::main_setup
-#include <gsl/gsl>                     // import gsl::final_action
-#pragma warning(pop)
+#include <artccel-core/main_hooks.hpp> // import Main_program, Raw_arguments, artccel::core::f::safe_main
+#include <artccel-core/util/exception_extras.hpp> // import util::Rethrow_on_destruct
 
 namespace artccel::core::detail {
-static auto main_0(Arguments_t args) -> int {
-  [[maybe_unused]] auto const [norm_args]{f::main_setup(args)};
-  gsl::final_action const finalizer{[args] {
-    [[maybe_unused]] auto const [placeholder]{f::main_cleanup(args)};
-  }};
+static auto main_0(Raw_arguments arguments) -> int {
+  util::Rethrow_on_destruct rethrow_on_destruct{};
+  Main_program const program
+      [[maybe_unused]]{rethrow_on_destruct.ptr(), arguments};
   return 0;
 }
 } // namespace artccel::core::detail

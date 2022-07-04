@@ -3,36 +3,59 @@
 #pragma once
 
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <functional>            // import std::function
+#include <exception>             // import std::exception_ptr
+#include <functional>            // import std::function, std::reference_wrapper
 #include <gsl/gsl>               // import gsl::czstring
+#include <optional>              // import std::optional
 #include <span>                  // import std::span
 #include <string>                // import std::u8string
-#include <string_view>           // import std::string_view
-#include <utility>               // import std::pairr
+#include <string_view>           // import std::string_view, std::u8string_view
+#include <variant>               // import std::variant
 #include <vector>                // import std::vector
 
 namespace artccel::core {
-struct ARTCCEL_CORE_EXPORT Main_setup_result;
-struct ARTCCEL_CORE_EXPORT Main_cleanup_result;
+class ARTCCEL_CORE_EXPORT Main_program;
+class ARTCCEL_CORE_EXPORT Argument;
 
-using Arguments_t = std::span<std::string_view const>;
+using Raw_arguments = std::span<std::string_view const>;
 
 namespace f {
 ARTCCEL_CORE_EXPORT auto safe_main(
-    std::function<int(Arguments_t)> const &main_func, int argc,
+    std::function<int(Raw_arguments)> const &main_func, int argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     gsl::czstring const argv[]) -> int;
-
-ARTCCEL_CORE_EXPORT auto main_setup(Arguments_t args) -> Main_setup_result;
-ARTCCEL_CORE_EXPORT auto main_cleanup(Arguments_t args) -> Main_cleanup_result;
 } // namespace f
 
-struct Main_setup_result {
-#pragma warning(suppress : 4251)
-  std::vector<std::pair<std::u8string, std::string_view>> normalized_args_;
+class Main_program {
+private:
+  struct {
+  } early_init_ [[no_unique_address, maybe_unused]];
+  std::reference_wrapper<std::exception_ptr> destructor_exc_out_;
+  std::vector<Argument> arguments_;
+
+public:
+  explicit Main_program(std::exception_ptr &destructor_exc_out,
+                        Raw_arguments arguments);
+  ~Main_program() noexcept;
+  auto arguments [[nodiscard]] () const -> std::span<Argument const>;
+
+  Main_program(Main_program const &) = delete;
+  auto operator=(Main_program const &) = delete;
+  Main_program(Main_program &&) = delete;
+  auto operator=(Main_program &&) = delete;
 };
-struct Main_cleanup_result {
-  char8_t placeholder_;
+class Argument {
+private:
+  std::string_view verbatim_;
+  std::variant<std::u8string, std::exception_ptr> utf8_;
+
+public:
+  constexpr Argument() noexcept = default;
+  explicit Argument(std::string_view argument);
+  auto verbatim [[nodiscard]] () const noexcept -> std::string_view;
+  auto utf8 [[nodiscard]] () const -> std::optional<std::u8string_view>;
+  auto utf8_or_exc [[nodiscard]] () const
+      -> std::variant<std::u8string_view, std::exception_ptr>;
 };
 } // namespace artccel::core
 

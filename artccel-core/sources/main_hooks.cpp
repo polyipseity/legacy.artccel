@@ -5,18 +5,26 @@
 #include <algorithm> // import std::ranges::transform
 #include <artccel-core/util/containers_extras.hpp> // import util::f::const_span
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8
-#include <functional>                     // import std::function
-#include <gsl/gsl> // import gsl::czstring, gsl::final_action, gsl::not_null
+#include <artccel-core/util/utility_extras.hpp> // import util::dependent_false_v
+#include <concepts>                             // import std::same_as
+#include <exception>  // import std::current_exception, std::exception_ptr
+#include <functional> // import std::function
+#include <gsl/gsl>    // import gsl::czstring, gsl::final_action, gsl::not_null
 #include <iostream> // import std::clog, std::cout, std::ios_base::sync_with_stdio
 #include <locale>   // import std::locale, std::locale::global
-#include <span>     // import std::begin, std::size, std::span
-#include <string_view> // import std::string_view
+#include <optional>    // import std::nullopt, std::optional
+#include <span>        // import std::begin, std::size, std::span
+#include <string>      // import std::u8string
+#include <string_view> // import std::string_view, std::u8string_view
+#include <type_traits> /// import std::decay_t
+#include <variant>     // import std::get_if, std::variant, std::visit
 #include <vector>      // import std::vector
 #pragma warning(pop)
 
-namespace artccel::core::f {
+namespace artccel::core {
+namespace f {
 auto safe_main(
-    std::function<int(Arguments_t)> const &main_func, int argc,
+    std::function<int(Raw_arguments)> const &main_func, int argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     gsl::czstring const argv[]) -> int {
   return main_func([args{util::f::const_span(argv, argv + argc)}] {
@@ -28,25 +36,60 @@ auto safe_main(
     return init;
   }());
 }
+} // namespace f
 
-auto main_setup(Arguments_t args) -> Main_setup_result {
-  std::ios_base::sync_with_stdio(false);
-  return {[args] {
-    std::vector<std::pair<std::u8string, std::string_view>> init(
-        std::size(args));
-    auto const prev_loc{std::locale::global(
-        std::locale{/*u8*/ ""})}; // use user-preferred locale to convert args
-    gsl::final_action const finalizer{
-        [&prev_loc] { std::locale::global(prev_loc); }};
-    std::ranges::transform(args, std::begin(init), [](auto arg) {
-      return std::pair{util::f::loc_enc_to_utf8(arg), arg};
-    });
-    return init;
-  }()};
+Main_program::Main_program(std::exception_ptr &destructor_exc_out,
+                           Raw_arguments arguments)
+    : early_init_{[] {
+        std::ios_base::sync_with_stdio(false);
+        return decltype(early_init_){};
+      }()},
+      destructor_exc_out_{destructor_exc_out}, arguments_{[arguments] {
+        decltype(arguments_) init(std::size(arguments));
+        auto const prev_loc{std::locale::global(std::locale{
+            /*u8*/ ""})}; // use user-preferred locale to convert args
+        gsl::final_action const finalizer{
+            [&prev_loc] { std::locale::global(prev_loc); }};
+        std::ranges::transform(arguments, std::begin(init),
+                               [](auto arg) { return Argument{arg}; });
+        return init;
+      }()} {}
+Main_program::~Main_program() noexcept {
+  try {
+    std::cout.flush();
+    std::clog.flush();
+  } catch (...) {
+    destructor_exc_out_.get() = std::current_exception();
+  }
 }
-auto main_cleanup(Arguments_t args [[maybe_unused]]) -> Main_cleanup_result {
-  std::cout.flush();
-  std::clog.flush();
-  return {u8'\0'};
+auto Main_program::arguments [[nodiscard]] () const
+    -> std::span<Argument const> {
+  return arguments_;
 }
-} // namespace artccel::core::f
+
+Argument::Argument(std::string_view argument)
+    : verbatim_{argument}, utf8_{[argument]() -> decltype(utf8_) {
+        std::u8string init{};
+        try {
+          init = util::f::loc_enc_to_utf8(argument);
+        } catch (...) {
+          return std::current_exception();
+        }
+        return init;
+      }()} {}
+auto Argument::verbatim [[nodiscard]] () const noexcept -> std::string_view {
+  return verbatim_;
+}
+auto Argument::utf8 [[nodiscard]] () const
+    -> std::optional<std::u8string_view> {
+  if (auto const *val{std::get_if<std::u8string>(&utf8_)}) {
+    return std::u8string_view{*val};
+  }
+  return std::nullopt;
+}
+auto Argument::utf8_or_exc [[nodiscard]] () const
+    -> std::variant<std::u8string_view, std::exception_ptr> {
+  using return_type = decltype(utf8_or_exc());
+  return std::visit([](auto &&var) -> return_type { return var; }, utf8_);
+}
+} // namespace artccel::core
