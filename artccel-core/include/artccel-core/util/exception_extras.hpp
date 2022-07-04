@@ -11,7 +11,7 @@
 #include <utility>     // import std::forward
 
 namespace artccel::core::util {
-class ARTCCEL_CORE_EXPORT Rethrow_on_destruct;
+class ARTCCEL_CORE_EXPORT Rethrow_on_lexical_scope_exit;
 
 namespace detail {
 using literals::operator""_UZ;
@@ -61,26 +61,36 @@ requires(
 }
 } // namespace f
 
-class Rethrow_on_destruct {
+class Rethrow_on_lexical_scope_exit {
 private:
   std::exception_ptr exc_;
 
 public:
-  explicit Rethrow_on_destruct() noexcept;
-  explicit Rethrow_on_destruct(
+  // functions are lvalue-only as this class only makes sense as a lvalue
+  explicit Rethrow_on_lexical_scope_exit() noexcept;
+  explicit Rethrow_on_lexical_scope_exit(
       [[maybe_unused]] std::nullptr_t /*unused*/) noexcept;
-  explicit Rethrow_on_destruct(std::exception_ptr exc) noexcept;
+  explicit Rethrow_on_lexical_scope_exit(std::exception_ptr exc) noexcept;
+  ~Rethrow_on_lexical_scope_exit() noexcept(false);
 
-  auto ptr [[nodiscard]] () &noexcept -> std::exception_ptr &;
-  auto ptr [[nodiscard]] () const &noexcept -> std::exception_ptr const &;
-  auto ptr [[nodiscard]] () &&noexcept -> std::exception_ptr;
-  auto ptr [[nodiscard]] () const && -> std::exception_ptr;
+  // named 'write' to make 'rolse = std::move(rolse2.write())' look weird
+  auto write [[nodiscard]] () &noexcept -> std::exception_ptr &;
+  auto read [[nodiscard]] () const &noexcept -> std::exception_ptr const &;
+  // "proper" (try rewriting your code instead) way: 'rolse = rolse2.release()'
+  auto release [[nodiscard]] () & -> std::exception_ptr;
 
-  Rethrow_on_destruct(Rethrow_on_destruct const &) = delete;
-  auto operator=(Rethrow_on_destruct const &) = delete;
-  Rethrow_on_destruct(Rethrow_on_destruct &&other) noexcept;
-  auto operator=(Rethrow_on_destruct &&right) noexcept -> Rethrow_on_destruct &;
-  ~Rethrow_on_destruct() noexcept(false);
+  auto operator=(std::nullptr_t right) &noexcept
+      -> Rethrow_on_lexical_scope_exit &;
+  auto operator=(std::exception_ptr const &right) &noexcept
+      -> Rethrow_on_lexical_scope_exit &;
+  auto operator=(std::exception_ptr &&right) &noexcept
+      -> Rethrow_on_lexical_scope_exit &;
+
+  // delete all to avoid double rethrowing
+  Rethrow_on_lexical_scope_exit(Rethrow_on_lexical_scope_exit const &) = delete;
+  auto operator=(Rethrow_on_lexical_scope_exit const &) = delete;
+  Rethrow_on_lexical_scope_exit(Rethrow_on_lexical_scope_exit &&) = delete;
+  auto operator=(Rethrow_on_lexical_scope_exit &&) = delete;
 };
 } // namespace artccel::core::util
 

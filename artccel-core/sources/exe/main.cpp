@@ -1,11 +1,11 @@
 #include <artccel-core/main_hooks.hpp> // import Main_program, Raw_arguments, artccel::core::f::safe_main
-#include <artccel-core/util/exception_extras.hpp> // import util::Rethrow_on_destruct
+#include <artccel-core/util/exception_extras.hpp> // import util::Rethrow_on_lexical_scope_exit
 
 namespace artccel::core::detail {
 static auto main_0(Raw_arguments arguments) -> int {
-  util::Rethrow_on_destruct rethrow_on_destruct{};
+  util::Rethrow_on_lexical_scope_exit lexical_rethrower{};
   Main_program const program
-      [[maybe_unused]]{rethrow_on_destruct.ptr(), arguments};
+      [[maybe_unused]]{lexical_rethrower.write(), arguments};
   return 0;
 }
 } // namespace artccel::core::detail
