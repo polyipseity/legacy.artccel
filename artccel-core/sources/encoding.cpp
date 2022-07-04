@@ -104,8 +104,9 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
         assert(false && u8"Could not find the length of the null character");
         processed = null_terminator_size;
       has_null_len:
-        [[fallthrough]];
+        [[likely]];
       }
+      [[fallthrough]];
     default:
       loc_enc.remove_prefix(processed);
       break;

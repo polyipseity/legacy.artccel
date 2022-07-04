@@ -17,7 +17,10 @@ class ARTCCEL_CORE_EXPORT Semiregular_once_flag;
 struct ARTCCEL_CORE_EXPORT Null_lockable;
 template <typename L, typename NL = Null_lockable> class Nullable_lockable;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 class Semiregular_once_flag {
+#pragma clang diagnostic pop
 private:
 #pragma warning(suppress : 4251)
   std::unique_ptr</* mutable */ std::once_flag> value_{
@@ -52,8 +55,8 @@ public:
       std::call_once(*value_, []() noexcept {});
     }
   }
-  auto operator=(Semiregular_once_flag const &right) noexcept(
-      noexcept(Semiregular_once_flag{right}.swap(*this), *this))
+  auto operator=(Semiregular_once_flag const &right) noexcept(noexcept(
+      static_cast<void>(Semiregular_once_flag{right}.swap(*this)), *this))
       -> Semiregular_once_flag & {
     Semiregular_once_flag{right}.swap(*this);
     return *this;
@@ -186,7 +189,7 @@ public:
     { null_lockable_.try_lock() } -> std::same_as<bool>;
   }
   constexpr auto try_lock [[nodiscard]] () const
-      noexcept(noexcept(bool{this->value_->try_lock()},
+      noexcept(noexcept(static_cast<void>(bool{this->value_->try_lock()}),
                         bool{null_lockable_.try_lock()}) &&
                std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
@@ -210,7 +213,8 @@ public:
   }
   constexpr auto try_lock_for
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
-      noexcept(noexcept(bool{this->value_->try_lock_for(rel_time)},
+      noexcept(noexcept(static_cast<void>(bool{
+                            this->value_->try_lock_for(rel_time)}),
                         bool{null_lockable_.try_lock_for(rel_time)}) &&
                std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
@@ -231,7 +235,8 @@ public:
   }
   constexpr auto try_lock_until [[nodiscard]] (
       std::chrono::time_point<Clock, Duration> const &abs_time) const
-      noexcept(noexcept(bool{this->value_->try_lock_until(abs_time)},
+      noexcept(noexcept(static_cast<void>(bool{
+                            this->value_->try_lock_until(abs_time)}),
                         bool{null_lockable_.try_lock_until(abs_time)}) &&
                std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
@@ -261,10 +266,10 @@ public:
     { std::declval<type>()->try_lock_shared() } -> std::same_as<bool>;
     { null_lockable_.try_lock_shared() } -> std::same_as<bool>;
   }
-  constexpr auto try_lock_shared [[nodiscard]] () const
-      noexcept(noexcept(bool{this->value_->try_lock_shared()},
-                        bool{null_lockable_.try_lock_shared()}) &&
-               std::is_nothrow_move_constructible_v<bool>) -> bool {
+  constexpr auto try_lock_shared [[nodiscard]] () const noexcept(
+      noexcept(static_cast<void>(bool{this->value_->try_lock_shared()}),
+               bool{null_lockable_.try_lock_shared()}) &&
+      std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
       return this->value_->try_lock_shared();
     }
@@ -300,7 +305,8 @@ public:
   }
   constexpr auto try_lock_shared_for
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
-      noexcept(noexcept(bool{this->value_->try_lock_shared_for(rel_time)},
+      noexcept(noexcept(static_cast<void>(bool{
+                            this->value_->try_lock_shared_for(rel_time)}),
                         bool{null_lockable_.try_lock_shared_for(rel_time)}) &&
                std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {
@@ -321,7 +327,8 @@ public:
   }
   constexpr auto try_lock_shared_until [[nodiscard]] (
       std::chrono::time_point<Clock, Duration> const &abs_time) const
-      noexcept(noexcept(bool{this->value_->try_lock_shared_until(abs_time)},
+      noexcept(noexcept(static_cast<void>(bool{
+                            this->value_->try_lock_shared_until(abs_time)}),
                         bool{null_lockable_.try_lock_shared_until(abs_time)}) &&
                std::is_nothrow_move_constructible_v<bool>) -> bool {
     if (this->value_) {

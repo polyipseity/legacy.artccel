@@ -35,7 +35,7 @@ protected:
 #pragma warning(suppress : 4589)
   using Geometry::Geometry;
   void swap(Geometry_impl &other [[maybe_unused]]) noexcept { using std::swap; }
-  Geometry_impl(Geometry_impl const &other [[maybe_unused]]) noexcept {};
+  Geometry_impl(Geometry_impl const &other [[maybe_unused]]) noexcept {}
   auto operator=(Geometry_impl const &right [[maybe_unused]]) noexcept(
       noexcept(Geometry_impl{right}.swap(*this), *this)) -> Geometry_impl & {
     Geometry_impl{right}.swap(*this);
@@ -72,7 +72,7 @@ protected:
   Primitive_impl(Primitive_impl const &other) noexcept(
       std::is_nothrow_copy_constructible_v<
           typename Primitive_impl::Geometry_impl>)
-      : Primitive_impl::Geometry_impl{other} {};
+      : Primitive_impl::Geometry_impl{other} {}
   auto operator=(Primitive_impl const &right) noexcept(
       noexcept(Primitive_impl{right}.swap(*this), *this)) -> Primitive_impl & {
     Primitive_impl{right}.swap(*this);

@@ -147,13 +147,13 @@ public:
       noexcept(Compute_out{right}.swap(*this), *this)) -> Compute_out & {
     Compute_out{right}.swap(*this);
     return *this;
-  };
+  }
   Compute_out(Compute_out &&other) noexcept
       : c_in_{std::move(other.c_in_)}, return_{std::move(other.return_)} {}
   auto operator=(Compute_out &&right) noexcept -> Compute_out & {
     Compute_out{std::move(right)}.swap(*this);
     return *this;
-  };
+  }
 };
 template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
 
@@ -191,7 +191,7 @@ public:
   auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_constant *> override {
     return new Compute_constant{/* *this */};
-  };
+  }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_constant *> override {
     util::f::check_bitset(
@@ -199,7 +199,7 @@ public:
         u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
         options);
     return new Compute_constant{/* *this */};
-  };
+  }
   constexpr ~Compute_constant() noexcept override = default;
   Compute_constant(Compute_constant const &) = delete;
   auto operator=(Compute_constant const &) = delete;
@@ -246,7 +246,7 @@ public:
   auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_function_constant *> override {
     return new Compute_function_constant{/* *this */};
-  };
+  }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function_constant *> override {
     util::f::check_bitset(
@@ -254,7 +254,7 @@ public:
         u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
         options);
     return new Compute_function_constant{/* *this */};
-  };
+  }
   constexpr ~Compute_function_constant() noexcept override = default;
   Compute_function_constant(Compute_function_constant const &) = delete;
   auto operator=(Compute_function_constant const &) = delete;
@@ -354,7 +354,7 @@ public:
   auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_value *> override {
     return new Compute_value{*this};
-  };
+  }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_value *> override {
     util::f::check_bitset(
@@ -364,7 +364,7 @@ public:
     return new Compute_value{*this, (options | Compute_option::concurrent).any()
                                         ? std::make_unique<std::shared_mutex>()
                                         : nullptr};
-  };
+  }
   ~Compute_value() noexcept override = default;
 
 protected:
@@ -383,7 +383,7 @@ protected:
       noexcept(Compute_value{right}.swap(*this), *this)) -> Compute_value & {
     Compute_value{right}.swap(*this);
     return *this;
-  };
+  }
   Compute_value(Compute_value &&other) noexcept
       : mutex_{other.mutex_.value_ ? std::make_unique<std::shared_mutex>()
                                    : nullptr},
@@ -391,7 +391,7 @@ protected:
   auto operator=(Compute_value &&right) noexcept -> Compute_value & {
     Compute_value{std::move(right)}.swap(*this);
     return *this;
-  };
+  }
 
   explicit Compute_value(
       Compute_value const &other,
@@ -468,7 +468,10 @@ protected:
           case Bound_action::reset:
             flag = {};
             return std::optional<R>{};
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
           default:
+#pragma clang diagnostic pop
             util::f::unreachable();
           }
         }};
@@ -576,7 +579,7 @@ public:
   auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_function *> override {
     return new Compute_function{*this};
-  };
+  }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function *> override {
     util::f::check_bitset(
@@ -587,7 +590,7 @@ public:
                                 (options | Compute_option::concurrent).any()
                                     ? std::make_unique<std::shared_mutex>()
                                     : nullptr};
-  };
+  }
   ~Compute_function() noexcept override = default;
 
 protected:
@@ -608,7 +611,7 @@ protected:
       noexcept(this == &right, swap(right), *this)) -> Compute_function & {
     Compute_function{right}.swap(*this);
     return *this;
-  };
+  }
   Compute_function(Compute_function &&other) noexcept
       : mutex_{other.mutex_.value_ ? std::make_unique<std::shared_mutex>()
                                    : nullptr},
@@ -617,7 +620,7 @@ protected:
   auto operator=(Compute_function &&right) noexcept -> Compute_function & {
     Compute_function{std::move(right)}.swap(*this);
     return *this;
-  };
+  }
 
   explicit Compute_function(
       Compute_function const &other,

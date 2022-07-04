@@ -13,10 +13,9 @@ add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
 	$<$<CXX_COMPILER_ID:MSVC>:/Wall>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
-
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4464> # relative include path contains '..'
@@ -36,6 +35,18 @@ add_compile_options(
 add_link_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
 )
+
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+	add_compile_options(
+		-Weverything
+		-Wno-c++98-compat
+		-Wno-c++98-compat-pedantic
+		-Wno-c++98-c++11-c++14-compat
+		-Wno-c++20-compat
+		-Wno-missing-variable-declarations
+		-Wno-ctad-maybe-unsupported
+	)
+endif()
 
 include(GenerateExportHeader)
 

@@ -60,10 +60,7 @@ constexpr static auto type_name_storage{[] {
 }()};
 
 template <typename T, typename Find, typename Replace> struct Replace_all;
-enum struct Replace_target : bool {
-  self = false,
-  container = true,
-};
+enum struct Replace_target : bool { self = false, container = true };
 template <typename NotFound, typename Find, typename Replace>
 requires(
     !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {

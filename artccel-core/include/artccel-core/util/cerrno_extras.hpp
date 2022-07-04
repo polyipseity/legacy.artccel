@@ -13,7 +13,10 @@ static inline auto get_errno() noexcept { return errno; }
 } // namespace detail
 using Errno_t = decltype(detail::get_errno());
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 class Errno_guard {
+#pragma clang diagnostic pop
 private:
   Errno_t err_no_{errno};
   bool released_{false};
