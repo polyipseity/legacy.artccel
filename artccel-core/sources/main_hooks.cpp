@@ -1,4 +1,4 @@
-#pragma warning(push)
+#pragma warning(push) // suppress <gsl/pointers>, <gsl/util>
 #pragma warning(disable : 4626 4820)
 #include <artccel-core/main_hooks.hpp> // interface
 

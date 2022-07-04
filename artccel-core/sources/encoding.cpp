@@ -1,4 +1,4 @@
-#pragma warning(push)
+#pragma warning(push) // suppress <xstring>
 #pragma warning(disable : 4365)
 #include <artccel-core/util/encoding.hpp> // interface
 
