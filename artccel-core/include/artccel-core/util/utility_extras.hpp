@@ -12,7 +12,7 @@
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
 #include <span>        // import std::dynamic_extent, std::span
-#include <type_traits> // import std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
+#include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 namespace artccel::core::util {
@@ -20,6 +20,7 @@ using literals::operator""_UZ;
 
 template <typename T, bool Explicit = true> struct Delegate;
 template <typename CharT, std::size_t N> struct Template_string;
+template <typename... Ts> struct Overloader;
 
 template <typename> constexpr auto dependent_false_v{false};
 
@@ -150,6 +151,12 @@ Template_string(char16_t chr)
     ->Template_string<char16_t, 1_UZ + null_terminator_size>;
 Template_string(char32_t chr)
     ->Template_string<char32_t, 1_UZ + null_terminator_size>;
+
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+template <typename... Ts> struct Overloader : Ts... {
+  using Ts::operator()...;
+};
+Overloader(auto &&...args) -> Overloader<std::decay_t<decltype(args)>...>;
 } // namespace artccel::core::util
 
 #endif
