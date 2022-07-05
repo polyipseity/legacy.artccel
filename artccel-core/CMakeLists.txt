@@ -15,7 +15,8 @@ add_library(artccel-core SHARED
 	"sources/geometry.cpp"
 	"sources/interval.cpp"
 	"sources/main_hooks.cpp"
-	"sources/polyfill.cpp")
+	"sources/polyfill.cpp"
+	"sources/reflect.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
 generate_preset_export_header(artccel-core)
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
