@@ -5,7 +5,7 @@
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <exception>             // import std::exception_ptr
 #include <functional>            // import std::function, std::reference_wrapper
-#include <gsl/gsl>               // import gsl::czstring
+#include <gsl/gsl>               // import gsl::czstring, gsl::not_null
 #include <optional>              // import std::optional
 #include <span>                  // import std::span
 #include <string>                // import std::u8string
@@ -47,7 +47,7 @@ public:
 class Argument {
 private:
   std::string_view verbatim_;
-  std::variant<std::u8string, std::exception_ptr> utf8_;
+  std::variant<std::u8string, gsl::not_null<std::exception_ptr>> utf8_;
 
 public:
   constexpr Argument() noexcept = default;
@@ -55,7 +55,7 @@ public:
   auto verbatim [[nodiscard]] () const noexcept -> std::string_view;
   auto utf8 [[nodiscard]] () const -> std::optional<std::u8string_view>;
   auto utf8_or_exc [[nodiscard]] () const
-      -> std::variant<std::u8string_view, std::exception_ptr>;
+      -> std::variant<std::u8string_view, gsl::not_null<std::exception_ptr>>;
 };
 } // namespace artccel::core
 

@@ -88,7 +88,7 @@ auto Argument::utf8 [[nodiscard]] () const
   return std::nullopt;
 }
 auto Argument::utf8_or_exc [[nodiscard]] () const
-    -> std::variant<std::u8string_view, std::exception_ptr> {
+    -> std::variant<std::u8string_view, gsl::not_null<std::exception_ptr>> {
   using return_type = decltype(utf8_or_exc());
   return std::visit([](auto &&var) -> return_type { return var; }, utf8_);
 }
