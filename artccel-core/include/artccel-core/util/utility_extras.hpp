@@ -111,6 +111,8 @@ protected:
 };
 
 template <typename CharT, std::size_t N> struct Template_string {
+  using char_type = CharT;
+  constexpr static auto size_{N};
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   std::array<CharT const, N> data_;
 
