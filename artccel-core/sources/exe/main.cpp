@@ -6,8 +6,8 @@
 #include <artccel-core/util/reflect.hpp>   // import util::f::type_name_array
 #include <artccel-core/util/semantics.hpp> // import util::null_terminator_size
 #include <artccel-core/util/utility_extras.hpp> // import util::Overloader
-#include <exception>   // import std::exception, std::exception_ptr
-#include <gsl/gsl>     // import gsl::index, gsl::not_null
+#include <exception> // import std::exception, std::exception_ptr
+#include <gsl/gsl> // import gsl::index, gsl::not_null, gsl::wzstring, gsl::zstring
 #include <iostream>    // import std::cin, std::cout, std::flush
 #include <string>      // import std::string
 #include <string_view> // import std::u8string_view
@@ -69,6 +69,10 @@ static auto main_0(Raw_arguments arguments) -> int {
 }
 } // namespace artccel::core::detail
 
+#ifdef _WIN32
+auto wmain(int argc, gsl::wzstring argv[]) -> int {
+#else
 auto main(int argc, gsl::zstring argv[]) -> int {
+#endif
   return artccel::core::f::safe_main(artccel::core::detail::main_0, argc, argv);
 }

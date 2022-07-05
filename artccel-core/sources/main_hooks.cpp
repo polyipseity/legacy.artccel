@@ -4,17 +4,18 @@
 
 #include <algorithm> // import std::ranges::transform
 #include <artccel-core/util/containers_extras.hpp> // import util::f::const_span
-#include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8
+#include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel-core/util/utility_extras.hpp> // import util::dependent_false_v
 #include <concepts>                             // import std::same_as
+#include <cwchar>                               // import std::wcslen
 #include <exception>  // import std::current_exception, std::exception_ptr
 #include <functional> // import std::function
-#include <gsl/gsl>    // import gsl::czstring, gsl::final_action, gsl::not_null
+#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null
 #include <iostream> // import std::clog, std::cout, std::ios_base::sync_with_stdio
 #include <locale>   // import std::locale, std::locale::global
 #include <optional>    // import std::nullopt, std::optional
-#include <span>        // import std::begin, std::size, std::span
-#include <string>      // import std::u8string
+#include <span>        // import std::begin, std::data, std::size, std::span
+#include <string>      // import std::u16string, std::u8string
 #include <string_view> // import std::string_view, std::u8string_view
 #include <type_traits> /// import std::decay_t
 #include <variant>     // import std::get_if, std::variant, std::visit
@@ -36,6 +37,33 @@ auto safe_main(
     return init;
   }());
 }
+#ifdef _WIN32
+auto safe_main(
+    std::function<int(Raw_arguments)> const &main_func, int argc,
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+    gsl::cwzstring const argv[]) -> int {
+  auto const utf8_args_storage{[args{util::f::const_span(argv, argv + argc)}] {
+    std::vector<std::u8string> init(std::size(args));
+    std::ranges::transform(
+        args, std::begin(init), [](gsl::not_null<gsl::cwzstring const> arg) {
+          // copy arg as UTF-16 (no conversion) and then convert to UTF-8
+          return util::f::utf16_to_utf8(
+              std::u16string{arg.get(), arg.get() + std::wcslen(arg)});
+        });
+    return init;
+  }()};
+  auto const argv_compatible_storage{[&utf8_args_storage] {
+    std::vector<gsl::czstring> init(std::size(utf8_args_storage));
+    std::ranges::transform(
+        utf8_args_storage, std::begin(init), [](auto const &utf8_arg) {
+          // defined behavior
+          return reinterpret_cast<gsl::czstring>(std::data(utf8_arg));
+        });
+    return init;
+  }()};
+  return safe_main(main_func, argc, std::data(argv_compatible_storage));
+}
+#endif
 } // namespace f
 
 Main_program::Main_program(std::exception_ptr &destructor_exc_out,
