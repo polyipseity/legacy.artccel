@@ -16,6 +16,8 @@ namespace artccel::core::util {
 namespace detail {
 template <typename AsCharT, Template_string Str>
 constexpr auto reinterpretation_storage{[] {
+  static_assert(sizeof(AsCharT) == sizeof(typename decltype(Str)::char_type),
+                u8"sizeof the two character types mismatch");
   std::array<AsCharT, std::size(Str.data_)> init{};
   std::ranges::transform(
       std::as_const(Str.data_), std::begin(init),
