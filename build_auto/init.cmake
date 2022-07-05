@@ -20,6 +20,8 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4464> # relative include path contains '..'
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4514> # unreferenced inline function has been removed
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-attributes>
+	$<$<CXX_COMPILER_ID:MSVC>:/wd5030> # attribute is not recognized
 
 	# pragma warning seems to be broken for below warnings
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4868> # compiler may not enforce left-to-right evaluation order in braced initializer list
@@ -59,20 +61,25 @@ function(generate_preset_export_header LIBRARY_TARGET)
 #	define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION
 #	define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
 #else
-#	ifdef ${LIBRARY_TARGET_CODE}_EXPORTS
-#		ifdef _MSC_VER
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
+#	ifndef ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION
+#		ifdef ${LIBRARY_TARGET_CODE}_EXPORTS
+#			ifdef _MSC_VER
+#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION
+#			else
+#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
+#			endif
 #		else
 #			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
 #		endif
-#	else
-#		ifdef _MSC_VER
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
+#	endif
+#	ifndef ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
+#		ifdef ${LIBRARY_TARGET_CODE}_EXPORTS
+#			ifdef _MSC_VER
+#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
+#			else
+#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
+#			endif
 #		else
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
 #			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
 #		endif
 #	endif
