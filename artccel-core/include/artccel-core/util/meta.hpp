@@ -19,37 +19,37 @@ requires(
     !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {
   using type = NotFound;
 };
-template <typename Find, typename Replace>
-struct Replace_all<Find, Find, Replace> {
+template <typename Found, typename Replace>
+struct Replace_all<Found, Found, Replace> {
   using type = Replace;
 };
-template <template <Replace_target> typename Find, typename Replace>
-struct Replace_all<Find<Replace_target::self>, Find<Replace_target::self>,
+template <template <Replace_target> typename Found, typename Replace>
+struct Replace_all<Found<Replace_target::self>, Found<Replace_target::self>,
                    Replace> {
   using type = Replace;
 };
-template <template <typename> typename T,
-          template <Replace_target> typename Find, typename Replace>
-struct Replace_all<T<Find<Replace_target::container>>,
-                   Find<Replace_target::container>, Replace> {
+template <template <typename> typename Container,
+          template <Replace_target> typename Found, typename Replace>
+struct Replace_all<Container<Found<Replace_target::container>>,
+                   Found<Replace_target::container>, Replace> {
   using type = Replace;
 };
 template <template <typename...> typename T, typename Find, typename Replace,
           typename... TArgs>
 struct Replace_all<T<TArgs...>, Find, Replace> {
-  using type = T<typename Replace_all<TArgs, Find, Replace>::type...>;
+  using type = T<Replace_all_t<TArgs, Find, Replace>...>;
 };
 template <typename T, typename Find, typename Replace>
 struct Replace_all<T *, Find, Replace> {
-  using type = typename Replace_all<T, Find, Replace>::type *;
+  using type = Replace_all_t<T, Find, Replace> *;
 };
 template <typename T, typename Find, typename Replace>
 struct Replace_all<T &, Find, Replace> {
-  using type = typename Replace_all<T, Find, Replace>::type &;
+  using type = Replace_all_t<T, Find, Replace> &;
 };
 template <typename T, typename Find, typename Replace>
 struct Replace_all<T &&, Find, Replace> {
-  using type = typename Replace_all<T, Find, Replace>::type &&;
+  using type = Replace_all_t<T, Find, Replace> &&;
 };
 } // namespace artccel::core::util
 
