@@ -19,7 +19,7 @@ using util::literals::encoding::operator""_as_utf8_compat;
 static void print_args(Main_program const &program) {
   std::cout << u8"arguments:\n"_as_utf8_compat;
   std::ranges::for_each(program.arguments(), [index{gsl::index{0}}](
-                                                 auto arg) mutable {
+                                                 auto const &arg) mutable {
     std::cout << u8"|- argument "_as_utf8_compat << index++
               << u8":\n"_as_utf8_compat;
     std::cout << u8" |- verbatim: "_as_utf8_compat << arg.verbatim()
@@ -36,9 +36,10 @@ static void print_args(Main_program const &program) {
               try {
                 std::rethrow_exception(exc_ptr);
               } catch (std::exception const &exc) {
-                std::cout << u8"  |- "_as_utf8_compat
-                          << util::f::utf8_as_utf8_compat<util::Template_string{
-                                 util::f::type_name_array<std::exception>()}>()
+                constexpr static auto exception_type_name{
+                    util::f::utf8_as_utf8_compat<util::Template_string{
+                        util::f::type_name_array<std::exception>()}>()};
+                std::cout << u8"  |- "_as_utf8_compat << exception_type_name
                           << u8": "_as_utf8_compat << exc.what()
                           << u8'\n'_as_utf8_compat;
               } catch (...) {

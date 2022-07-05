@@ -63,7 +63,10 @@ requires(
 
 class Rethrow_on_lexical_scope_exit {
 private:
+#pragma warning(push)
+#pragma warning(disable : 4251)
   std::exception_ptr exc_;
+#pragma warning(pop)
 
 public:
   // functions are lvalue-only as this class only makes sense as a lvalue

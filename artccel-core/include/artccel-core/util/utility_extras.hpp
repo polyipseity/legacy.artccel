@@ -108,8 +108,8 @@ protected:
 template <typename... Ts> struct Overloader : Ts... {
   using Ts::operator()...;
 };
-Overloader(auto &&...args)
-    -> Overloader<std::remove_reference_t<decltype(args)>...>;
+template <typename... Ts>
+Overloader(Ts &&...args) -> Overloader<std::remove_reference_t<Ts>...>;
 } // namespace artccel::core::util
 
 #endif

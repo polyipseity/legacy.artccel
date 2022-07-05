@@ -7,7 +7,7 @@
 #include "meta.hpp"              // import Template_string
 #include "semantics.hpp"         // import null_terminator_size
 #include <algorithm>             // import std::ranges::copy
-#include <array> // import std::array, std::begin, std::cbegin, std::size, std::to_array
+#include <array> // import std::array, std::begin, std::data, std::size, std::to_array
 #include <cstddef>     // import std::size_t
 #include <string_view> // import std::string_view, std::u8string_view
 #include <utility>     // import std::move
@@ -67,7 +67,7 @@ consteval static auto type_name_loc_enc_array [[nodiscard]] () noexcept
   return detail::type_name_storage<T>;
 }
 template <typename T> consteval static auto type_name_loc_enc [[nodiscard]] () {
-  return std::string_view{std::cbegin(f::type_name_loc_enc_array<T>()),
+  return std::string_view{std::data(f::type_name_loc_enc_array<T>()),
                           std::size(f::type_name_loc_enc_array<T>()) -
                               null_terminator_size};
 }
@@ -78,7 +78,7 @@ consteval static auto type_name_array [[nodiscard]] () noexcept -> auto & {
       f::type_name_loc_enc_array<T>()}>();
 }
 template <typename T> consteval static auto type_name [[nodiscard]] () {
-  return std::u8string_view{std::cbegin(f::type_name_array<T>()),
+  return std::u8string_view{std::data(f::type_name_array<T>()),
                             std::size(f::type_name_array<T>()) -
                                 null_terminator_size};
 }

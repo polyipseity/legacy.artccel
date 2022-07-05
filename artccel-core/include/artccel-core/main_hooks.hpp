@@ -29,9 +29,12 @@ ARTCCEL_CORE_EXPORT auto safe_main(
 class Main_program {
 private:
   struct {
-  } early_init_ [[no_unique_address, maybe_unused]];
+  } early_init_ [[no_unique_address, maybe_unused, msvc::no_unique_address]];
+#pragma warning(push)
+#pragma warning(disable : 4251)
   std::reference_wrapper<std::exception_ptr> destructor_exc_out_;
   std::vector<Argument> arguments_;
+#pragma warning(pop)
 
 public:
   explicit Main_program(std::exception_ptr &destructor_exc_out,
@@ -46,8 +49,11 @@ public:
 };
 class Argument {
 private:
+#pragma warning(push)
+#pragma warning(disable : 4251)
   std::string_view verbatim_;
   std::variant<std::u8string, gsl::not_null<std::exception_ptr>> utf8_;
+#pragma warning(pop)
 
 public:
   constexpr Argument() noexcept = default;
