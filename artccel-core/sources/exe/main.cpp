@@ -2,9 +2,10 @@
 #include <artccel-core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
 #include <artccel-core/util/encoding.hpp> // import util::literals::encoding::operator""_as_utf8_compat, util::f::utf8_as_utf8_compat
 #include <artccel-core/util/exception_extras.hpp> // import util::Rethrow_on_lexical_scope_exit
+#include <artccel-core/util/meta.hpp>      // import util::Template_string
 #include <artccel-core/util/reflect.hpp>   // import util::f::type_name_array
 #include <artccel-core/util/semantics.hpp> // import util::null_terminator_size
-#include <artccel-core/util/utility_extras.hpp> // import util::Overloader, util::Template_string
+#include <artccel-core/util/utility_extras.hpp> // import util::Overloader
 #include <exception>   // import std::exception, std::exception_ptr
 #include <gsl/gsl>     // import gsl::index, gsl::not_null
 #include <iostream>    // import std::cout

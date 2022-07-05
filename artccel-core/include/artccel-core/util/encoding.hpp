@@ -3,8 +3,8 @@
 #pragma once
 
 #include "containers_extras.hpp" // import f::const_array
+#include "meta.hpp"              // import Template_string
 #include "semantics.hpp"         // import null_terminator_size
-#include "utility_extras.hpp"    // import Template_string
 #include <algorithm>             // import std::ranges::transform
 #include <array> // import std::array, std::begin, std::data, std::size
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT

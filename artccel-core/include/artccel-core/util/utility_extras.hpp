@@ -2,24 +2,17 @@
 #define ARTCCEL_CORE_UTIL_UTILITY_EXTRAS_HPP
 #pragma once
 
-#include "containers_extras.hpp" // import f::to_array_cv
-#include "polyfill.hpp"          // import literals::operator""_UZ
-#include "semantics.hpp"         // import null_terminator_size
-#include <array>                 // import std::array
-#include <cassert>               // import assert
+#include <array>   // import std::array
+#include <cassert> // import assert
 #include <concepts> // import std::copy_constructible, std::invocable, std::move_constructible
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
-#include <span>        // import std::dynamic_extent, std::span
-#include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
+#include <type_traits> // import std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 namespace artccel::core::util {
-using literals::operator""_UZ;
-
 template <typename T, bool Explicit = true> struct Delegate;
-template <typename CharT, std::size_t N> struct Template_string;
 template <typename... Ts> struct Overloader;
 
 template <typename> constexpr auto dependent_false_v{false};
@@ -111,52 +104,12 @@ protected:
 #pragma warning(suppress : 4625 4626)
 };
 
-template <typename CharT, std::size_t N> struct Template_string {
-  using char_type = CharT;
-  constexpr static auto size_{N};
-  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
-  std::array<CharT const, N> data_;
-
-  explicit consteval Template_string(std::array<CharT const, N> str)
-      : data_{std::move(str)} {}
-  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  consteval Template_string(CharT const (&str)[N])
-      : Template_string{f::to_array_cv(str)} {
-    // implicit for use in string literal operator template
-  }
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  explicit consteval Template_string(CharT const (&&str)[N])
-      : Template_string{f::to_array_cv(std::move(str))} {}
-  explicit consteval Template_string(std::span<CharT const, N> str) requires(
-      N != std::dynamic_extent)
-      : Template_string{f::to_array_cv(str)} {}
-  explicit consteval Template_string(char chr) : Template_string{{{chr}}} {}
-  explicit consteval Template_string(wchar_t chr) : Template_string{{{chr}}} {}
-  explicit consteval Template_string(char8_t chr) : Template_string{{{chr}}} {}
-  explicit consteval Template_string(char16_t chr) : Template_string{{{chr}}} {}
-  explicit consteval Template_string(char32_t chr) : Template_string{{{chr}}} {}
-
-  consteval Template_string(Template_string const &) = default;
-  auto operator=(Template_string const &) = delete;
-  Template_string(Template_string &&) = delete;
-  auto operator=(Template_string &&) = delete;
-  constexpr ~Template_string() noexcept = default;
-};
-Template_string(char chr)->Template_string<char, 1_UZ + null_terminator_size>;
-Template_string(wchar_t chr)
-    ->Template_string<wchar_t, 1_UZ + null_terminator_size>;
-Template_string(char8_t chr)
-    ->Template_string<char8_t, 1_UZ + null_terminator_size>;
-Template_string(char16_t chr)
-    ->Template_string<char16_t, 1_UZ + null_terminator_size>;
-Template_string(char32_t chr)
-    ->Template_string<char32_t, 1_UZ + null_terminator_size>;
-
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 template <typename... Ts> struct Overloader : Ts... {
   using Ts::operator()...;
 };
-Overloader(auto &&...args) -> Overloader<std::decay_t<decltype(args)>...>;
+Overloader(auto &&...args)
+    -> Overloader<std::remove_reference_t<decltype(args)>...>;
 } // namespace artccel::core::util
 
 #endif

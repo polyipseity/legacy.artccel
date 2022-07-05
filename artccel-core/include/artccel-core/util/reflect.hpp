@@ -4,6 +4,7 @@
 
 #include "containers_extras.hpp" // import f::const_array
 #include "encoding.hpp"          // import f::utf8_compat_as_utf8_array
+#include "meta.hpp"              // import Template_string
 #include "semantics.hpp"         // import null_terminator_size
 #include <algorithm>             // import std::ranges::copy
 #include <array> // import std::array, std::begin, std::cbegin, std::size, std::to_array
