@@ -4,14 +4,12 @@
 
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <cerrno>                // import errno
+#include <type_traits>           // import std::decay_t
 
 namespace artccel::core::util {
 class ARTCCEL_CORE_EXPORT Errno_guard;
 
-namespace detail {
-static inline auto get_errno() noexcept { return errno; }
-} // namespace detail
-using Errno_t = decltype(detail::get_errno());
+using Errno_t = std::decay_t<decltype(errno)>;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"

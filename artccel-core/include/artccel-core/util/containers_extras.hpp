@@ -8,14 +8,8 @@
 #include <utility> // import std::forward, std::index_sequence, std::make_index_sequence, std::move
 
 namespace artccel::core::util {
-namespace detail {
 template <typename> struct array_size;
-template <typename T, std::size_t N> struct array_size<std::array<T, N>> {
-  constexpr static auto value{N};
-};
-} // namespace detail
-
-template <typename T> constexpr auto array_size_v{detail::array_size<T>::value};
+template <typename T> constexpr auto array_size_v{array_size<T>::value};
 
 namespace f {
 template <typename... Args>
@@ -81,6 +75,10 @@ requires(N !=
   (std::make_index_sequence<N>{});
 }
 } // namespace f
+
+template <typename T, std::size_t N> struct array_size<std::array<T, N>> {
+  constexpr static auto value{N};
+};
 } // namespace artccel::core::util
 
 #endif
