@@ -3,7 +3,7 @@
 #pragma once
 
 #include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
-#include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::enum_bitset_operators, util::f::check_bitset, util::f::next_bitmask
+#include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::check_bitset, util::f::next_bitmask, util::operators::enum_bitset
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
@@ -23,7 +23,7 @@
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;
 // NOLINTNEXTLINE(google-build-using-namespace)
-using namespace util::enum_bitset_operators;
+using namespace util::operators::enum_bitset;
 
 enum struct Compute_option : std::uint8_t;
 using Compute_options = util::Bitset_of<Compute_option>;

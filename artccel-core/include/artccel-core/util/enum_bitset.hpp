@@ -55,7 +55,7 @@ struct Enum_bitset {
   }
 };
 
-namespace enum_bitset_operators {
+namespace operators::enum_bitset {
 template <typename E>
 requires std::is_enum_v<E>
 constexpr auto operator& [[nodiscard]] (E left, E right) noexcept {
@@ -136,7 +136,7 @@ requires std::is_enum_v<E>
 constexpr auto operator^=(Bitset_of<E> &left, E right) noexcept {
   return left ^= Bitset_of<E>{f::to_underlying(right)};
 }
-} // namespace enum_bitset_operators
+} // namespace operators::enum_bitset
 } // namespace artccel::core::util
 
 #endif
