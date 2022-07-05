@@ -29,25 +29,34 @@ constexpr auto reinterpretation_storage{[] {
 namespace f {
 ARTCCEL_CORE_EXPORT auto utf8_compat_as_utf8(std::string_view utf8_compat)
     -> std::u8string;
-template <Template_string Str> consteval auto utf8_compat_as_utf8() {
-  return std::u8string_view{
-      std::data(detail::reinterpretation_storage<char8_t, Str>),
-      std::size(detail::reinterpretation_storage<char8_t, Str>) -
-          null_terminator_size};
+template <Template_string Str>
+consteval auto utf8_compat_as_utf8_array [[nodiscard]] () noexcept -> auto & {
+  return detail::reinterpretation_storage<char8_t, Str>;
 }
-ARTCCEL_CORE_EXPORT constexpr auto
-utf8_compat_as_utf8(char utf8_compat) noexcept {
+template <Template_string Str>
+consteval auto utf8_compat_as_utf8 [[nodiscard]] () {
+  return std::u8string_view{std::data(f::utf8_compat_as_utf8_array<Str>()),
+                            std::size(f::utf8_compat_as_utf8_array<Str>()) -
+                                null_terminator_size};
+}
+ARTCCEL_CORE_EXPORT constexpr auto utf8_compat_as_utf8
+    [[nodiscard]] (char utf8_compat) noexcept {
   return static_cast<char8_t>(utf8_compat);
 }
 ARTCCEL_CORE_EXPORT auto utf8_as_utf8_compat(std::u8string_view utf8)
     -> std::string;
-template <Template_string Str> consteval auto utf8_as_utf8_compat() {
-  return std::string_view{
-      std::data(detail::reinterpretation_storage<char, Str>),
-      std::size(detail::reinterpretation_storage<char, Str>) -
-          null_terminator_size};
+template <Template_string Str>
+consteval auto utf8_as_utf8_compat_array [[nodiscard]] () noexcept -> auto & {
+  return detail::reinterpretation_storage<char, Str>;
 }
-ARTCCEL_CORE_EXPORT constexpr auto utf8_as_utf8_compat(char8_t utf8) noexcept {
+template <Template_string Str>
+consteval auto utf8_as_utf8_compat [[nodiscard]] () {
+  return std::string_view{std::data(f::utf8_as_utf8_compat_array<Str>()),
+                          std::size(f::utf8_as_utf8_compat_array<Str>()) -
+                              null_terminator_size};
+}
+ARTCCEL_CORE_EXPORT constexpr auto utf8_as_utf8_compat
+    [[nodiscard]] (char8_t utf8) noexcept {
   return static_cast<char>(utf8);
 }
 
@@ -80,19 +89,29 @@ ARTCCEL_CORE_EXPORT auto utf32_to_loc_enc(char32_t utf32) -> std::string;
 
 namespace literals::encoding {
 template <Template_string Str>
-constexpr auto operator""_as_utf8 [[nodiscard]] () {
+constexpr auto operator""_as_utf8_array [[nodiscard]] () noexcept
+    -> decltype(auto) {
+  return f::utf8_compat_as_utf8_array<Str>();
+}
+template <Template_string Str>
+constexpr auto operator""_as_utf8 [[nodiscard]] () -> decltype(auto) {
   return f::utf8_compat_as_utf8<Str>();
 }
 ARTCCEL_CORE_EXPORT constexpr auto operator""_as_utf8
-    [[nodiscard]] (char utf8_compat) noexcept {
+    [[nodiscard]] (char utf8_compat) noexcept -> decltype(auto) {
   return f::utf8_compat_as_utf8(utf8_compat);
 }
 template <Template_string Str>
-constexpr auto operator""_as_utf8_compat [[nodiscard]] () {
+constexpr auto operator""_as_utf8_compat_array [[nodiscard]] () noexcept
+    -> decltype(auto) {
+  return f::utf8_as_utf8_compat_array<Str>();
+}
+template <Template_string Str>
+constexpr auto operator""_as_utf8_compat [[nodiscard]] () -> decltype(auto) {
   return f::utf8_as_utf8_compat<Str>();
 }
 ARTCCEL_CORE_EXPORT constexpr auto operator""_as_utf8_compat
-    [[nodiscard]] (char8_t utf8) noexcept {
+    [[nodiscard]] (char8_t utf8) noexcept -> decltype(auto) {
   return f::utf8_as_utf8_compat(utf8);
 }
 } // namespace literals::encoding
