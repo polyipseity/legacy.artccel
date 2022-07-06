@@ -9,6 +9,10 @@ set(CMAKE_C_STANDARD_REQUIRED true)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
+if(WIN32)
+	add_definitions(-DNOMINMAX)
+endif()
+
 add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>
