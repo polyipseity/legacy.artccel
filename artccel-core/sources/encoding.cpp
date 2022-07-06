@@ -4,20 +4,20 @@
 
 #include <algorithm> // import std::min, std::ranges::for_each
 #include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
-#include <artccel-core/util/cerrno_extras.hpp> // import Errno_guard
+#include <artccel-core/util/cerrno_extras.hpp>  // import Errno_guard
+#include <artccel-core/util/codecvt_extras.hpp> // import Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
 #include <artccel-core/util/exception_extras.hpp> // import f::throw_multiple_as_nested
+#include <artccel-core/util/meta.hpp>             // import Unprotect_structors
 #include <artccel-core/util/polyfill.hpp>  // import literals::operator""_UZ
 #include <artccel-core/util/semantics.hpp> // import null_terminator_size
 #include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
 #include <cassert>                              // import assert
 #include <cerrno>                               // import errno
 #include <climits>                              // import MB_LEN_MAX
-#include <codecvt>  // import std::codecvt_utf8_utf16
-#include <concepts> // import std::same_as
-#include <cstring>  // import std::strerror
+#include <concepts>                             // import std::same_as
+#include <cstring>                              // import std::strerror
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
-#include <locale>    // import std::wstring_convert
 #include <span>      // import std::span
 #include <stdexcept> // import std::invalid_argument, std::throw_with_nested
 #include <string> // import std::basic_string, std::string, std::u16string, std::u32string, std::u8string
@@ -83,7 +83,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
       }
       [[unlikely]] case cuchar_mbrtoc_incomplete
           : throw std::invalid_argument{
-                f::utf8_to_loc_enc(u8"Incomplete byte sequence")};
+                std::string{u8"Incomplete byte sequence"_as_utf8_compat}};
     case cuchar_mbrtoc_surrogate:
       break;
       [[unlikely]] case cuchar_mbrtoc_null : {
@@ -155,33 +155,15 @@ auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
 }
 
 auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#pragma warning(push)
-#pragma warning(disable : 4996)
-  return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-      .from_bytes(
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(std::data(utf8)), // defined behavior
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-          reinterpret_cast<char const *>(std::data(utf8) +
-                                         std::size(utf8))); // defined behavior
-#pragma warning(pop)
-#pragma clang diagnostic pop
+  return f::codecvt_convert_to_intern<Unprotect_structors<Codecvt_utf16_utf8>>(
+      utf8);
 }
 auto utf8_to_utf16(char8_t utf8) -> std::u16string {
   return utf8_to_utf16({&utf8, 1_UZ});
 }
 auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
-  return utf8_compat_as_utf8(
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#pragma warning(push)
-#pragma warning(disable : 4996)
-      std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}
-          .to_bytes(std::data(utf16), std::data(utf16) + std::size(utf16)));
-#pragma warning(pop)
-#pragma clang diagnostic pop
+  return f::codecvt_convert_to_extern<Unprotect_structors<Codecvt_utf16_utf8>>(
+      utf16);
 }
 auto utf16_to_utf8(char16_t utf16) -> std::u8string {
   return utf16_to_utf8({&utf16, 1_UZ});
