@@ -14,6 +14,7 @@
 namespace artccel::core::util {
 using literals::operator""_UZ;
 
+template <typename T> struct Unprotect_structors;
 template <typename CharT, std::size_t N> struct Template_string;
 template <typename T, typename Find, typename Replace> struct Replace_all;
 enum struct Replace_target : bool { self = false, container = true };
@@ -23,6 +24,12 @@ template <typename T, template <Replace_target> typename Find, typename Replace>
 using Replace_all_t_t =
     Replace_all_t<Replace_all_t<T, Find<Replace_target::container>, Replace>,
                   Find<Replace_target::self>, Replace>;
+
+template <typename T> struct Unprotect_structors : public T {
+  using T::T;
+  ~Unprotect_structors() noexcept = default;
+#pragma warning(suppress : 4625 4626)
+};
 
 template <typename CharT, std::size_t N> struct Template_string {
   using char_type = CharT;
