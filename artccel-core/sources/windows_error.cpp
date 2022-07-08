@@ -3,10 +3,10 @@
 #pragma warning(disable : 4668 5039)
 #include <artccel-core/platform/windows_error.hpp> // interface
 
-#include <Windows.h> // import ::GetLastError
+#include <Windows.h>                         // import ::GetLastError
+#include <artccel-core/util/conversions.hpp> // import util::f::int_modulo_cast
 #include <artccel-core/util/encoding.hpp> // import util::literals::encoding::operator""_as_utf8_compat
-#include <artccel-core/util/numeric_conversions.hpp> // import util::f::int_modulo_cast
-#include <cassert>                                   // import assert
+#include <cassert>                        // import assert
 #include <iostream>     // import std::cerr, std::flush
 #include <system_error> // import std::system_category, std::system_error
 #pragma warning(pop)

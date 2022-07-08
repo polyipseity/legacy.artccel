@@ -10,8 +10,8 @@
 #include <artccel-core/export.h>                // import ARTCCEL_CORE_NO_EXPORT
 #include <artccel-core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
 #include <artccel-core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
+#include <artccel-core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
-#include <artccel-core/util/numeric_conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast
 #include <artccel-core/util/polyfill.hpp> // import util::f::unreachable, util::literals::operator""_UZ
 #include <artccel-core/util/utility_extras.hpp> // import util::Semiregularize
 #include <cassert>                              // import assert

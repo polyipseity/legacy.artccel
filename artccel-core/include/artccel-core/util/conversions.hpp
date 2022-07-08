@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_NUMERIC_CONVERSIONS_HPP
-#define ARTCCEL_CORE_UTIL_NUMERIC_CONVERSIONS_HPP
+#ifndef ARTCCEL_CORE_UTIL_CONVERSIONS_HPP
+#define ARTCCEL_CORE_UTIL_CONVERSIONS_HPP
 #pragma once
 
 #include <concepts>    // import std::integral
