@@ -7,7 +7,7 @@
 #include <artccel-core/util/cerrno_extras.hpp>  // import Errno_guard
 #include <artccel-core/util/codecvt_extras.hpp> // import Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
 #include <artccel-core/util/exception_extras.hpp> // import f::throw_multiple_as_nested
-#include <artccel-core/util/meta.hpp>             // import Unprotect_structors
+#include <artccel-core/util/meta.hpp>             // import Semiregularize
 #include <artccel-core/util/polyfill.hpp>  // import literals::operator""_UZ
 #include <artccel-core/util/semantics.hpp> // import null_terminator_size
 #include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
@@ -153,14 +153,13 @@ auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
 }
 
 auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
-  return f::codecvt_convert_to_intern<Unprotect_structors<Codecvt_utf16_utf8>>(
-      utf8);
+  return f::codecvt_convert_to_intern<Semiregularize<Codecvt_utf16_utf8>>(utf8);
 }
 auto utf8_to_utf16(char8_t utf8) -> std::u16string {
   return utf8_to_utf16({&utf8, 1});
 }
 auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
-  return f::codecvt_convert_to_extern<Unprotect_structors<Codecvt_utf16_utf8>>(
+  return f::codecvt_convert_to_extern<Semiregularize<Codecvt_utf16_utf8>>(
       utf16);
 }
 auto utf16_to_utf8(char16_t utf16) -> std::u8string {
