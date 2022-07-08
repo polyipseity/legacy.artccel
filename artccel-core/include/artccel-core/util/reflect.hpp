@@ -62,20 +62,20 @@ constexpr static auto type_name_storage{[] {
 
 namespace f {
 template <typename T>
-consteval static auto type_name_loc_enc_array [[nodiscard]] () noexcept
+consteval static auto type_name_lit_enc_array [[nodiscard]] () noexcept
     -> auto & {
   return detail::type_name_storage<T>;
 }
-template <typename T> consteval static auto type_name_loc_enc [[nodiscard]] () {
-  return std::string_view{std::data(f::type_name_loc_enc_array<T>()),
-                          std::size(f::type_name_loc_enc_array<T>()) -
+template <typename T> consteval static auto type_name_lit_enc [[nodiscard]] () {
+  return std::string_view{std::data(f::type_name_lit_enc_array<T>()),
+                          std::size(f::type_name_lit_enc_array<T>()) -
                               null_terminator_size};
 }
 template <typename T>
 consteval static auto type_name_array [[nodiscard]] () noexcept -> auto & {
   // better hope that the literal encoding is UTF-8
   return f::utf8_compat_as_utf8_array<Template_string{
-      f::type_name_loc_enc_array<T>()}>();
+      f::type_name_lit_enc_array<T>()}>();
 }
 template <typename T> consteval static auto type_name [[nodiscard]] () {
   return std::u8string_view{std::data(f::type_name_array<T>()),

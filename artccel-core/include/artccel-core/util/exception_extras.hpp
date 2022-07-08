@@ -2,7 +2,6 @@
 #define ARTCCEL_CORE_UTIL_EXCEPTION_EXTRAS_HPP
 #pragma once
 
-#include "polyfill.hpp"          // import literals::operator""_UZ
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <concepts>              // import std::derived_from
 #include <cstddef>               // import std::nullptr_t
@@ -14,15 +13,13 @@ namespace artccel::core::util {
 class ARTCCEL_CORE_EXPORT Rethrow_on_lexical_scope_exit;
 
 namespace detail {
-using literals::operator""_UZ;
-
 template <bool Rethrow, typename Top, typename... Nested>
 requires(std::derived_from<std::remove_reference_t<Top>, std::exception> &&...
              &&std::derived_from<std::remove_reference_t<Nested>,
                                  std::exception>) auto throw_multiple_as_nested
     [[noreturn]] (Top &&top, Nested &&...nested)
     -> std::remove_reference_t<Top> {
-  if constexpr (sizeof...(Nested) == 0_UZ) {
+  if constexpr (sizeof...(Nested) == 0) {
     if constexpr (Rethrow) {
       if (std::current_exception()) {
         std::throw_with_nested(std::forward<Top>(top));

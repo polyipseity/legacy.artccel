@@ -9,7 +9,7 @@
 #include <exception> // import std::exception, std::exception_ptr
 #include <gsl/gsl> // import gsl::index, gsl::not_null, gsl::wzstring, gsl::zstring
 #include <iostream>    // import std::cin, std::cout, std::flush
-#include <string>      // import std::string
+#include <string>      // import std::getline, std::string
 #include <string_view> // import std::u8string_view
 #include <variant>     // import std::visit
 
@@ -55,7 +55,7 @@ static void print_args(Main_program const &program) {
 static auto echo_cin() {
   std::cout << u8"echo in: "_as_utf8_compat << std::flush;
   std::string in{};
-  std::cin >> in;
+	std::getline(std::cin, in);
   std::cout << u8"echo out: "_as_utf8_compat << in << u8'\n'_as_utf8_compat
             << std::flush;
 }

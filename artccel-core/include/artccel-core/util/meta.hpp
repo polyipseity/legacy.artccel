@@ -3,7 +3,6 @@
 #pragma once
 
 #include "containers_extras.hpp" // import f::to_array_cv
-#include "polyfill.hpp"          // import literals::operator""_UZ
 #include "semantics.hpp"         // import null_terminator_size
 #include <array>                 // import std::array
 #include <concepts>              // import std::same_as
@@ -12,8 +11,6 @@
 #include <utility>               // import std::move
 
 namespace artccel::core::util {
-using literals::operator""_UZ;
-
 template <typename CharT, std::size_t N> struct Template_string;
 template <typename T, typename Find, typename Replace> struct Replace_all;
 enum struct Replace_target : bool { self = false, container = true };
@@ -55,15 +52,15 @@ template <typename CharT, std::size_t N> struct Template_string {
   auto operator=(Template_string &&) = delete;
   constexpr ~Template_string() noexcept = default;
 };
-Template_string(char chr)->Template_string<char, 1_UZ + null_terminator_size>;
+Template_string(char chr)->Template_string<char, 1 + null_terminator_size>;
 Template_string(wchar_t chr)
-    ->Template_string<wchar_t, 1_UZ + null_terminator_size>;
+    ->Template_string<wchar_t, 1 + null_terminator_size>;
 Template_string(char8_t chr)
-    ->Template_string<char8_t, 1_UZ + null_terminator_size>;
+    ->Template_string<char8_t, 1 + null_terminator_size>;
 Template_string(char16_t chr)
-    ->Template_string<char16_t, 1_UZ + null_terminator_size>;
+    ->Template_string<char16_t, 1 + null_terminator_size>;
 Template_string(char32_t chr)
-    ->Template_string<char32_t, 1_UZ + null_terminator_size>;
+    ->Template_string<char32_t, 1 + null_terminator_size>;
 
 template <typename NotFound, typename Find, typename Replace>
 requires(

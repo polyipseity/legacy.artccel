@@ -12,6 +12,7 @@
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 namespace artccel::core::util {
+template <typename T> struct Semiregularize;
 template <typename T, bool Explicit = true> struct Delegate;
 template <typename... Ts> struct Overloader;
 
@@ -64,6 +65,18 @@ constexpr auto forward_apply(F &&func, Tuple<Args...> &&t_args) noexcept(
   (std::index_sequence_for<Args...>{});
 }
 } // namespace f
+
+template <typename T> struct Semiregularize : public T {
+  using T::T;
+  constexpr ~Semiregularize() noexcept = default;
+  constexpr Semiregularize(Semiregularize const &) = default;
+  constexpr auto operator=(Semiregularize const &)
+      -> Semiregularize & = default;
+  constexpr Semiregularize(Semiregularize &&) noexcept = default;
+  constexpr auto operator=(Semiregularize &&) noexcept
+      -> Semiregularize & = default;
+#pragma warning(suppress : 4625 4626 5026 5027)
+};
 
 template <typename T, bool Explicit> struct Delegate {
   using type = T;
