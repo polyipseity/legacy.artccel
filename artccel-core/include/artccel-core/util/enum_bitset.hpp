@@ -2,8 +2,8 @@
 #define ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
 #pragma once
 
-#include "encoding.hpp" // import f::utf8_as_utf8_compat, literals::encoding::operator""_as_utf8_compat
-#include "polyfill.hpp"          // import f::to_underlying
+#include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat, operators::utf8_compat::ostream::operator<<
+#include "polyfill.hpp" // import f::to_underlying
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <bitset>                // import std::bitset
 #include <cassert>               // import assert
@@ -24,6 +24,7 @@ using Bitset_of = std::bitset<CHAR_BIT * sizeof(Enum)>;
 
 namespace f {
 using literals::encoding::operator""_as_utf8_compat;
+using operators::utf8_compat::ostream::operator<<;
 
 ARTCCEL_CORE_EXPORT consteval auto next_bitmask
     [[nodiscard]] (std::uint64_t bitmask) {
@@ -37,8 +38,8 @@ constexpr void check_bitset(std::bitset<Size> const &valid,
   // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
   if (auto const valid_value{valid & value}; valid_value != value)
       [[unlikely]] {
-    std::cerr << f::utf8_as_utf8_compat(msg_prefix) << u8": "_as_utf8_compat
-              << (value ^ valid_value) << u8'\n'_as_utf8_compat;
+    std::cerr << msg_prefix << u8": "_as_utf8_compat << (value ^ valid_value)
+              << u8'\n'_as_utf8_compat;
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     assert(false && u8"value has invalid bits set to 1");
   }

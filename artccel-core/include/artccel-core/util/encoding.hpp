@@ -8,8 +8,12 @@
 #include <algorithm>             // import std::ranges::transform
 #include <array> // import std::array, std::begin, std::data, std::size
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <string> // import std::string, std::u16string, std::u32string, std::u8string
-#include <string_view> // import std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
+#include <cstddef>               // import std::size_t
+#include <cstring>               // import std::memcpy
+#include <istream>               // import std::basic_istream
+#include <ostream>               // import std::basic_ostream
+#include <string> // import std::basic_string, std::getline, std::string, std::u16string, std::u32string, std::u8string
+#include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 #include <utility>     // import std::as_const, std::move
 
 namespace artccel::core::util {
@@ -85,6 +89,23 @@ ARTCCEL_CORE_EXPORT auto utf16_to_loc_enc(char16_t utf16) -> std::string;
 ARTCCEL_CORE_EXPORT auto utf32_to_loc_enc(std::u32string_view utf32)
     -> std::string;
 ARTCCEL_CORE_EXPORT auto utf32_to_loc_enc(char32_t utf32) -> std::string;
+
+template <typename StreamTraits, typename StrTraits, typename Allocator>
+auto getline_utf8(std::basic_istream<char, StreamTraits> &input,
+                  std::basic_string<char8_t, StrTraits, Allocator> &str,
+                  char8_t delim = u8'\n') -> decltype(auto) {
+  std::basic_string<char, StreamTraits> temp{};
+  decltype(auto) ret{std::getline(input, temp, utf8_as_utf8_compat(delim))};
+  str.resize(std::size(temp));
+  std::memcpy(std::data(str), std::data(temp), std::size(temp));
+  return ret;
+}
+template <typename StreamTraits, typename StrTraits, typename Allocator>
+auto getline_utf8(std::basic_istream<char, StreamTraits> &&input,
+                  std::basic_string<char8_t, StrTraits, Allocator> &str,
+                  char8_t delim = u8'\n') -> decltype(auto) {
+  return getline_utf8(input, str, delim);
+}
 } // namespace f
 
 namespace literals::encoding {
@@ -115,6 +136,38 @@ ARTCCEL_CORE_EXPORT constexpr auto operator""_as_utf8_compat
   return f::utf8_as_utf8_compat(utf8);
 }
 } // namespace literals::encoding
+
+namespace operators::utf8_compat {
+namespace ostream {
+template <typename StreamTraits, std::size_t Size>
+auto operator<<(std::basic_ostream<char, StreamTraits> &left,
+                char8_t (&right)[Size]) = delete;
+template <typename StreamTraits, typename StrTraits>
+auto operator<<(std::basic_ostream<char, StreamTraits> &left,
+                std::basic_string_view<char8_t, StrTraits> right)
+    -> decltype(auto) {
+  return left << f::utf8_as_utf8_compat(right);
+}
+template <typename StreamTraits, typename StrTraits, typename Allocator>
+auto operator<<(std::basic_ostream<char, StreamTraits> &left,
+                std::basic_string<char8_t, StrTraits, Allocator> const &right)
+    -> decltype(auto) {
+  return left << std::basic_string_view<char8_t, StrTraits>{right};
+}
+} // namespace ostream
+namespace istream {
+template <typename StreamTraits, typename StrTraits, typename Allocator>
+auto operator>>(std::basic_istream<char, StreamTraits> &left,
+                std::basic_string<char8_t, StrTraits, Allocator> &right)
+    -> decltype(auto) {
+  std::basic_string<char, StreamTraits> temp{};
+  decltype(auto) ret{left >> temp};
+  right.resize(std::size(temp));
+  std::memcpy(std::data(right), std::data(temp), std::size(temp));
+  return ret;
+}
+} // namespace istream
+} // namespace operators::utf8_compat
 } // namespace artccel::core::util
 
 #endif
