@@ -2,6 +2,7 @@
 #define ARTCCEL_CORE_UTIL_CODECVT_EXTRAS_HPP
 #pragma once
 
+#include "containers_extras.hpp" // import f::atad
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat
 #include "polyfill.hpp" // import f::unreachable
 #include "utility_extras.hpp" // import dependent_false_v
@@ -56,9 +57,8 @@ auto codecvt_convert(std::basic_string_view<InCharT> input) {
              } else {
                return &Codecvt::in;
              }
-           }()))(state, std::data(input), std::data(input) + std::size(input),
-                 input_next, std::data(output),
-                 std::data(output) + std::size(output), output_next)) {
+           }()))(state, std::data(input), f::atad(input), input_next,
+                 std::data(output), f::atad(output), output_next)) {
   case std::codecvt_base::ok:
     [[fallthrough]];
     [[unlikely]] case std::codecvt_base::noconv : break;
@@ -69,7 +69,7 @@ auto codecvt_convert(std::basic_string_view<InCharT> input) {
   default:
     f::unreachable();
   }
-  if (input_next != std::data(input) + std::size(input)) [[unlikely]] {
+  if (input_next != f::atad(input)) [[unlikely]] {
     throw std::range_error{
         std::string{u8"Incomplete conversion"_as_utf8_compat}};
   }

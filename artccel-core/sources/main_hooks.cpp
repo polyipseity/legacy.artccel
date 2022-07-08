@@ -9,7 +9,7 @@
 #include <algorithm> // import std::min, std::ranges::for_each, std::ranges::transform
 #include <artccel-core/export.h>                // import ARTCCEL_CORE_NO_EXPORT
 #include <artccel-core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
-#include <artccel-core/util/containers_extras.hpp> // import util::f::const_span
+#include <artccel-core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel-core/util/numeric_conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast
 #include <artccel-core/util/polyfill.hpp> // import util::f::unreachable, util::literals::operator""_UZ
@@ -105,8 +105,7 @@ private:
 
 protected:
   static auto section_splitter(std::span<char_type> buffer) noexcept {
-    return std::data(buffer) + std::size(buffer) -
-           section_size(std::size(buffer));
+    return util::f::atad(buffer) - section_size(std::size(buffer));
   }
   static auto section_size(std::integral auto size) noexcept {
     return size / 2;
@@ -225,16 +224,16 @@ protected:
         std::u8string init(codecvt_->max_length() * std::size(read), u8'\0');
         char8_t *write_ptr{std::data(init)};
         for (auto const *read_ptr{std::data(read)};
-             read_ptr != std::data(read) + std::size(read);) {
-          switch (codecvt_->out(
-              mbstate_, read_ptr, std::data(read) + std::size(read), read_ptr,
-              write_ptr, std::data(init) + std::size(init), write_ptr)) {
+             read_ptr != util::f::atad(read);) {
+          switch (codecvt_->out(mbstate_, read_ptr, util::f::atad(read),
+                                read_ptr, write_ptr, util::f::atad(init),
+                                write_ptr)) {
           case std::codecvt_base::ok:
             [[fallthrough]];
           case std::codecvt_base::partial:
             [[fallthrough]];
             [[unlikely]] case std::codecvt_base::noconv
-                : assert(read_ptr == std::data(read) + std::size(read) &&
+                : assert(read_ptr == util::f::atad(read) &&
                          u8"Not all read characters are converted at once");
             break;
           case std::codecvt_base::error:

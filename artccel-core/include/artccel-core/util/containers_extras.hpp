@@ -2,9 +2,10 @@
 #define ARTCCEL_CORE_UTIL_CONTAINERS_EXTRAS_HPP
 #pragma once
 
-#include <array>   // import std::array
-#include <cstddef> // import std::size_t
-#include <span>    // import std::dynamic_extent, std::span
+#include <array>            // import std::array, std::data, std::size
+#include <cstddef>          // import std::size_t
+#include <initializer_list> // import std::initializer_list
+#include <span>             // import std::dynamic_extent, std::span
 #include <utility> // import std::forward, std::index_sequence, std::make_index_sequence, std::move
 
 namespace artccel::core::util {
@@ -12,6 +13,25 @@ template <typename> struct array_size;
 template <typename Type> constexpr auto array_size_v{array_size<Type>::value};
 
 namespace f {
+template <typename Container>
+constexpr auto atad [[nodiscard]] (Container &container) -> decltype(auto) {
+  return std::data(container) + std::size(container);
+}
+template <typename Container>
+constexpr auto atad [[nodiscard]] (const Container &container)
+-> decltype(auto) {
+  return std::data(container) + std::size(container);
+}
+template <class Element, std::size_t Size>
+constexpr auto atad [[nodiscard]] (Element (&array)[Size]) noexcept {
+  return array + Size;
+}
+template <class Element>
+constexpr auto atad
+    [[nodiscard]] (std::initializer_list<Element> init_list) noexcept {
+  return init_list.end();
+}
+
 template <typename... Args>
 constexpr auto const_span
     [[nodiscard]] (Args &&...args) noexcept(noexcept(std::span{
