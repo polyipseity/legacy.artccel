@@ -35,7 +35,7 @@
 #include <variant>     // import std::get_if, std::variant, std::visit
 #include <vector>      // import std::vector
 #ifdef _WIN32
-#include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
+#include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleMode, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
 #include <artccel-core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
 #endif
 #pragma warning(pop)
@@ -367,15 +367,19 @@ Main_program::Main_program(
         }
         if (auto const std_handle{::GetStdHandle(STD_INPUT_HANDLE)};
             std_handle != INVALID_HANDLE_VALUE) {
-          auto new_rdbuf{std::make_shared<detail::Windows_console_input_buffer>(
-              std_handle)}; // TODO: C++23: std::make_unique
-          auto const prev_rdbuf{std::cin.rdbuf(new_rdbuf.get())};
-          finalizers.emplace_back(make_copyable_finalizer(
-              [prev_rdbuf, new_rdbuf{std::move(new_rdbuf)}]() mutable {
-                std::cin.rdbuf(prev_rdbuf);
-                assert(new_rdbuf.use_count() == 1); // TODO: C++23: remove
-                new_rdbuf.reset();                  // make it explicit
-              }));
+          if (DWORD console_mode{};
+              std_handle && ::GetConsoleMode(std_handle, &console_mode)) {
+            auto new_rdbuf{
+                std::make_shared<detail::Windows_console_input_buffer>(
+                    std_handle)}; // TODO: C++23: std::make_unique
+            auto const prev_rdbuf{std::cin.rdbuf(new_rdbuf.get())};
+            finalizers.emplace_back(make_copyable_finalizer(
+                [prev_rdbuf, new_rdbuf{std::move(new_rdbuf)}]() mutable {
+                  std::cin.rdbuf(prev_rdbuf);
+                  assert(new_rdbuf.use_count() == 1); // TODO: C++23: remove
+                  new_rdbuf.reset();                  // make it explicit
+                }));
+          }
         } else {
           platform::windows::f::print_last_error();
         }
