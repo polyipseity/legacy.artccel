@@ -145,8 +145,6 @@ static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
 } // namespace detail
 
 namespace f {
-using literals::operator""_UZ;
-
 auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string {
   return {std::cbegin(utf8_compat), std::cend(utf8_compat)};
 }
@@ -159,14 +157,14 @@ auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
       utf8);
 }
 auto utf8_to_utf16(char8_t utf8) -> std::u16string {
-  return utf8_to_utf16({&utf8, 1_UZ});
+  return utf8_to_utf16({&utf8, 1});
 }
 auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
   return f::codecvt_convert_to_extern<Unprotect_structors<Codecvt_utf16_utf8>>(
       utf16);
 }
 auto utf16_to_utf8(char16_t utf16) -> std::u8string {
-  return utf16_to_utf8({&utf16, 1_UZ});
+  return utf16_to_utf8({&utf16, 1});
 }
 
 auto loc_enc_to_utf8(std::string_view loc_enc) -> std::u8string {
@@ -174,19 +172,19 @@ auto loc_enc_to_utf8(std::string_view loc_enc) -> std::u8string {
   return utf16_to_utf8(loc_enc_to_utf16(loc_enc));
 }
 auto loc_enc_to_utf8(char loc_enc) -> std::u8string {
-  return loc_enc_to_utf8({&loc_enc, 1_UZ});
+  return loc_enc_to_utf8({&loc_enc, 1});
 }
 auto loc_enc_to_utf16(std::string_view loc_enc) -> std::u16string {
   return detail::loc_enc_to_utf<char16_t>(loc_enc);
 }
 auto loc_enc_to_utf16(char loc_enc) -> std::u16string {
-  return loc_enc_to_utf16({&loc_enc, 1_UZ});
+  return loc_enc_to_utf16({&loc_enc, 1});
 }
 auto loc_enc_to_utf32(std::string_view loc_enc) -> std::u32string {
   return detail::loc_enc_to_utf<char32_t>(loc_enc);
 }
 auto loc_enc_to_utf32(char loc_enc) -> std::u32string {
-  return loc_enc_to_utf32({&loc_enc, 1_UZ});
+  return loc_enc_to_utf32({&loc_enc, 1});
 }
 
 auto utf8_to_loc_enc(std::u8string_view utf8) -> std::string {
@@ -194,19 +192,19 @@ auto utf8_to_loc_enc(std::u8string_view utf8) -> std::string {
   return utf16_to_loc_enc(utf8_to_utf16(utf8));
 }
 auto utf8_to_loc_enc(char8_t utf8) -> std::string {
-  return utf8_to_loc_enc({&utf8, 1_UZ});
+  return utf8_to_loc_enc({&utf8, 1});
 }
 auto utf16_to_loc_enc(std::u16string_view utf16) -> std::string {
   return detail::utf_to_loc_enc(utf16);
 }
 auto utf16_to_loc_enc(char16_t utf16) -> std::string {
-  return utf16_to_loc_enc({&utf16, 1_UZ});
+  return utf16_to_loc_enc({&utf16, 1});
 }
 auto utf32_to_loc_enc(std::u32string_view utf32) -> std::string {
   return detail::utf_to_loc_enc(utf32);
 }
 auto utf32_to_loc_enc(char32_t utf32) -> std::string {
-  return utf32_to_loc_enc({&utf32, 1_UZ});
+  return utf32_to_loc_enc({&utf32, 1});
 }
 } // namespace f
 } // namespace artccel::core::util
