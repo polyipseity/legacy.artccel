@@ -7,10 +7,9 @@
 #include <artccel-core/util/cerrno_extras.hpp>  // import Errno_guard
 #include <artccel-core/util/codecvt_extras.hpp> // import Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
 #include <artccel-core/util/exception_extras.hpp> // import f::throw_multiple_as_nested
-#include <artccel-core/util/meta.hpp>             // import Semiregularize
 #include <artccel-core/util/polyfill.hpp>  // import literals::operator""_UZ
 #include <artccel-core/util/semantics.hpp> // import null_terminator_size
-#include <artccel-core/util/utility_extras.hpp> // import dependent_false_v
+#include <artccel-core/util/utility_extras.hpp> // import Semiregularize, dependent_false_v
 #include <cassert>                              // import assert
 #include <cerrno>                               // import errno
 #include <climits>                              // import MB_LEN_MAX
