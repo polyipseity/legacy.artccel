@@ -15,7 +15,8 @@
 namespace artccel::core::util {
 class ARTCCEL_CORE_EXPORT Semiregular_once_flag;
 struct ARTCCEL_CORE_EXPORT Null_lockable;
-template <typename L, typename NL = Null_lockable> class Nullable_lockable;
+template <typename Lock, typename NullLock = Null_lockable>
+class Nullable_lockable;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
@@ -127,20 +128,20 @@ struct Null_lockable {
   }
 };
 
-template <typename L, typename NL>
+template <typename Lock, typename NullLock>
 #pragma warning(suppress : 4251)
-class Nullable_lockable : public Delegate<std::unique_ptr</* mutable */ L>> {
+class Nullable_lockable : public Delegate<std::unique_ptr</* mutable */ Lock>> {
 public:
   using type = typename Nullable_lockable::type;
-  using lockable_type = L;
-  using null_lockable_type = NL;
+  using lockable_type = Lock;
+  using null_lockable_type = NullLock;
 
 private:
-  constexpr static NL null_lockable_{};
+  constexpr static NullLock null_lockable_{};
 
 public:
   constexpr Nullable_lockable() noexcept
-      : Nullable_lockable{std::make_unique<L>()} {}
+      : Nullable_lockable{std::make_unique<Lock>()} {}
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   constexpr Nullable_lockable(type value) noexcept
       : Nullable_lockable::Delegate{std::move(value)} {}

@@ -14,7 +14,7 @@
 
 namespace artccel::core::util {
 namespace detail {
-template <typename T /* needs to be named */>
+template <typename Type /* needs to be named */>
 consteval static auto raw_type_name [[nodiscard]] () -> std::string_view {
 // internal linkage as it may be different
 // propagate internal linkage to callers if necessary
@@ -42,13 +42,13 @@ public:
                                  std::size(control_type_name_)};
 #pragma warning(suppress : 4324)
 } type_name_format{};
-template <typename T>
+template <typename Type>
 constexpr static auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix_ == std::string_view::npos) {
     return std::to_array(/*u8*/ "<type name unavailable>");
   } else {
     constexpr auto type_name{[] {
-      auto init{raw_type_name<T>()};
+      auto init{raw_type_name<Type>()};
       init.remove_prefix(type_name_format.junk_prefix_);
       init.remove_suffix(type_name_format.junk_suffix_);
       return init;
@@ -61,25 +61,26 @@ constexpr static auto type_name_storage{[] {
 } // namespace detail
 
 namespace f {
-template <typename T>
+template <typename Type>
 consteval static auto type_name_lit_enc_array [[nodiscard]] () noexcept
     -> auto & {
-  return detail::type_name_storage<T>;
+  return detail::type_name_storage<Type>;
 }
-template <typename T> consteval static auto type_name_lit_enc [[nodiscard]] () {
-  return std::string_view{std::data(f::type_name_lit_enc_array<T>()),
-                          std::size(f::type_name_lit_enc_array<T>()) -
+template <typename Type>
+consteval static auto type_name_lit_enc [[nodiscard]] () {
+  return std::string_view{std::data(f::type_name_lit_enc_array<Type>()),
+                          std::size(f::type_name_lit_enc_array<Type>()) -
                               null_terminator_size};
 }
-template <typename T>
+template <typename Type>
 consteval static auto type_name_array [[nodiscard]] () noexcept -> auto & {
   // better hope that the literal encoding is UTF-8
   return f::utf8_compat_as_utf8_array<Template_string{
-      f::type_name_lit_enc_array<T>()}>();
+      f::type_name_lit_enc_array<Type>()}>();
 }
-template <typename T> consteval static auto type_name [[nodiscard]] () {
-  return std::u8string_view{std::data(f::type_name_array<T>()),
-                            std::size(f::type_name_array<T>()) -
+template <typename Type> consteval static auto type_name [[nodiscard]] () {
+  return std::u8string_view{std::data(f::type_name_array<Type>()),
+                            std::size(f::type_name_array<Type>()) -
                                 null_terminator_size};
 }
 } // namespace f

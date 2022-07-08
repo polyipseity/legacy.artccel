@@ -15,14 +15,14 @@
 #include <utility>               // import std::swap
 
 namespace artccel::core::geometry::impl {
-template <util::Nonnegative_interval<std::int8_t> D>
+template <util::Nonnegative_interval<std::int8_t> Dim>
 class Geometry_impl : public virtual Geometry {
 public:
   // NOLINTNEXTLINE(fuchsia-statically-constructed-objects): constexpr ctor
-  constexpr static auto dimension_{D};
+  constexpr static auto dimension_{Dim};
   auto dimension [[nodiscard]] () const
       -> util::Nonnegative_interval<std::int8_t> final {
-    return D;
+    return Dim;
   }
   ~Geometry_impl() noexcept override = default;
   auto clone [[nodiscard]] () const -> gsl::owner<Geometry *> {
@@ -50,9 +50,9 @@ protected:
 #pragma warning(suppress : 4820)
 };
 
-template <util::Nonnegative_interval<std::int8_t> D>
+template <util::Nonnegative_interval<std::int8_t> Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-class Primitive_impl : public virtual Primitive, public Geometry_impl<D> {
+class Primitive_impl : public virtual Primitive, public Geometry_impl<Dim> {
 public:
   using Primitive_impl::Geometry_impl::dimension_;
   ~Primitive_impl() noexcept override = default;
@@ -86,20 +86,20 @@ protected:
 #pragma warning(suppress : 4250 4820)
 };
 
-template <util::Nonnegative_interval<std::int8_t> D>
+template <util::Nonnegative_interval<std::int8_t> Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-class Point_impl : public virtual Point, public Primitive_impl<D> {
+class Point_impl : public virtual Point, public Primitive_impl<Dim> {
 public:
   using Point_impl::Primitive_impl::dimension_;
 
 private:
-  std::array<compute::Compute_out<double>, D> position_{};
+  std::array<compute::Compute_out<double>, Dim> position_{};
 
 public:
   Point_impl() noexcept = default;
   template <
       std::convertible_to<typename decltype(position_)::value_type>... Position>
-  requires(sizeof...(Position) == D) explicit Point_impl(Position... position)
+  requires(sizeof...(Position) == Dim) explicit Point_impl(Position... position)
       : position_{{std::move(position)...}} {}
   ~Point_impl() noexcept override = default;
   auto clone [[nodiscard]] () const -> gsl::owner<Point *> {

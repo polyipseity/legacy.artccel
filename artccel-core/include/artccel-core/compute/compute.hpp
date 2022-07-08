@@ -27,14 +27,14 @@ using namespace util::operators::enum_bitset;
 
 enum struct Compute_option : std::uint8_t;
 using Compute_options = util::Bitset_of<Compute_option>;
-template <std::copyable R> class Compute_io;
-template <typename Derived, std::copyable R> class Compute_in;
-template <std::copyable R> class Compute_out;
-template <std::copyable R, R V> class Compute_constant;
-template <std::copyable R, auto F>
-requires std::is_invocable_r_v<R, decltype(F)>
+template <std::copyable Ret> class Compute_io;
+template <typename Derived, std::copyable Ret> class Compute_in;
+template <std::copyable Ret> class Compute_out;
+template <std::copyable Ret, Ret Val> class Compute_constant;
+template <std::copyable Ret, auto Func>
+requires std::is_invocable_r_v<Ret, decltype(Func)>
 class Compute_function_constant;
-template <std::copyable R> class Compute_value;
+template <std::copyable Ret> class Compute_value;
 template <typename Signature> class Compute_function;
 struct ARTCCEL_CORE_EXPORT Reset_t {
   explicit consteval Reset_t() noexcept = default;
@@ -44,14 +44,14 @@ struct ARTCCEL_CORE_EXPORT Extract_t {
 };
 struct ARTCCEL_CORE_EXPORT Out_t;
 
-template <typename T, typename R>
+template <typename Type, typename Ret>
 concept Compute_in_c =
-    std::derived_from<T, Compute_in<T, R>> && std::copyable<R>;
-template <typename T>
-concept Compute_in_any_c = Compute_in_c<T, typename T::return_type>;
+    std::derived_from<Type, Compute_in<Type, Ret>> && std::copyable<Ret>;
+template <typename Type>
+concept Compute_in_any_c = Compute_in_c<Type, typename Type::return_type>;
 
 namespace detail {
-template <typename T> struct Odr_type_name {
+template <typename Type> struct Odr_type_name {
 #pragma warning(suppress : 4251)
   constinit static std::u8string_view const value;
 };
@@ -65,10 +65,10 @@ enum struct Compute_option : std::uint8_t {
   defer = util::f::next_bitmask(concurrent),
 };
 
-template <std::copyable R> class Compute_io {
+template <std::copyable Ret> class Compute_io {
 public:
-  using return_type = R;
-  virtual auto operator()() const -> R = 0;
+  using return_type = Ret;
+  virtual auto operator()() const -> Ret = 0;
 
   virtual ~Compute_io() noexcept = default;
   Compute_io(Compute_io const &) = delete;
@@ -80,8 +80,8 @@ protected:
   constexpr Compute_io() noexcept = default;
 };
 
-template <typename Derived, std::copyable R>
-class Compute_in : public Compute_io<R>,
+template <typename Derived, std::copyable Ret>
+class Compute_in : public Compute_io<Ret>,
                    public std::enable_shared_from_this<Derived> {
 public:
   using return_type = typename Compute_in::return_type;
@@ -97,37 +97,37 @@ protected:
 #pragma warning(suppress : 4625 4626 5026 5027)
 };
 
-template <std::copyable R> class Compute_out : public Compute_io<R> {
+template <std::copyable Ret> class Compute_out : public Compute_io<Ret> {
 public:
   using return_type = typename Compute_out::return_type;
-  using in_type = Compute_io<R>;
+  using in_type = Compute_io<Ret>;
 
 private:
   std::weak_ptr<in_type const> c_in_{};
-  R return_{};
+  Ret return_{};
 
 public:
   constexpr Compute_out() noexcept = default;
-  explicit Compute_out(Compute_in_c<R> auto const &c_in)
+  explicit Compute_out(Compute_in_c<Ret> auto const &c_in)
       : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
 
   auto operator() [[nodiscard]] () const
-      noexcept(noexcept(R{return_}) && std::is_nothrow_move_constructible_v<R>)
-          -> R override {
+      noexcept(noexcept(Ret{return_}) &&
+               std::is_nothrow_move_constructible_v<Ret>) -> Ret override {
     return return_;
   }
-  auto operator()([[maybe_unused]] Extract_t /*unused*/) -> R {
+  auto operator()([[maybe_unused]] Extract_t /*unused*/) -> Ret {
     if (auto const c_in{c_in_.lock()}) {
       return_ = *c_in();
     }
     return return_;
   }
-  friend auto operator>>(Compute_out const &left, R &right) noexcept(
-      noexcept(R{right = left()}) && std::is_nothrow_move_constructible_v<R>)
-      -> R {
+  friend auto operator>>(Compute_out const &left, Ret &right) noexcept(
+      noexcept(Ret{right = left()}) &&
+      std::is_nothrow_move_constructible_v<Ret>) -> Ret {
     return right = left();
   }
-  friend auto operator>>=(Compute_out &left, R &right) -> R {
+  friend auto operator>>=(Compute_out &left, Ret &right) -> Ret {
     return right = left(Extract_t{});
   }
 
@@ -155,10 +155,11 @@ public:
     return *this;
   }
 };
-template <std::copyable R> Compute_out(Compute_io<R> const &) -> Compute_out<R>;
+template <std::copyable Ret>
+Compute_out(Compute_io<Ret> const &) -> Compute_out<Ret>;
 
-template <std::copyable R, R V>
-class Compute_constant : public Compute_in<Compute_constant<R, V>, R> {
+template <std::copyable Ret, Ret Val>
+class Compute_constant : public Compute_in<Compute_constant<Ret, Val>, Ret> {
 private:
   struct Friend {
     explicit consteval Friend() noexcept = default;
@@ -166,7 +167,7 @@ private:
 
 public:
   using return_type = typename Compute_constant::return_type;
-  constexpr static auto value_{V};
+  constexpr static auto value_{Val};
   template <typename... Args>
   explicit constexpr Compute_constant([[maybe_unused]] Friend /*unused*/,
                                       Args &&...args)
@@ -183,8 +184,8 @@ public:
         Friend{}, std::forward<Args>(args)...);
   }
   constexpr auto operator() [[nodiscard]] () const
-      noexcept(noexcept(R{value_}) && std::is_nothrow_move_constructible_v<R>)
-          -> R override {
+      noexcept(noexcept(Ret{value_}) &&
+               std::is_nothrow_move_constructible_v<Ret>) -> Ret override {
     return value_;
   }
 
@@ -210,10 +211,10 @@ protected:
   constexpr Compute_constant() noexcept = default;
 };
 
-template <std::copyable R, auto F>
-requires std::is_invocable_r_v<R, decltype(F)>
+template <std::copyable Ret, auto Func>
+requires std::is_invocable_r_v<Ret, decltype(Func)>
 class Compute_function_constant
-    : public Compute_in<Compute_function_constant<R, F>, R> {
+    : public Compute_in<Compute_function_constant<Ret, Func>, Ret> {
 private:
   struct Friend {
     explicit consteval Friend() noexcept = default;
@@ -221,7 +222,7 @@ private:
 
 public:
   using return_type = typename Compute_function_constant::return_type;
-  constexpr static auto function_{F};
+  constexpr static auto function_{Func};
   template <typename... Args>
   explicit constexpr Compute_function_constant(
       [[maybe_unused]] Friend /*unused*/, Args &&...args)
@@ -238,9 +239,9 @@ public:
         Friend{}, std::forward<Args>(args)...);
   }
   constexpr auto operator() [[nodiscard]] () const
-      noexcept(noexcept(R{std::invoke(F)}) &&
-               std::is_nothrow_move_constructible_v<R>) -> R override {
-    return std::invoke(F);
+      noexcept(noexcept(Ret{std::invoke(Func)}) &&
+               std::is_nothrow_move_constructible_v<Ret>) -> Ret override {
+    return std::invoke(Func);
   }
 
   auto clone_unmodified [[nodiscard]] () const
@@ -265,8 +266,8 @@ protected:
   constexpr Compute_function_constant() noexcept = default;
 };
 
-template <std::copyable R>
-class Compute_value : public Compute_in<Compute_value<R>, R> {
+template <std::copyable Ret>
+class Compute_value : public Compute_in<Compute_value<Ret>, Ret> {
 private:
   struct Friend {
     explicit consteval Friend() noexcept = default;
@@ -280,13 +281,13 @@ public:
 
 private:
   util::Nullable_lockable</* mutable */ std::shared_mutex> const mutex_;
-  R value_;
+  Ret value_;
 
 protected:
-  explicit Compute_value(R value)
+  explicit Compute_value(Ret value)
       : Compute_value{util::Enum_bitset{} | Compute_option::concurrent,
                       std::move(value)} {}
-  explicit Compute_value(Compute_options const &options, R value)
+  explicit Compute_value(Compute_options const &options, Ret value)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::shared_mutex>()
                    : nullptr},
@@ -332,21 +333,21 @@ public:
     return create_const_0(std::forward<Args>(args)...);
   }
 
-  auto operator() [[nodiscard]] () const -> R override {
+  auto operator() [[nodiscard]] () const -> Ret override {
     std::shared_lock const guard{mutex_};
     return value_;
   }
-  friend auto operator<<(Compute_value &left, R const &value) -> R {
-    return left << R{value};
+  friend auto operator<<(Compute_value &left, Ret const &value) -> Ret {
+    return left << Ret{value};
   }
-  friend auto operator<<(Compute_value &left, R &&value) -> R {
+  friend auto operator<<(Compute_value &left, Ret &&value) -> Ret {
     std::lock_guard const guard{left.mutex_};
     return std::exchange(left.value_, std::move(value));
   }
-  friend auto operator<<=(Compute_value &left, R const &value) -> R {
-    return left <<= R{value};
+  friend auto operator<<=(Compute_value &left, Ret const &value) -> Ret {
+    return left <<= Ret{value};
   }
-  friend auto operator<<=(Compute_value &left, R &&value) -> R {
+  friend auto operator<<=(Compute_value &left, Ret &&value) -> Ret {
     std::lock_guard const guard{left.mutex_};
     return left.value_ = std::move(value);
   }
@@ -401,9 +402,9 @@ protected:
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
 
-template <std::copyable R, std::copyable... TArgs>
-class Compute_function<R(TArgs...)>
-    : public Compute_in<Compute_function<R(TArgs...)>, R> {
+template <std::copyable Ret, std::copyable... TArgs>
+class Compute_function<Ret(TArgs...)>
+    : public Compute_in<Compute_function<Ret(TArgs...)>, Ret> {
 private:
   struct Friend {
     explicit consteval Friend() noexcept = default;
@@ -411,7 +412,7 @@ private:
 
 public:
   using return_type = typename Compute_function::return_type;
-  using signature_type = R(TArgs...);
+  using signature_type = Ret(TArgs...);
   template <typename... Args>
   explicit Compute_function([[maybe_unused]] Friend /*unused*/, Args &&...args)
       : Compute_function{std::forward<Args>(args)...} {}
@@ -425,23 +426,23 @@ protected:
 private:
   util::Nullable_lockable</* mutable */ std::shared_mutex> const mutex_;
   std::function<signature_type> function_;
-  std::function<std::optional<R>(Bound_action)> bound_;
+  std::function<std::optional<Ret>(Bound_action)> bound_;
 
 protected:
-  template <typename F, typename... Args>
-  requires std::invocable<F, Args...>
-  explicit Compute_function(F &&function, Args &&...args)
+  template <typename Func, typename... Args>
+  requires std::invocable<Func, Args...>
+  explicit Compute_function(Func &&function, Args &&...args)
       : Compute_function{Compute_option::concurrent | Compute_option::defer,
-                         std::forward<F>(function),
+                         std::forward<Func>(function),
                          std::forward<Args>(args)...} {}
-  template <typename F, typename... Args>
-  requires std::invocable<F, Args...>
-  explicit Compute_function(Compute_options const &options, F &&function,
+  template <typename Func, typename... Args>
+  requires std::invocable<Func, Args...>
+  explicit Compute_function(Compute_options const &options, Func &&function,
                             Args &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
                    ? std::make_unique<std::shared_mutex>()
                    : nullptr},
-        function_{std::forward<F>(function)},
+        function_{std::forward<Func>(function)},
         bound_{bind((options & Compute_option::defer).none(), function_,
                     std::forward<Args>(args)...)} {
     constexpr static auto valid_options{Compute_option::concurrent |
@@ -455,26 +456,26 @@ protected:
   requires std::invocable<decltype(function_), Args...>
   static auto bind(bool invoke, decltype(function_) const &function,
                    Args &&...args) {
-    auto bound{
-        [flag{util::Semiregular_once_flag{}}, ret{std::optional<R>{}}, function,
-         ... args{std::forward<Args>(args)}](Bound_action action) mutable {
-          switch (action) {
-          case Bound_action::compute:
-            flag.call_once([&ret, &function, &args...]() noexcept(noexcept(
-                               ret = function(std::forward<Args>(args)...))) {
-              ret = function(std::forward<Args>(args)...);
-            });
-            return ret;
-          case Bound_action::reset:
-            flag = {};
-            return std::optional<R>{};
+    auto bound{[flag{util::Semiregular_once_flag{}}, ret{std::optional<Ret>{}},
+                function, ... args{std::forward<Args>(args)}](
+                   Bound_action action) mutable {
+      switch (action) {
+      case Bound_action::compute:
+        flag.call_once([&ret, &function, &args...]() noexcept(noexcept(
+                           ret = function(std::forward<Args>(args)...))) {
+          ret = function(std::forward<Args>(args)...);
+        });
+        return ret;
+      case Bound_action::reset:
+        flag = {};
+        return std::optional<Ret>{};
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
-          default:
+      default:
 #pragma clang diagnostic pop
-            util::f::unreachable();
-          }
-        }};
+        util::f::unreachable();
+      }
+    }};
     if (invoke) {
       bound(Bound_action::compute);
     }
@@ -517,7 +518,7 @@ public:
   template <typename... Args>
   requires std::invocable<decltype(function_), Args...>
   auto bind(Compute_options const &options, Args &&...args)
-      -> std::optional<R> {
+      -> std::optional<Ret> {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::defer};
     util::f::check_bitset(
@@ -529,7 +530,7 @@ public:
     bound_ = bind(invoke, function_, std::forward<Args>(args)...);
     return invoke ? bound_(Bound_action::compute) : std::nullopt;
   }
-  auto reset(Compute_options const &options) -> std::optional<R> {
+  auto reset(Compute_options const &options) -> std::optional<Ret> {
     constexpr static auto valid_options{util::Enum_bitset{} |
                                         Compute_option::defer};
     util::f::check_bitset(
@@ -542,7 +543,7 @@ public:
     return invoke ? bound_(Bound_action::compute) : std::nullopt;
   }
 
-  auto operator()() const -> R override {
+  auto operator()() const -> Ret override {
     std::shared_lock const guard{mutex_};
     return *bound_(Bound_action::compute);
   }
@@ -559,7 +560,7 @@ public:
   template <template <typename...> typename Tuple, typename... Args>
   requires std::invocable<decltype(function_), Args...>
   friend auto operator<<=(Compute_function &left, Tuple<Args...> &&t_args)
-      -> R {
+      -> Ret {
     return util::f::forward_apply(
         [&left](Args &&...args) -> decltype(auto) {
           return *left.bind(util::Enum_bitset{} | Compute_option::empty,
@@ -572,7 +573,7 @@ public:
     left.reset(util::Enum_bitset{} | Compute_option::defer);
   }
   friend auto operator<<=(Compute_function &left,
-                          [[maybe_unused]] Reset_t /*unused*/) -> R {
+                          [[maybe_unused]] Reset_t /*unused*/) -> Ret {
     return *left.reset(util::Enum_bitset{} | Compute_option::empty);
   }
 
@@ -631,12 +632,13 @@ protected:
       : mutex_{std::move(mutex)}, function_{other.function_},
         bound_{other.bound_} {}
 };
-template <typename F>
-Compute_function(F &&, auto &&...) -> Compute_function<
-    decltype(decltype(std::function{std::declval<F>()})::operator())>;
-template <typename F>
-Compute_function(Compute_options const &, F &&, auto &&...) -> Compute_function<
-    decltype(decltype(std::function{std::declval<F>()})::operator())>;
+template <typename Func>
+Compute_function(Func &&, auto &&...) -> Compute_function<
+    decltype(decltype(std::function{std::declval<Func>()})::operator())>;
+template <typename Func>
+Compute_function(Compute_options const &, Func &&, auto &&...)
+    -> Compute_function<decltype(decltype(std::function{
+        std::declval<Func>()})::operator())>;
 
 struct Out_t {
   explicit consteval Out_t() noexcept = default;

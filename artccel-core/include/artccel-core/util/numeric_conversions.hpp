@@ -7,14 +7,14 @@
 #include <type_traits> // import std::remove_cv_t
 
 namespace artccel::core::util::f {
-template <std::integral T>
+template <std::integral Int>
 constexpr auto int_modulo_cast(std::integral auto value) noexcept {
   // value % 2^bits, non-implementation defined for signed since C++20
-  return static_cast<std::remove_cv_t<T>>(value);
+  return static_cast<std::remove_cv_t<Int>>(value);
 }
-template <std::integral T>
+template <std::integral Int>
 constexpr auto int_clamp_cast(std::integral auto value) noexcept {
-  using out_type = std::remove_cv_t<T>;
+  using out_type = std::remove_cv_t<Int>;
   using in_limits = std::numeric_limits<decltype(value)>;
   using out_limits = std::numeric_limits<out_type>;
   if constexpr (in_limits::max() > out_limits::max()) {
