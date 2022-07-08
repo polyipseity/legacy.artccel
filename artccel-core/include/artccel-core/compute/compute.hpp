@@ -2,13 +2,14 @@
 #define ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
 #pragma once
 
+#include "../util/concepts_extras.hpp" // import util::Invocable_r
 #include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::check_bitset, util::f::next_bitmask, util::operators::enum_bitset
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 #include <cinttypes>  // import std::uint8_t
-#include <concepts>   // import std::copyable, std::derived_from, std::invocable
+#include <concepts>   // import std::copyable, std::derived_from
 #include <functional> // import std::function, std::invoke
 #include <gsl/gsl>    // import gsl::owner
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
@@ -32,7 +33,7 @@ template <typename Derived, std::copyable Ret> class Compute_in;
 template <std::copyable Ret> class Compute_out;
 template <std::copyable Ret, Ret Val> class Compute_constant;
 template <std::copyable Ret, auto Func>
-requires std::is_invocable_r_v<Ret, decltype(Func)>
+requires util::Invocable_r<decltype(Func), Ret>
 class Compute_function_constant;
 template <std::copyable Ret> class Compute_value;
 template <typename Signature> class Compute_function;
@@ -212,7 +213,7 @@ protected:
 };
 
 template <std::copyable Ret, auto Func>
-requires std::is_invocable_r_v<Ret, decltype(Func)>
+requires util::Invocable_r<decltype(Func), Ret>
 class Compute_function_constant
     : public Compute_in<Compute_function_constant<Ret, Func>, Ret> {
 private:
@@ -429,14 +430,12 @@ private:
   std::function<std::optional<Ret>(Bound_action)> bound_;
 
 protected:
-  template <typename Func, typename... Args>
-  requires std::invocable<Func, Args...>
+  template <typename... Args, util::Invocable_r<Ret, Args...> Func>
   explicit Compute_function(Func &&function, Args &&...args)
       : Compute_function{Compute_option::concurrent | Compute_option::defer,
                          std::forward<Func>(function),
                          std::forward<Args>(args)...} {}
-  template <typename Func, typename... Args>
-  requires std::invocable<Func, Args...>
+  template <typename... Args, util::Invocable_r<Ret, Args...> Func>
   explicit Compute_function(Compute_options const &options, Func &&function,
                             Args &&...args)
       : mutex_{(options & Compute_option::concurrent).any()
@@ -453,7 +452,7 @@ protected:
         options);
   }
   template <typename... Args>
-  requires std::invocable<decltype(function_), Args...>
+  requires util::Invocable_r<decltype(function_), Ret, Args...>
   static auto bind(bool invoke, decltype(function_) const &function,
                    Args &&...args) {
     auto bound{[flag{util::Semiregular_once_flag{}}, ret{std::optional<Ret>{}},
@@ -516,7 +515,7 @@ public:
   }
 
   template <typename... Args>
-  requires std::invocable<decltype(function_), Args...>
+  requires util::Invocable_r<decltype(function_), Ret, Args...>
   auto bind(Compute_options const &options, Args &&...args)
       -> std::optional<Ret> {
     constexpr static auto valid_options{util::Enum_bitset{} |
@@ -548,25 +547,25 @@ public:
     return *bound_(Bound_action::compute);
   }
   template <template <typename...> typename Tuple, typename... Args>
-  requires std::invocable<decltype(function_), Args...>
-  friend void operator<<(Compute_function &left, Tuple<Args...> &&t_args) {
+  requires util::Invocable_r<decltype(function_), Ret, Args...>
+  friend void operator<<(Compute_function &left, Tuple<Args &&...> &&t_args) {
     util::f::forward_apply(
         [&left](Args &&...args) {
           left.bind(util::Enum_bitset{} | Compute_option::defer,
                     std::forward<Args>(args)...);
         },
-        std::forward<Tuple<Args...>>(t_args));
+        std::forward<Tuple<Args &&...>>(t_args));
   }
   template <template <typename...> typename Tuple, typename... Args>
-  requires std::invocable<decltype(function_), Args...>
-  friend auto operator<<=(Compute_function &left, Tuple<Args...> &&t_args)
+  requires util::Invocable_r<decltype(function_), Ret, Args...>
+  friend auto operator<<=(Compute_function &left, Tuple<Args &&...> &&t_args)
       -> Ret {
     return util::f::forward_apply(
         [&left](Args &&...args) -> decltype(auto) {
           return *left.bind(util::Enum_bitset{} | Compute_option::empty,
                             std::forward<Args>(args)...);
         },
-        std::forward<Tuple<Args...>>(t_args));
+        std::forward<Tuple<Args &&...>>(t_args));
   }
   friend void operator<<(Compute_function &left,
                          [[maybe_unused]] Reset_t /*unused*/) {

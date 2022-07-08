@@ -44,14 +44,13 @@ constexpr auto unify_ptr_to_ref(Type &&value) noexcept -> decltype(auto) {
   }
 }
 
-template <typename Func, template <typename...> typename Tuple,
-          typename... Args>
-requires std::invocable<Func, Args...>
-constexpr auto forward_apply(Func &&func, Tuple<Args...> &&t_args) noexcept(
+template <template <typename...> typename Tuple, typename... Args,
+          std::invocable<Args...> Func>
+constexpr auto forward_apply(Func &&func, Tuple<Args &&...> &&t_args) noexcept(
     std::is_nothrow_invocable_v<Func, Args...> &&std::
         is_nothrow_move_constructible_v<std::invoke_result_t<Func, Args...>>)
     -> decltype(auto) {
-  using TArgs = Tuple<Args...>;
+  using TArgs = Tuple<Args &&...>;
   return
       [&func, &t_args ]<std::size_t... Idx>(
           [[maybe_unused]] std::index_sequence<

@@ -5,7 +5,7 @@
 #include "utility_extras.hpp" // import Delegate
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 #include <chrono>   // import std::chrono::duration, std::chrono::time_point
-#include <concepts> // import std::semiregular, std::same_as
+#include <concepts> // import std::invocable, std::semiregular, std::same_as
 #include <memory>   // import std::make_unique, std::unique_ptr
 #include <mutex> // import std::call_once, std::mutex, std::once_flag, std::recursive_mutex, std::recursive_timed_mutex, std::timed_mutex
 #include <shared_mutex> // import std::shared_mutex, std::shared_timed_mutex
@@ -30,14 +30,14 @@ private:
 
 public:
   constexpr Semiregular_once_flag() noexcept = default;
-  template <typename Callable, typename... Args>
-  void call_once(Callable &&func, Args &&...args) {
-    std::call_once(*value_, [this, &func, &args...]() noexcept(noexcept(
-                                std::invoke(std::forward<Callable>(func),
-                                            std::forward<Args>(args)...))) {
-      std::invoke(std::forward<Callable>(func), std::forward<Args>(args)...);
-      flag_ = true; // after invocation because std::invoke may throw
-    });
+  template <typename... Args, std::invocable<Args...> Func>
+  void call_once(Func &&func, Args &&...args) {
+    std::call_once(
+        *value_, [this, &func, &args...]() noexcept(noexcept(std::invoke(
+                     std::forward<Func>(func), std::forward<Args>(args)...))) {
+          std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+          flag_ = true; // after invocation because std::invoke may throw
+        });
   }
 
   ~Semiregular_once_flag() noexcept = default;
