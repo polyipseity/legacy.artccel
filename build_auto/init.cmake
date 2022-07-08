@@ -20,6 +20,7 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/Wall>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-warning-option>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4464> # relative include path contains '..'
