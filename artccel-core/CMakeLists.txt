@@ -11,7 +11,6 @@ add_library(artccel-core SHARED
 	"sources/concurrent.cpp"
 	"sources/encoding.cpp"
 	"sources/enum_bitset.cpp"
-	"sources/exception_extras.cpp"
 	"sources/geometry.cpp"
 	"sources/interval.cpp"
 	"sources/main_hooks.cpp"

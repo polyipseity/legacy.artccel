@@ -2,16 +2,12 @@
 #define ARTCCEL_CORE_UTIL_EXCEPTION_EXTRAS_HPP
 #pragma once
 
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <concepts>              // import std::derived_from
-#include <cstddef>               // import std::nullptr_t
-#include <exception> // import std::current_exception, std::exception, std::exception_ptr, std::throw_with_nested
+#include <concepts> // import std::derived_from
+#include <exception> // import std::current_exception, std::exception, std::throw_with_nested
 #include <type_traits> // import std::remove_reference_t
 #include <utility>     // import std::forward
 
 namespace artccel::core::util {
-class ARTCCEL_CORE_EXPORT Rethrow_on_lexical_scope_exit;
-
 namespace detail {
 template <bool Rethrow, typename Top, typename... Nested>
 requires(std::derived_from<std::remove_reference_t<Top>, std::exception> &&...
@@ -57,41 +53,6 @@ requires(
                                          std::forward<Nested>(nested)...);
 }
 } // namespace f
-
-class Rethrow_on_lexical_scope_exit {
-private:
-#pragma warning(push)
-#pragma warning(disable : 4251)
-  std::exception_ptr exc_;
-#pragma warning(pop)
-
-public:
-  // functions are lvalue-only as this class only makes sense as a lvalue
-  explicit Rethrow_on_lexical_scope_exit() noexcept;
-  explicit Rethrow_on_lexical_scope_exit(
-      [[maybe_unused]] std::nullptr_t /*unused*/) noexcept;
-  explicit Rethrow_on_lexical_scope_exit(std::exception_ptr exc) noexcept;
-  ~Rethrow_on_lexical_scope_exit() noexcept(false);
-
-  // named 'write' to make 'rolse = std::move(rolse2.write())' look weird
-  auto write [[nodiscard]] () &noexcept -> std::exception_ptr &;
-  auto read [[nodiscard]] () const &noexcept -> std::exception_ptr const &;
-  // "proper" (try rewriting your code instead) way: 'rolse = rolse2.release()'
-  auto release [[nodiscard]] () & -> std::exception_ptr;
-
-  auto operator=(std::nullptr_t right) &noexcept
-      -> Rethrow_on_lexical_scope_exit &;
-  auto operator=(std::exception_ptr const &right) &noexcept
-      -> Rethrow_on_lexical_scope_exit &;
-  auto operator=(std::exception_ptr &&right) &noexcept
-      -> Rethrow_on_lexical_scope_exit &;
-
-  // delete all to avoid double rethrowing
-  Rethrow_on_lexical_scope_exit(Rethrow_on_lexical_scope_exit const &) = delete;
-  auto operator=(Rethrow_on_lexical_scope_exit const &) = delete;
-  Rethrow_on_lexical_scope_exit(Rethrow_on_lexical_scope_exit &&) = delete;
-  auto operator=(Rethrow_on_lexical_scope_exit &&) = delete;
-};
 } // namespace artccel::core::util
 
 #endif
