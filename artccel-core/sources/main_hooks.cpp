@@ -36,6 +36,7 @@
 #include <vector>      // import std::vector
 #ifdef _WIN32
 #include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
+#include <artccel-core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
 #endif
 #pragma warning(pop)
 #pragma warning(pop)
@@ -187,8 +188,10 @@ protected:
     return pos;
   }
   auto sync() -> int override {
-    if (!::FlushConsoleInputBuffer(console_))
+    if (!::FlushConsoleInputBuffer(console_)) {
+      platform::windows::f::print_last_error();
       return -1;
+    }
     auto const splitter{section_splitter(buffer_)};
     setg(std::data(copy_front_to_back({splitter, std::min(gptr(), egptr())})),
          splitter, splitter);
@@ -210,6 +213,7 @@ protected:
                            nullptr)) {
           init.resize(read_size);
         } else {
+          platform::windows::f::print_last_error();
           init.clear();
         }
         return init;
@@ -344,13 +348,22 @@ Main_program::Main_program(
             prev_console_output_cp && ::SetConsoleOutputCP(CP_UTF8)) {
           finalizers.emplace_back(
               make_copyable_finalizer([prev_console_output_cp] {
-                ::SetConsoleOutputCP(prev_console_output_cp);
+                if (!::SetConsoleOutputCP(prev_console_output_cp)) {
+                  platform::windows::f::throw_last_error();
+                }
               }));
+        } else {
+          platform::windows::f::print_last_error();
         }
         if (auto const prev_console_cp{::GetConsoleCP()};
             prev_console_cp && ::SetConsoleCP(CP_UTF8)) {
-          finalizers.emplace_back(make_copyable_finalizer(
-              [prev_console_cp] { ::SetConsoleCP(prev_console_cp); }));
+          finalizers.emplace_back(make_copyable_finalizer([prev_console_cp] {
+            if (!::SetConsoleCP(prev_console_cp)) {
+              platform::windows::f::throw_last_error();
+            }
+          }));
+        } else {
+          platform::windows::f::print_last_error();
         }
         if (auto const std_handle{::GetStdHandle(STD_INPUT_HANDLE)};
             std_handle != INVALID_HANDLE_VALUE) {
@@ -363,6 +376,8 @@ Main_program::Main_program(
                 assert(new_rdbuf.use_count() == 1); // TODO: C++23: remove
                 new_rdbuf.reset();                  // make it explicit
               }));
+        } else {
+          platform::windows::f::print_last_error();
         }
 #endif
 
