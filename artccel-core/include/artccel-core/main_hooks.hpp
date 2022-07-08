@@ -3,13 +3,16 @@
 #pragma once
 
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <concepts>              // import std::invocable
 #include <exception>             // import std::exception_ptr
-#include <functional>            // import std::function, std::reference_wrapper
-#include <gsl/gsl>     // import gsl::cwzstring, gsl::czstring, gsl::not_null
-#include <optional>    // import std::optional
-#include <span>        // import std::span
-#include <string>      // import std::u8string
+#include <functional>            // import std::function
+#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null
+#include <memory>   // import std::make_shared, std::shared_ptr, std::weak_ptr
+#include <optional> // import std::optional
+#include <span>     // import std::span
+#include <string>   // import std::u8string
 #include <string_view> // import std::string_view, std::u8string_view
+#include <utility>     // import std::forward
 #include <variant>     // import std::variant
 #include <vector>      // import std::vector
 
@@ -35,18 +38,27 @@ ARTCCEL_CORE_EXPORT auto safe_main(
 } // namespace f
 
 class Main_program {
+public:
+  using copyable_finalizer_type = std::shared_ptr<gsl::final_action<
+      std::function<void()>>>; // TODO: C++23: use std::move_only_function
+  using destructor_exceptions_out_type = std::vector<std::exception_ptr>;
+  static auto make_copyable_finalizer(std::invocable<> auto &&finalizer) {
+    return std::make_shared<typename copyable_finalizer_type::element_type>(
+        std::forward<decltype(finalizer)>(finalizer));
+  }
+
 private:
-  struct {
-  } early_init_ [[no_unique_address, maybe_unused, msvc::no_unique_address]];
 #pragma warning(push)
 #pragma warning(disable : 4251)
-  std::reference_wrapper<std::exception_ptr> destructor_exc_out_;
+  copyable_finalizer_type early_structor_;
   std::vector<Argument> arguments_;
+  copyable_finalizer_type late_structor_;
 #pragma warning(pop)
 
 public:
-  explicit Main_program(std::exception_ptr &destructor_exc_out,
-                        Raw_arguments arguments);
+  explicit Main_program(
+      std::weak_ptr<destructor_exceptions_out_type> destructor_excs_out,
+      Raw_arguments arguments);
   ~Main_program() noexcept;
   auto arguments [[nodiscard]] () const -> std::span<Argument const>;
 

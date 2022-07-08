@@ -13,8 +13,8 @@ constexpr inline auto null_terminator_size{1_UZ};
 using Cu8zstring = gsl::basic_zstring<char8_t const, gsl::dynamic_extent>;
 using U8zstring = gsl::basic_zstring<char8_t, gsl::dynamic_extent>;
 
-template <typename T> using Observer_ptr = T *;
-template <typename T> using Observer_ref = T &;
+template <typename Type> using Observer_ptr = Type *;
+template <typename Type> using Observer_ref = Type &;
 } // namespace artccel::core::util
 
 #endif

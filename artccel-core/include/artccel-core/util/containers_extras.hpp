@@ -2,16 +2,36 @@
 #define ARTCCEL_CORE_UTIL_CONTAINERS_EXTRAS_HPP
 #pragma once
 
-#include <array>   // import std::array
-#include <cstddef> // import std::size_t
-#include <span>    // import std::dynamic_extent, std::span
+#include <array>            // import std::array, std::data, std::size
+#include <cstddef>          // import std::size_t
+#include <initializer_list> // import std::initializer_list
+#include <span>             // import std::dynamic_extent, std::span
 #include <utility> // import std::forward, std::index_sequence, std::make_index_sequence, std::move
 
 namespace artccel::core::util {
 template <typename> struct array_size;
-template <typename T> constexpr auto array_size_v{array_size<T>::value};
+template <typename Type> constexpr auto array_size_v{array_size<Type>::value};
 
 namespace f {
+template <typename Container>
+constexpr auto atad [[nodiscard]] (Container &container) -> decltype(auto) {
+  return std::data(container) + std::size(container);
+}
+template <typename Container>
+constexpr auto atad [[nodiscard]] (const Container &container)
+-> decltype(auto) {
+  return std::data(container) + std::size(container);
+}
+template <class Element, std::size_t Size>
+constexpr auto atad [[nodiscard]] (Element (&array)[Size]) noexcept {
+  return array + Size;
+}
+template <class Element>
+constexpr auto atad
+    [[nodiscard]] (std::initializer_list<Element> init_list) noexcept {
+  return init_list.end();
+}
+
 template <typename... Args>
 constexpr auto const_span
     [[nodiscard]] (Args &&...args) noexcept(noexcept(std::span{
@@ -20,21 +40,21 @@ constexpr auto const_span
   return std::span<typename span_type::element_type const, span_type::extent>{
       std::forward<Args>(args)...};
 }
-template <typename T, std::size_t N>
-constexpr auto const_array [[nodiscard]] (std::array<T, N> const &array) {
-  return [&array]<std::size_t... I>(
-      [[maybe_unused]] std::index_sequence<I...> /*unused*/) {
-    return std::array<T const, N>{{array[I]...}};
+template <typename Type, std::size_t Size>
+constexpr auto const_array [[nodiscard]] (std::array<Type, Size> const &array) {
+  return [&array]<std::size_t... Idx>(
+      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+    return std::array<Type const, Size>{{array[Idx]...}};
   }
-  (std::make_index_sequence<N>{});
+  (std::make_index_sequence<Size>{});
 }
-template <typename T, std::size_t N>
-constexpr auto const_array [[nodiscard]] (std::array<T, N> &&array) {
-  return [&array]<std::size_t... I>(
-      [[maybe_unused]] std::index_sequence<I...> /*unused*/) {
-    return std::array<T const, N>{{std::move(array[I])...}};
+template <typename Type, std::size_t Size>
+constexpr auto const_array [[nodiscard]] (std::array<Type, Size> &&array) {
+  return [&array]<std::size_t... Idx>(
+      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+    return std::array<Type const, Size>{{std::move(array[Idx])...}};
   }
-  (std::make_index_sequence<N>{});
+  (std::make_index_sequence<Size>{});
 }
 template <typename... Args>
 constexpr auto const_array
@@ -45,39 +65,40 @@ constexpr auto const_array
                     array_size_v<array_type>>{std::forward<Args>(args)...};
 }
 
-template <typename T, std::size_t N>
+template <typename Type, std::size_t Size>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-constexpr auto to_array_cv(T (&array)[N]) {
+constexpr auto to_array_cv(Type (&array)[Size]) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  return [&array]<std::size_t... I>(
-      [[maybe_unused]] std::index_sequence<I...> /*unused*/) {
-    return std::array<T, N>{{array[I]...}};
+  return [&array]<std::size_t... Idx>(
+      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+    return std::array<Type, Size>{{array[Idx]...}};
   }
-  (std::make_index_sequence<N>{});
+  (std::make_index_sequence<Size>{});
 }
-template <typename T, std::size_t N>
+template <typename Type, std::size_t Size>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-constexpr auto to_array_cv(T (&&array)[N]) {
+constexpr auto to_array_cv(Type (&&array)[Size]) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  return [&array]<std::size_t... I>(
-      [[maybe_unused]] std::index_sequence<I...> /*unused*/) {
-    return std::array<T, N>{{std::move(array[I])...}};
+  return [&array]<std::size_t... Idx>(
+      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+    return std::array<Type, Size>{{std::move(array[Idx])...}};
   }
-  (std::make_index_sequence<N>{});
+  (std::make_index_sequence<Size>{});
 }
-template <typename T, std::size_t N>
-requires(N !=
-         std::dynamic_extent) constexpr auto to_array_cv(std::span<T, N> span) {
-  return [span]<std::size_t... I>(
-      [[maybe_unused]] std::index_sequence<I...> /*unused*/) {
-    return std::array<T, N>{{span[I]...}};
+template <typename Type, std::size_t Size>
+requires(Size != std::dynamic_extent) constexpr auto to_array_cv(
+    std::span<Type, Size> span) {
+  return [span]<std::size_t... Idx>(
+      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+    return std::array<Type, Size>{{span[Idx]...}};
   }
-  (std::make_index_sequence<N>{});
+  (std::make_index_sequence<Size>{});
 }
 } // namespace f
 
-template <typename T, std::size_t N> struct array_size<std::array<T, N>> {
-  constexpr static auto value{N};
+template <typename Type, std::size_t Size>
+struct array_size<std::array<Type, Size>> {
+  constexpr static auto value{Size};
 };
 } // namespace artccel::core::util
 

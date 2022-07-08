@@ -11,12 +11,12 @@ add_library(artccel-core SHARED
 	"sources/concurrent.cpp"
 	"sources/encoding.cpp"
 	"sources/enum_bitset.cpp"
-	"sources/exception_extras.cpp"
 	"sources/geometry.cpp"
 	"sources/interval.cpp"
 	"sources/main_hooks.cpp"
 	"sources/polyfill.cpp"
-	"sources/reflect.cpp")
+	"sources/reflect.cpp"
+	"sources/windows_error.cpp")
 configure_file("in/config.h" "include/artccel-core/config.h")
 generate_preset_export_header(artccel-core)
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)

@@ -33,14 +33,14 @@ class Geometry {
 public:
   virtual auto dimension [[nodiscard]] () const
       -> util::Nonnegative_interval<std::int8_t> = 0;
-  template <std::derived_from<Quality> T>
+  template <std::derived_from<Quality> Qly>
   auto try_get_quality [[nodiscard]] () {
-    return dynamic_cast<util::Observer_ptr<T>>(try_get_quality(typeid(T)));
+    return dynamic_cast<util::Observer_ptr<Qly>>(try_get_quality(typeid(Qly)));
   }
-  template <std::derived_from<Quality> T>
+  template <std::derived_from<Quality> Qly>
   auto try_get_quality [[nodiscard]] () const {
-    return dynamic_cast<util::Observer_ptr<T const>>(
-        try_get_quality(typeid(T)));
+    return dynamic_cast<util::Observer_ptr<Qly const>>(
+        try_get_quality(typeid(Qly)));
   }
   auto clone [[nodiscard]] () const -> gsl::owner<Geometry *>;
   virtual ~Geometry() noexcept;
