@@ -6,8 +6,8 @@
 #pragma warning(disable : 4820)
 #include <artccel-core/main_hooks.hpp> // interface
 
-#include <algorithm>             // import std::min, std::ranges::transform
-#include <artccel-core/export.h> // import ARTCCEL_CORE_NO_EXPORT
+#include <algorithm> // import std::min, std::ranges::for_each, std::ranges::transform
+#include <artccel-core/export.h>                // import ARTCCEL_CORE_NO_EXPORT
 #include <artccel-core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
 #include <artccel-core/util/containers_extras.hpp> // import util::f::const_span
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
@@ -24,17 +24,18 @@
 #include <ios> // import std::ios_base::openmode, std::ios_base::seekdir, std::streamsize
 #include <iostream> // import std::cin, std::clog, std::cout, std::ios_base::sync_with_stdio
 #include <locale> // import std::codecvt_base::result, std::locale, std::locale::global
-#include <memory>   // import std::make_unique_for_overwrite, std::unique_ptr
+#include <memory> // import std::make_shared, std::make_unique, std::make_unique_for_overwrite, std::unique_ptr, std::weak_ptr
 #include <optional> // import std::nullopt, std::optional
 #include <span> // import std::begin, std::data, std::empty, std::size, std::span
 #include <streambuf>   // import std::streambuf
 #include <string>      // import std::u16string, std::u8string
 #include <string_view> // import std::string_view, std::u8string_view
 #include <type_traits> /// import std::decay_t
+#include <utility>     // import std::move
 #include <variant>     // import std::get_if, std::variant, std::visit
 #include <vector>      // import std::vector
 #ifdef _WIN32
-#include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
+#include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
 #endif
 #pragma warning(pop)
 #pragma warning(pop)
@@ -43,6 +44,38 @@
 namespace artccel::core {
 namespace detail {
 using util::literals::operator""_UZ;
+
+static auto run_finalizer_save_excepts(
+    std::vector<Main_program::copyable_finalizer_type> finalizers,
+    std::weak_ptr<Main_program::destructor_exceptions_out_type>
+        dtor_excs_out) noexcept {
+  return [finalizers{std::move(finalizers)},
+          dtor_excs_out{std::move(dtor_excs_out)}]() mutable noexcept {
+    if (auto const dtor_excs{dtor_excs_out.lock()}) {
+      std::ranges::for_each(finalizers, [&dtor_excs](auto &finalizer) noexcept {
+        try {
+          assert(finalizer.use_count() == 1 && u8"Non-unique finalizer");
+          finalizer.reset();
+        } catch (...) {
+          try {
+            dtor_excs->emplace_back(std::current_exception());
+          } catch (...) {
+            // NOOP
+          }
+        }
+      });
+    } else {
+      std::ranges::for_each(finalizers, [](auto &finalizer) noexcept {
+        try {
+          assert(finalizer.use_count() == 1 && u8"Non-unique finalizer");
+          finalizer.reset();
+        } catch (...) {
+          // NOOP
+        }
+      });
+    }
+  };
+}
 
 #ifdef _WIN32
 // TODO: await https://github.com/microsoft/terminal/issues/7777
@@ -291,23 +324,52 @@ auto safe_main(
 #endif
 } // namespace f
 
-Main_program::Main_program(std::exception_ptr &destructor_exc_out,
-                           Raw_arguments arguments)
-    : early_init_{[] {
-        std::ios_base::sync_with_stdio(false);
+Main_program::Main_program(
+    std::weak_ptr<std::vector<std::exception_ptr>> destructor_excs_out,
+    Raw_arguments arguments)
+    : early_structor_{[&destructor_excs_out] {
+        std::vector<copyable_finalizer_type> finalizers{};
+
+        auto const prev_stdio_sync{std::ios_base::sync_with_stdio(false)};
+        finalizers.emplace_back(make_copyable_finalizer([prev_stdio_sync] {
+          std::ios_base::sync_with_stdio(prev_stdio_sync);
+        }));
 #ifdef _WIN32
-        std::locale::global(
-            std::locale{/*u8*/ ".UTF-8"}); // ACP functions -> UTF-8 functions
-        ::SetConsoleOutputCP(CP_UTF8);
-        ::SetConsoleCP(CP_UTF8);
+        auto const prev_locale{std::locale::global(
+            std::locale{/*u8*/ ".UTF-8"})}; // ACP functions -> UTF-8 functions
+        finalizers.emplace_back(make_copyable_finalizer(
+            [prev_locale] { std::locale::global(prev_locale); }));
+
+        if (auto const prev_console_output_cp{::GetConsoleOutputCP()};
+            prev_console_output_cp && ::SetConsoleOutputCP(CP_UTF8)) {
+          finalizers.emplace_back(
+              make_copyable_finalizer([prev_console_output_cp] {
+                ::SetConsoleOutputCP(prev_console_output_cp);
+              }));
+        }
+        if (auto const prev_console_cp{::GetConsoleCP()};
+            prev_console_cp && ::SetConsoleCP(CP_UTF8)) {
+          finalizers.emplace_back(make_copyable_finalizer(
+              [prev_console_cp] { ::SetConsoleCP(prev_console_cp); }));
+        }
         if (auto const std_handle{::GetStdHandle(STD_INPUT_HANDLE)};
             std_handle != INVALID_HANDLE_VALUE) {
-          std::cin.rdbuf(new detail::Windows_console_input_buffer{std_handle});
+          auto new_rdbuf{std::make_shared<detail::Windows_console_input_buffer>(
+              std_handle)}; // TODO: C++23: std::make_unique
+          auto const prev_rdbuf{std::cin.rdbuf(new_rdbuf.get())};
+          finalizers.emplace_back(make_copyable_finalizer(
+              [prev_rdbuf, new_rdbuf{std::move(new_rdbuf)}]() mutable {
+                std::cin.rdbuf(prev_rdbuf);
+                assert(new_rdbuf.use_count() == 1); // TODO: C++23: remove
+                new_rdbuf.reset();                  // make it explicit
+              }));
         }
 #endif
-        return decltype(early_init_){};
+
+        return make_copyable_finalizer(detail::run_finalizer_save_excepts(
+            std::move(finalizers), destructor_excs_out));
       }()},
-      destructor_exc_out_{destructor_exc_out}, arguments_{[arguments] {
+      arguments_{[arguments] {
         decltype(arguments_) init(std::size(arguments));
         auto const prev_loc{std::locale::global(std::locale{
             /*u8*/ ""})}; // use user-preferred locale to convert args
@@ -316,16 +378,19 @@ Main_program::Main_program(std::exception_ptr &destructor_exc_out,
         std::ranges::transform(arguments, std::begin(init),
                                [](auto arg) { return Argument{arg}; });
         return init;
+      }()},
+      late_structor_{[&destructor_excs_out] {
+        std::vector<copyable_finalizer_type> finalizers{};
+
+        finalizers.emplace_back(make_copyable_finalizer([] {
+          std::cout.flush();
+          std::clog.flush();
+        }));
+        return make_copyable_finalizer(detail::run_finalizer_save_excepts(
+            std::move(finalizers), destructor_excs_out));
       }()} {
 }
-Main_program::~Main_program() noexcept {
-  try {
-    std::cout.flush();
-    std::clog.flush();
-  } catch (...) {
-    destructor_exc_out_.get() = std::current_exception();
-  }
-}
+Main_program::~Main_program() noexcept = default;
 auto Main_program::arguments [[nodiscard]] () const
     -> std::span<Argument const> {
   return arguments_;
