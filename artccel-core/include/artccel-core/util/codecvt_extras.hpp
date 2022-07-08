@@ -5,6 +5,7 @@
 #include "containers_extras.hpp" // import f::atad
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat
 #include "polyfill.hpp" // import f::unreachable
+#include "string_extras.hpp"  // import Char_traits_c, Rebind_char_traits_t
 #include "utility_extras.hpp" // import dependent_false_v
 #include <concepts>           // import std::derived_from, std::same_as
 #include <cwchar>             // import std::mbstate_t
@@ -27,8 +28,8 @@ concept Codecvt_c = std::derived_from<
 namespace detail {
 using literals::encoding::operator""_as_utf8_compat;
 
-template <Codecvt_c Codecvt, typename InCharT>
-auto codecvt_convert(std::basic_string_view<InCharT> input) {
+template <Codecvt_c Codecvt, typename InCharT, Char_traits_c Traits>
+auto codecvt_convert(std::basic_string_view<InCharT, Traits> input) {
   using intern_type = typename Codecvt::intern_type;
   using extern_type = typename Codecvt::extern_type;
   constexpr auto int_to_ext{[]() noexcept {
@@ -45,7 +46,7 @@ auto codecvt_convert(std::basic_string_view<InCharT> input) {
   using out_c_t = std::conditional_t<int_to_ext, extern_type, intern_type>;
 
   Codecvt const codecvt{};
-  std::basic_string<out_c_t> output(
+  std::basic_string<out_c_t, Rebind_char_traits_t<Traits, out_c_t>> output(
       (int_to_ext ? codecvt.max_length() : 1) * std::size(input), out_c_t{});
 
   in_c_t const *input_next{};
@@ -80,14 +81,14 @@ auto codecvt_convert(std::basic_string_view<InCharT> input) {
 } // namespace detail
 
 namespace f {
-template <Codecvt_c Codecvt>
+template <Codecvt_c Codecvt, Char_traits_c Traits>
 auto codecvt_convert_to_extern(
-    std::basic_string_view<typename Codecvt::intern_type> intern) {
+    std::basic_string_view<typename Codecvt::intern_type, Traits> intern) {
   return detail::codecvt_convert<Codecvt>(intern);
 }
-template <Codecvt_c Codecvt>
+template <Codecvt_c Codecvt, Char_traits_c Traits>
 auto codecvt_convert_to_intern(
-    std::basic_string_view<typename Codecvt::extern_type> ext) {
+    std::basic_string_view<typename Codecvt::extern_type, Traits> ext) {
   return detail::codecvt_convert<Codecvt>(ext);
 }
 } // namespace f

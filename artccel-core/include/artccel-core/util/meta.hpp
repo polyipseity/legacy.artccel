@@ -63,11 +63,6 @@ Template_string(char16_t chr)
 Template_string(char32_t chr)
     ->Template_string<char32_t, 1 + null_terminator_size>;
 
-template <typename NotFound, typename Find, typename Replace>
-requires(
-    !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {
-  using type = NotFound;
-};
 template <typename Found, typename Replace>
 struct Replace_all<Found, Found, Replace> {
   using type = Replace;
@@ -99,6 +94,11 @@ struct Replace_all<Type &, Find, Replace> {
 template <typename Type, typename Find, typename Replace>
 struct Replace_all<Type &&, Find, Replace> {
   using type = Replace_all_t<Type, Find, Replace> &&;
+};
+template <typename NotFound, typename Find, typename Replace>
+requires(
+    !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {
+  using type = NotFound;
 };
 } // namespace artccel::core::util
 
