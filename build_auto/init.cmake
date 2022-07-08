@@ -39,6 +39,7 @@ add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fvisibility=hidden>
 )
 add_link_options(
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
 )
 
