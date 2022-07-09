@@ -20,14 +20,11 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/Wall>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-argument>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-warning-option>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4464> # relative include path contains '..'
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4514> # unreferenced inline function has been removed
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4710> # function not inlined
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-attributes>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd5030> # attribute is not recognized
 
 	# pragma warning seems to be broken for below warnings
@@ -56,6 +53,9 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 		-Wno-return-std-move-in-c++11
 		-Wno-missing-variable-declarations
 		-Wno-ctad-maybe-unsupported
+		-Wno-error=unknown-argument
+		-Wno-error=unknown-warning-option
+		-Wno-error=unknown-attributes
 	)
 endif()
 
