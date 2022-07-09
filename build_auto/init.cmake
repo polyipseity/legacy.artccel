@@ -25,6 +25,7 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4464> # relative include path contains '..'
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4514> # unreferenced inline function has been removed
+	$<$<CXX_COMPILER_ID:MSVC>:/wd4710> # function not inlined
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-attributes>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd5030> # attribute is not recognized
 
