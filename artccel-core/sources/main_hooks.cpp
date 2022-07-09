@@ -12,7 +12,7 @@
 #include <artccel-core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
 #include <artccel-core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
-#include <artccel-core/util/polyfill.hpp> // import util::f::unreachable, util::literals::operator""_UZ
+#include <artccel-core/util/polyfill.hpp>       // import util::f::unreachable
 #include <artccel-core/util/utility_extras.hpp> // import util::Semiregularize
 #include <cassert>                              // import assert
 #include <concepts>   // import std::integral, std::same_as
@@ -44,8 +44,6 @@
 
 namespace artccel::core {
 namespace detail {
-using util::literals::operator""_UZ;
-
 static auto run_finalizer_save_excepts(
     std::vector<Main_program::copyable_finalizer_type> finalizers,
     std::weak_ptr<Main_program::destructor_exceptions_out_type>
@@ -86,7 +84,8 @@ public:
   using codecvt_type = util::Semiregularize<util::Codecvt_utf16_utf8>;
 
   static codecvt_type const helper_codecvt_;
-  constexpr static auto default_buffer_code_point_size_{4096_UZ};
+  constexpr static std::size_t default_buffer_code_point_size_{
+      4096}; // TODO: C++23: UZ
   static std::size_t const default_buffer_size_;
   static auto
   calculate_buffer_size(std::integral auto code_point_size) noexcept {

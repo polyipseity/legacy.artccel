@@ -3,7 +3,6 @@
 #pragma once
 
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <cstddef>               // import std::size_t
 #include <type_traits> // import std::is_enum_v, std::underlying_type_t
 
 namespace artccel::core::util {
@@ -23,15 +22,6 @@ ARTCCEL_CORE_EXPORT inline void unreachable [[noreturn]] () noexcept {
   // with [[noreturn]], an empty body also invokes undefined behavior
 }
 } // namespace f
-
-namespace literals {
-ARTCCEL_CORE_EXPORT constexpr auto operator""_UZ
-    // NOLINTNEXTLINE(google-runtime-int): specs requires 'unsigned long long'
-    [[nodiscard]] (unsigned long long value) noexcept {
-  // static_cast because std::size_t may not be big enough
-  return static_cast<std::size_t>(value); // TODO: C++23: UZ
-}
-} // namespace literals
 } // namespace artccel::core::util
 
 #endif

@@ -7,8 +7,7 @@
 #include <artccel-core/util/cerrno_extras.hpp>  // import Errno_guard
 #include <artccel-core/util/codecvt_extras.hpp> // import Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
 #include <artccel-core/util/exception_extras.hpp> // import f::throw_multiple_as_nested
-#include <artccel-core/util/polyfill.hpp>  // import literals::operator""_UZ
-#include <artccel-core/util/semantics.hpp> // import null_terminator_size
+#include <artccel-core/util/semantics.hpp>        // import null_terminator_size
 #include <artccel-core/util/utility_extras.hpp> // import Semiregularize, dependent_false_v
 #include <cassert>                              // import assert
 #include <cerrno>                               // import errno
@@ -27,19 +26,18 @@
 
 namespace artccel::core::util {
 namespace detail {
-using literals::operator""_UZ;
-
 #pragma warning(push)
 #pragma warning(disable : 4146)
-constexpr static auto cwchar_mbrlen_null{0_UZ};
-constexpr static auto cwchar_mbrlen_error [[maybe_unused]]{-1_UZ};
-constexpr static auto cwchar_mbrlen_incomplete [[maybe_unused]]{-2_UZ};
-constexpr static auto cuchar_mbrtoc_null{0_UZ};
-constexpr static auto cuchar_mbrtoc_error{-1_UZ};
-constexpr static auto cuchar_mbrtoc_incomplete{-2_UZ};
-constexpr static auto cuchar_mbrtoc_surrogate{-3_UZ};
-constexpr static auto cuchar_crtomb_surrogate{0_UZ};
-constexpr static auto cuchar_crtomb_error{-1_UZ};
+// TODO: C++23: UZ
+constexpr static std::size_t cwchar_mbrlen_null{0};
+constexpr static std::size_t cwchar_mbrlen_error [[maybe_unused]]{-1};
+constexpr static std::size_t cwchar_mbrlen_incomplete [[maybe_unused]]{-2};
+constexpr static std::size_t cuchar_mbrtoc_null{0};
+constexpr static std::size_t cuchar_mbrtoc_error{-1};
+constexpr static std::size_t cuchar_mbrtoc_incomplete{-2};
+constexpr static std::size_t cuchar_mbrtoc_surrogate{-3};
+constexpr static std::size_t cuchar_crtomb_surrogate{0};
+constexpr static std::size_t cuchar_crtomb_error{-1};
 #pragma warning(pop)
 
 template <typename UTFCharT>
@@ -88,7 +86,8 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
       [[unlikely]] case cuchar_mbrtoc_null : {
         auto const null_len_max{
             std::min(std::size_t{MB_LEN_MAX}, std::size(loc_enc))};
-        for (auto null_len{1_UZ}; null_len <= null_len_max; ++null_len) {
+        // TODO: C++23: UZ
+        for (std::size_t null_len{1}; null_len <= null_len_max; ++null_len) {
           if (auto old_state_copy{old_state};
               // NOLINTNEXTLINE(concurrency-mt-unsafe)
               std::mbrlen(std::data(loc_enc), null_len, &old_state_copy) ==

@@ -2,13 +2,11 @@
 #define ARTCCEL_CORE_UTIL_SEMANTICS_HPP
 #pragma once
 
-#include "polyfill.hpp" // import literals::operator""_UZ
-#include <gsl/gsl>      // import gsl::basic_zstring, gsl::dynamic_extent
+#include <cstddef> // import std::size_t
+#include <gsl/gsl> // import gsl::basic_zstring, gsl::dynamic_extent
 
 namespace artccel::core::util {
-using literals::operator""_UZ;
-
-constexpr inline auto null_terminator_size{1_UZ};
+constexpr inline std::size_t null_terminator_size{1}; // TODO: C++23: UZ
 
 using Cu8zstring = gsl::basic_zstring<char8_t const, gsl::dynamic_extent>;
 using U8zstring = gsl::basic_zstring<char8_t, gsl::dynamic_extent>;
