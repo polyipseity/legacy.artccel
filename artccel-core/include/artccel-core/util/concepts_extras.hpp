@@ -3,9 +3,11 @@
 #pragma once
 
 #include <concepts>    // import std::derived_from, std::same_as
-#include <type_traits> // import std::is_invocable_r_v
+#include <type_traits> // import std::is_arithmetic_v, std::is_invocable_r_v
 
 namespace artccel::core::util {
+template <typename Type>
+concept Arithmetic = std::is_arithmetic_v<Type>;
 template <typename Derived, typename Base>
 concept Derived_from_but_not =
     std::derived_from<Derived, Base> && !std::same_as<Derived, Base>;
