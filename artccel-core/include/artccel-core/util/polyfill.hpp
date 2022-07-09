@@ -5,8 +5,7 @@
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <type_traits> // import std::is_enum_v, std::underlying_type_t
 
-namespace artccel::core::util {
-namespace f {
+namespace artccel::core::util::f {
 constexpr auto to_underlying [[nodiscard]] (
     auto enum_) noexcept requires std::is_enum_v<decltype(enum_)> {
   // TODO: C++23: std::to_underlying
@@ -21,7 +20,6 @@ ARTCCEL_CORE_EXPORT inline void unreachable [[noreturn]] () noexcept {
 #endif
   // with [[noreturn]], an empty body also invokes undefined behavior
 }
-} // namespace f
-} // namespace artccel::core::util
+} // namespace artccel::core::util::f
 
 #endif

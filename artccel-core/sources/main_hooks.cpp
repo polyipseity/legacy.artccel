@@ -10,7 +10,7 @@
 #include <artccel-core/export.h>                // import ARTCCEL_CORE_NO_EXPORT
 #include <artccel-core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
 #include <artccel-core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
-#include <artccel-core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast
+#include <artccel-core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast, util::f::int_unsigned_exact_cast
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel-core/util/polyfill.hpp>       // import util::f::unreachable
 #include <artccel-core/util/utility_extras.hpp> // import util::Semiregularize
@@ -44,6 +44,7 @@
 
 namespace artccel::core {
 namespace detail {
+// NOLINTNEXTLINE(readability-function-cognitive-complexity): 26/25
 static auto run_finalizer_save_excepts(
     std::vector<Main_program::copyable_finalizer_type> finalizers,
     std::weak_ptr<Main_program::destructor_exceptions_out_type>
@@ -53,6 +54,7 @@ static auto run_finalizer_save_excepts(
     if (auto const dtor_excs{dtor_excs_out.lock()}) {
       std::ranges::for_each(finalizers, [&dtor_excs](auto &finalizer) noexcept {
         try {
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
           assert(finalizer.use_count() == 1 && u8"Non-unique finalizer");
           finalizer.reset();
         } catch (...) {
@@ -66,6 +68,7 @@ static auto run_finalizer_save_excepts(
     } else {
       std::ranges::for_each(finalizers, [](auto &finalizer) noexcept {
         try {
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
           assert(finalizer.use_count() == 1 && u8"Non-unique finalizer");
           finalizer.reset();
         } catch (...) {
@@ -117,8 +120,6 @@ protected:
 
 public:
   Windows_console_input_buffer(HANDLE console) : console_{console} {
-    assert(codecvt_->encoding() != -1 &&
-           u8"State-dependent encoding unsupported");
     auto const splitter{section_splitter(buffer_)};
     setg(splitter, splitter, splitter);
   }
@@ -138,12 +139,10 @@ protected:
     auto const clamped_size{
         util::f::int_clamp_cast<typename decltype(buffer_)::size_type>(size)};
     if (auto const sect_size{section_size(clamped_size)};
-        sect_size >=
-        util::f::int_clamp_cast<decltype(sect_size)>(codecvt_->max_length())) {
+        sect_size >= util::f::int_unsigned_exact_cast(codecvt_->max_length())) {
       auto const prev_egptr{egptr()};
       auto const transfer_size{std::min(
-          sect_size,
-          util::f::int_clamp_cast<decltype(sect_size)>(prev_egptr - eback()))};
+          sect_size, util::f::int_unsigned_exact_cast(prev_egptr - eback()))};
 
       buffer_ = {buffer, clamped_size};
       auto const splitter{section_splitter(buffer_)};
@@ -242,10 +241,12 @@ protected:
               mbstate_ = {}; // perhaps unmatched surrogate pair
             }
             break;
+          default:
+            util::f::unreachable();
           }
         }
-        init.resize(util::f::int_clamp_cast<typename decltype(init)::size_type>(
-            write_ptr - std::data(init)));
+        init.resize(
+            util::f::int_unsigned_exact_cast(write_ptr - std::data(init)));
         return init;
       }()};
       auto const splitter{section_splitter(buffer_)};
@@ -265,8 +266,8 @@ protected:
       -> std::streamsize override {
     auto const initial_count{count};
     while (count > 0 && underflow() != traits_type::eof()) {
-      auto const copy_count{util::f::int_clamp_cast<std::size_t>(
-          std::min(count, egptr() - gptr()))};
+      auto const copy_count{
+          util::f::int_unsigned_exact_cast(std::min(count, egptr() - gptr()))};
       std::memcpy(out, gptr(), copy_count);
       setg(eback(), gptr() + copy_count, egptr());
       out += copy_count;

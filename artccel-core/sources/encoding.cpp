@@ -30,14 +30,15 @@ namespace detail {
 #pragma warning(disable : 4146)
 // TODO: C++23: UZ
 constexpr static std::size_t cwchar_mbrlen_null{0};
-constexpr static std::size_t cwchar_mbrlen_error [[maybe_unused]]{-1};
-constexpr static std::size_t cwchar_mbrlen_incomplete [[maybe_unused]]{-2};
+constexpr static auto cwchar_mbrlen_error [[maybe_unused]]{std::size_t(-1)};
+constexpr static auto cwchar_mbrlen_incomplete
+    [[maybe_unused]]{std::size_t(-2)};
 constexpr static std::size_t cuchar_mbrtoc_null{0};
-constexpr static std::size_t cuchar_mbrtoc_error{-1};
-constexpr static std::size_t cuchar_mbrtoc_incomplete{-2};
-constexpr static std::size_t cuchar_mbrtoc_surrogate{-3};
+constexpr static auto cuchar_mbrtoc_error{std::size_t(-1)};
+constexpr static auto cuchar_mbrtoc_incomplete{std::size_t(-2)};
+constexpr static auto cuchar_mbrtoc_surrogate{std::size_t(-3)};
 constexpr static std::size_t cuchar_crtomb_surrogate{0};
-constexpr static std::size_t cuchar_crtomb_error{-1};
+constexpr static auto cuchar_crtomb_error{std::size_t(-1)};
 #pragma warning(pop)
 
 template <typename UTFCharT>

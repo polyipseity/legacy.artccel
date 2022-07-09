@@ -3,12 +3,12 @@
 #pragma once
 
 #include "concepts_extras.hpp" // import Regular_invocable_r
-#include <concepts>            // import std::integral, std::same_as
-#include <functional>          // import std::invoke
-#include <limits>              // import std::numeric_limits
-#include <stdexcept>           // import std::overflow_error
-#include <string>              // import std::to_string
-#include <type_traits> // import std::is_nothrow_move_constructible_v, std::remove_cv_t
+#include <concepts> // import std::integral, std::same_as, std::signed_integral
+#include <functional>  // import std::invoke
+#include <limits>      // import std::numeric_limits
+#include <stdexcept>   // import std::overflow_error
+#include <string>      // import std::to_string
+#include <type_traits> // import std::decay_t, std::is_nothrow_move_constructible_v, std::make_unsigned_t, std::remove_cv_t
 
 namespace artccel::core::util {
 namespace detail {
@@ -51,30 +51,38 @@ constexpr auto int_cast(InInt value) noexcept(
 namespace f {
 template <std::integral Int>
 constexpr auto int_modulo_cast(std::integral auto value) noexcept {
-  constexpr auto overflow{[](std::integral auto value) noexcept {
+  constexpr auto overflow{[](decltype(value) val) noexcept {
     // value % 2^bits, non-implementation defined for signed since C++20
-    return static_cast<std::remove_cv_t<Int>>(value);
+    return static_cast<std::remove_cv_t<Int>>(val);
   }};
   return detail::int_cast<Int, overflow, overflow>(value);
 }
 template <std::integral Int>
 constexpr auto int_exact_cast(std::integral auto value) {
-  constexpr auto overflow{[](std::integral auto value [[maybe_unused]]) {
-    throw std::overflow_error{std::to_string(value)};
-  }};
+  constexpr auto overflow{
+      [](decltype(value) val [[maybe_unused]]) -> std::remove_cv_t<Int> {
+        throw std::overflow_error{std::to_string(val)};
+      }};
   return detail::int_cast<Int, overflow, overflow>(value);
 }
 template <std::integral Int>
 constexpr auto int_clamp_cast(std::integral auto value) noexcept {
   using out_limits = std::numeric_limits<std::remove_cv_t<Int>>;
-  return detail::int_cast<
-      Int,
-      [](std::integral auto value [[maybe_unused]]) noexcept {
-        return out_limits::max();
-      },
-      [](std::integral auto value [[maybe_unused]]) noexcept {
-        return out_limits::lowest();
-      }>(value);
+  return detail::int_cast<Int,
+                          [](decltype(value) val [[maybe_unused]]) noexcept {
+                            return out_limits::max();
+                          },
+                          [](decltype(value) val [[maybe_unused]]) noexcept {
+                            return out_limits::lowest();
+                          }>(value);
+}
+constexpr auto int_unsigned_cast(std::signed_integral auto value) noexcept {
+  return f::int_modulo_cast<
+      std::make_unsigned_t<std::decay_t<decltype(value)>>>(value);
+}
+constexpr auto int_unsigned_exact_cast(std::signed_integral auto value) {
+  return f::int_exact_cast<std::make_unsigned_t<std::decay_t<decltype(value)>>>(
+      value);
 }
 } // namespace f
 } // namespace artccel::core::util

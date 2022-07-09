@@ -15,6 +15,7 @@ template <typename Type> constexpr auto array_size_v{array_size<Type>::value};
 namespace f {
 template <typename Container>
 constexpr auto atad [[nodiscard]] (Container &container) -> decltype(auto) {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic,clang-analyzer-cplusplus.InnerPointer)
   return std::data(container) + std::size(container);
 }
 template <typename Container>
@@ -23,6 +24,7 @@ constexpr auto atad [[nodiscard]] (const Container &container)
   return std::data(container) + std::size(container);
 }
 template <class Element, std::size_t Size>
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 constexpr auto atad [[nodiscard]] (Element (&array)[Size]) noexcept {
   return array + Size;
 }

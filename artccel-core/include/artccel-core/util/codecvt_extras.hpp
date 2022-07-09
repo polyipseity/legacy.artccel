@@ -3,6 +3,7 @@
 #pragma once
 
 #include "containers_extras.hpp" // import f::atad
+#include "conversions.hpp"       // import f::int_unsigned_exact_cast
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat
 #include "polyfill.hpp" // import f::unreachable
 #include "string_extras.hpp"  // import Char_traits_c, Rebind_char_traits_t
@@ -47,7 +48,9 @@ auto codecvt_convert(std::basic_string_view<InCharT, Traits> input) {
 
   Codecvt const codecvt{};
   std::basic_string<out_c_t, Rebind_char_traits_t<Traits, out_c_t>> output(
-      (int_to_ext ? codecvt.max_length() : 1) * std::size(input), out_c_t{});
+      (int_to_ext ? f::int_unsigned_exact_cast(codecvt.max_length()) : 1) *
+          std::size(input),
+      out_c_t{});
 
   in_c_t const *input_next{};
   out_c_t *output_next{};
@@ -67,15 +70,19 @@ auto codecvt_convert(std::basic_string_view<InCharT, Traits> input) {
     throw std::range_error{std::string{u8"Partial conversion"_as_utf8_compat}};
   case std::codecvt_base::partial:
     throw std::range_error{std::string{u8"Errored conversion"_as_utf8_compat}};
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
   default:
+#pragma clang diagnostic pop
     f::unreachable();
   }
+  // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
   if (input_next != f::atad(input)) [[unlikely]] {
     throw std::range_error{
         std::string{u8"Incomplete conversion"_as_utf8_compat}};
   }
 
-  output.resize(output_next - std::data(output));
+  output.resize(f::int_unsigned_exact_cast(output_next - std::data(output)));
   return output;
 }
 } // namespace detail

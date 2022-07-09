@@ -69,9 +69,16 @@ constexpr auto forward_apply(Func &&func, Tuple<Args &&...> &&t_args) noexcept(
 }
 } // namespace f
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 template <typename Type> struct Semiregularize : public Type {
+#pragma clang diagnostic pop
   using Type::Type;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsuggest-destructor-override"
+  // NOLINTNEXTLINE(hicpp-use-override,modernize-use-override)
   constexpr ~Semiregularize() noexcept = default;
+#pragma clang diagnostic pop
   constexpr Semiregularize(Semiregularize const &) = default;
   constexpr auto operator=(Semiregularize const &)
       -> Semiregularize & = default;

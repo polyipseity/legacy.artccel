@@ -16,6 +16,7 @@
 #include <ostream>               // import std::basic_ostream
 #include <string> // import std::basic_string, std::getline, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
+#include <tuple>       // import std::ignore
 #include <utility>     // import std::as_const, std::move
 
 namespace artccel::core::util {
@@ -101,6 +102,7 @@ auto getline_utf8(std::basic_istream<char, StreamTraits> &input,
   std::basic_string<char, StreamTraits> temp{};
   decltype(auto) ret{std::getline(input, temp, utf8_as_utf8_compat(delim))};
   str.resize(std::size(temp));
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.InnerPointer)
   std::memcpy(std::data(str), std::data(temp), std::size(temp));
   return ret;
 }
@@ -146,8 +148,10 @@ ARTCCEL_CORE_EXPORT constexpr auto operator""_as_utf8_compat
 namespace operators::utf8_compat {
 namespace ostream {
 template <Char_traits_c StreamTraits, std::size_t Size>
-auto operator<<(std::basic_ostream<char, StreamTraits> &left,
-                char8_t (&right)[Size]) = delete;
+auto operator<<(
+    std::basic_ostream<char, StreamTraits> &left,
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+    char8_t (&right)[Size]) = delete;
 template <Char_traits_c StreamTraits,
           Compatible_char_traits<StreamTraits, char8_t> StrTraits>
 auto operator<<(std::basic_ostream<char, StreamTraits> &left,
@@ -174,6 +178,7 @@ auto operator>>(std::basic_istream<char, StreamTraits> &left,
   std::basic_string<char, StreamTraits> temp{};
   decltype(auto) ret{left >> temp};
   right.resize(std::size(temp));
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.InnerPointer)
   std::memcpy(std::data(right), std::data(temp), std::size(temp));
   return ret;
 }
