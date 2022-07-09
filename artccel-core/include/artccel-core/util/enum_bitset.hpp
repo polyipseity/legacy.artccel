@@ -2,6 +2,7 @@
 #define ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
 #pragma once
 
+#include "conversions.hpp" // import f::int_modulo_cast
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat, operators::utf8_compat::ostream::operator<<
 #include "polyfill.hpp" // import f::to_underlying
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
@@ -61,28 +62,28 @@ template <typename Enum>
 requires std::is_enum_v<Enum>
 constexpr auto operator& [[nodiscard]] (Enum left, Enum right) noexcept {
   // NOLINTNEXTLINE(google-runtime-int): library argument type
-  return Bitset_of<Enum>{static_cast<unsigned long long>(
+  return Bitset_of<Enum>{f::int_modulo_cast<unsigned long long>(
       f::to_underlying(left) & f::to_underlying(right))};
 }
 template <typename Enum>
 requires std::is_enum_v<Enum>
 constexpr auto operator| [[nodiscard]] (Enum left, Enum right) noexcept {
   // NOLINTNEXTLINE(google-runtime-int): library argument type
-  return Bitset_of<Enum>{static_cast<unsigned long long>(
+  return Bitset_of<Enum>{f::int_modulo_cast<unsigned long long>(
       f::to_underlying(left) | f::to_underlying(right))};
 }
 template <typename Enum>
 requires std::is_enum_v<Enum>
 constexpr auto operator^ [[nodiscard]] (Enum left, Enum right) noexcept {
   // NOLINTNEXTLINE(google-runtime-int): library argument type
-  return Bitset_of<Enum>{static_cast<unsigned long long>(
+  return Bitset_of<Enum>{f::int_modulo_cast<unsigned long long>(
       f::to_underlying(left) ^ f::to_underlying(right))};
 }
 constexpr auto operator~[[nodiscard]] (
     auto operand) noexcept requires std::is_enum_v<decltype(operand)> {
   return Bitset_of<decltype(operand)>{
       // NOLINTNEXTLINE(google-runtime-int): library argument type
-      static_cast<unsigned long long>(~f::to_underlying(operand))};
+      f::int_modulo_cast<unsigned long long>(~f::to_underlying(operand))};
 }
 
 template <typename Enum>

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "containers_extras.hpp" // import f::const_array
+#include "conversions.hpp"       // import f::int_modulo_cast
 #include "meta.hpp"              // import Template_string
 #include "semantics.hpp"         // import null_terminator_size
 #include "string_extras.hpp"     // import Char_traits_c, Compatible_char_traits
@@ -26,7 +27,7 @@ constexpr auto reinterpretation_storage{[] {
   std::array<AsCharT, std::size(Str.data_)> init{};
   std::ranges::transform(
       std::as_const(Str.data_), std::begin(init),
-      [](auto chr) noexcept { return static_cast<AsCharT>(chr); });
+      [](auto chr) noexcept { return f::int_modulo_cast<AsCharT>(chr); });
   return f::const_array(std::move(init));
 }()};
 } // namespace detail
@@ -46,7 +47,7 @@ consteval auto utf8_compat_as_utf8 [[nodiscard]] () {
 }
 ARTCCEL_CORE_EXPORT constexpr auto utf8_compat_as_utf8
     [[nodiscard]] (char utf8_compat) noexcept {
-  return static_cast<char8_t>(utf8_compat);
+  return f::int_modulo_cast<char8_t>(utf8_compat);
 }
 ARTCCEL_CORE_EXPORT auto utf8_as_utf8_compat(std::u8string_view utf8)
     -> std::string;
@@ -62,7 +63,7 @@ consteval auto utf8_as_utf8_compat [[nodiscard]] () {
 }
 ARTCCEL_CORE_EXPORT constexpr auto utf8_as_utf8_compat
     [[nodiscard]] (char8_t utf8) noexcept {
-  return static_cast<char>(utf8);
+  return f::int_modulo_cast<char>(utf8);
 }
 
 ARTCCEL_CORE_EXPORT auto utf8_to_utf16(std::u8string_view utf8)
