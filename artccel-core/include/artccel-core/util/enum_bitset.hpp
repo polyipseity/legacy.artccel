@@ -32,9 +32,9 @@ ARTCCEL_CORE_EXPORT consteval auto next_bitmask
   return bitmask == empty_bitmask ? std::uint64_t{1} : bitmask << 1U;
 }
 template <std::size_t Size>
-constexpr void check_bitset(std::bitset<Size> const &valid,
-                            std::u8string_view msg_prefix,
-                            std::bitset<Size> const &value) {
+constexpr void check_bitset(std::bitset<Size> const &valid [[maybe_unused]],
+                            std::u8string_view msg_prefix [[maybe_unused]],
+                            std::bitset<Size> const &value [[maybe_unused]]) {
 #ifndef NDEBUG
   // NOLINTNEXTLINE(google-readability-braces-around-statements,hicpp-braces-around-statements,readability-braces-around-statements)
   if (auto const valid_value{valid & value}; valid_value != value)
