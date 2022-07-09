@@ -57,8 +57,11 @@ static void print_args(Main_program const &program) {
 
 static auto echo_cin() {
   std::cout << u8"echo in: "_as_utf8_compat << std::flush;
-  std::u8string input{};
-  util::f::getline_utf8(std::cin, input);
+  auto const input{[] {
+    std::u8string init{};
+    util::f::getline_utf8(std::cin, init);
+    return init;
+  }()};
   std::cout << u8"echo out: "_as_utf8_compat << input << u8'\n'_as_utf8_compat
             << std::flush;
 }
@@ -78,7 +81,11 @@ static auto main_0(Raw_arguments arguments) -> int {
 } // namespace artccel::core::detail
 
 #ifdef _WIN32
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 auto wmain(int argc, gsl::wzstring argv[]) -> int {
+#pragma clang diagnostic pop
 #else
 auto main(int argc, gsl::zstring argv[]) -> int {
 #endif

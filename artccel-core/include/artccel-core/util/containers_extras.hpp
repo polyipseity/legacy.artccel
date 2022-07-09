@@ -21,6 +21,7 @@ constexpr auto atad [[nodiscard]] (Container &container) -> decltype(auto) {
 template <typename Container>
 constexpr auto atad [[nodiscard]] (const Container &container)
 -> decltype(auto) {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   return std::data(container) + std::size(container);
 }
 template <class Element, std::size_t Size>

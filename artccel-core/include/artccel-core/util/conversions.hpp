@@ -3,12 +3,12 @@
 #pragma once
 
 #include "concepts_extras.hpp" // import Regular_invocable_r
-#include <concepts> // import std::integral, std::same_as, std::signed_integral
-#include <functional>  // import std::invoke
-#include <limits>      // import std::numeric_limits
-#include <stdexcept>   // import std::overflow_error
-#include <string>      // import std::to_string
-#include <type_traits> // import std::decay_t, std::is_nothrow_move_constructible_v, std::make_unsigned_t, std::remove_cv_t
+#include <concepts>            // import std::integral, std::same_as
+#include <functional>          // import std::invoke
+#include <limits>              // import std::numeric_limits
+#include <stdexcept>           // import std::overflow_error
+#include <string>              // import std::to_string
+#include <type_traits> // import std::conditional_t, std::is_nothrow_move_constructible_v, std::make_signed_t, std::make_unsigned_t, std::remove_cv_t
 
 namespace artccel::core::util {
 namespace detail {
@@ -76,13 +76,44 @@ constexpr auto int_clamp_cast(std::integral auto value) noexcept {
                             return out_limits::lowest();
                           }>(value);
 }
-constexpr auto int_unsigned_cast(std::signed_integral auto value) noexcept {
-  return f::int_modulo_cast<
-      std::make_unsigned_t<std::decay_t<decltype(value)>>>(value);
+template <bool Unsigned>
+constexpr auto int_signedness_cast(std::integral auto value) noexcept {
+  using out_type =
+      std::conditional_t<Unsigned, std::make_unsigned_t<decltype(value)>,
+                         std::make_signed_t<decltype(value)>>;
+  return f::int_modulo_cast<out_type>(value);
 }
-constexpr auto int_unsigned_exact_cast(std::signed_integral auto value) {
-  return f::int_exact_cast<std::make_unsigned_t<std::decay_t<decltype(value)>>>(
-      value);
+constexpr auto int_unsigned_cast(std::integral auto value) noexcept {
+  return f::int_signedness_cast<true>(value);
+}
+constexpr auto int_signed_cast(std::integral auto value) noexcept {
+  return f::int_signedness_cast<false>(value);
+}
+template <bool Unsigned>
+constexpr auto int_signedness_exact_cast(std::integral auto value) {
+  using out_type =
+      std::conditional_t<Unsigned, std::make_unsigned_t<decltype(value)>,
+                         std::make_signed_t<decltype(value)>>;
+  return f::int_exact_cast<out_type>(value);
+}
+constexpr auto int_unsigned_exact_cast(std::integral auto value) {
+  return f::int_signedness_exact_cast<true>(value);
+}
+constexpr auto int_signed_exact_cast(std::integral auto value) {
+  return f::int_signedness_exact_cast<false>(value);
+}
+template <bool Unsigned>
+constexpr auto int_signedness_clamp_cast(std::integral auto value) {
+  using out_type =
+      std::conditional_t<Unsigned, std::make_unsigned_t<decltype(value)>,
+                         std::make_signed_t<decltype(value)>>;
+  return f::int_clamp_cast<out_type>(value);
+}
+constexpr auto int_unsigned_clamp_cast(std::integral auto value) {
+  return f::int_signedness_clamp_cast<true>(value);
+}
+constexpr auto int_signed_clamp_cast(std::integral auto value) {
+  return f::int_signedness_clamp_cast<false>(value);
 }
 } // namespace f
 } // namespace artccel::core::util

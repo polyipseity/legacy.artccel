@@ -29,7 +29,7 @@ using operators::utf8_compat::ostream::operator<<;
 
 ARTCCEL_CORE_EXPORT consteval auto next_bitmask
     [[nodiscard]] (std::uint64_t bitmask) {
-  return bitmask == empty_bitmask ? std::uint64_t{1} : bitmask << 1U;
+  return bitmask == empty_bitmask ? 1 : bitmask << 1U;
 }
 template <std::size_t Size>
 constexpr void check_bitset(std::bitset<Size> const &valid [[maybe_unused]],

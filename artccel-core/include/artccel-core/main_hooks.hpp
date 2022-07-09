@@ -67,6 +67,7 @@ public:
   Main_program(Main_program &&) = delete;
   auto operator=(Main_program &&) = delete;
 };
+// NOLINTNEXTLINE(bugprone-exception-escape): should work, dumb time waster
 class Argument {
 private:
 #pragma warning(push)
