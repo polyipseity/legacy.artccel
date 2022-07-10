@@ -7,7 +7,7 @@ endif()
 # clang-tidy
 # workaround: make clang-tidy include non-default system headers
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
-string(PREPEND CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+list(INSERT CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES 0 ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 set(CMAKE_CXX_CLANG_TIDY clang-tidy
 	-p "${CMAKE_BINARY_DIR}/compile_commands.json"
 	"-line-filter=[\
