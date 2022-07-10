@@ -20,26 +20,24 @@ if(ARTCCEL_INSTALL)
 	export(EXPORT artccel-targets NAMESPACE "${ARTCCEL_NAMESPACE}" FILE "Targets.cmake")
 
 	include(CMakePackageConfigHelpers)
-	configure_package_config_file(in/Config.cmake
-		"${PROJECT_BINARY_DIR}/Config.cmake"
+	configure_package_config_file(
+		"in/config.cmake"
+		"${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
 		INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake"
-		NO_SET_AND_CHECK_MACRO
-		NO_CHECK_REQUIRED_COMPONENTS_MACRO
 	)
 	write_basic_package_version_file(
-		"${PROJECT_BINARY_DIR}/ConfigVersion.cmake"
-		VERSION "${artccel_VERSION}"
+		"${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
 		COMPATIBILITY AnyNewerVersion
 	)
-	install(FILES "${PROJECT_BINARY_DIR}/Config.cmake" "${PROJECT_BINARY_DIR}/ConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
+	install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
 endif()
 
 if(ARTCCEL_STANDALONE)
 	include(InstallRequiredSystemLibraries)
 	set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING.COMBINED.txt")
-	set(CPACK_PACKAGE_VERSION_MAJOR "${artccel_VERSION_MAJOR}")
-	set(CPACK_PACKAGE_VERSION_MINOR "${artccel_VERSION_MINOR}")
-	set(CPACK_PACKAGE_VERSION_PATCH "${artccel_VERSION_PATCH}")
+	set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+	set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+	set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
 	set(CPACK_SOURCE_GENERATOR "TGZ")
 	include(CPack)
 endif()
