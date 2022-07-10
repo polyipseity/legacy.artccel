@@ -1,41 +1,45 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(artccel VERSION 1.0.0 LANGUAGES C CXX)
-set(ROOT_DIR "${PROJECT_SOURCE_DIR}/")
+set(ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/")
 
-include("${ROOT_DIR}/build_auto/init.cmake")
-
-find_package(Microsoft.GSL 4.0.0 EXACT REQUIRED CONFIG)
+include("${ROOT_SOURCE_DIR}/build_auto/init.cmake")
+include("${ROOT_SOURCE_DIR}/build_auto/dependencies.cmake")
 
 add_library(artccel INTERFACE)
+add_library("${ARTCCEL_NAMESPACE}artccel" ALIAS artccel)
 configure_file("in/config.h" "include/artccel/config.h")
 target_include_directories(artccel INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
 
 add_subdirectory(artccel-core)
 
-include(GNUInstallDirs)
-install(TARGETS artccel EXPORT artccel-targets)
-install(DIRECTORY include/ "${PROJECT_BINARY_DIR}/include/" TYPE INCLUDE)
-install(EXPORT artccel-targets DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
-export(EXPORT artccel-targets FILE "Targets.cmake")
+if(ARTCCEL_INSTALL)
+	include(GNUInstallDirs)
+	install(TARGETS artccel EXPORT artccel-targets)
+	install(DIRECTORY include/ "${PROJECT_BINARY_DIR}/include/" TYPE INCLUDE)
+	install(EXPORT artccel-targets DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
+	export(EXPORT artccel-targets NAMESPACE "${ARTCCEL_NAMESPACE}" FILE "Targets.cmake")
 
-include(InstallRequiredSystemLibraries)
-set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING.COMBINED.txt")
-set(CPACK_PACKAGE_VERSION_MAJOR "${artccel_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${artccel_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${artccel_VERSION_PATCH}")
-set(CPACK_SOURCE_GENERATOR "TGZ")
-include(CPack)
+	include(CMakePackageConfigHelpers)
+	configure_package_config_file(in/Config.cmake
+		"${PROJECT_BINARY_DIR}/Config.cmake"
+		INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake"
+		NO_SET_AND_CHECK_MACRO
+		NO_CHECK_REQUIRED_COMPONENTS_MACRO
+	)
+	write_basic_package_version_file(
+		"${PROJECT_BINARY_DIR}/ConfigVersion.cmake"
+		VERSION "${artccel_VERSION}"
+		COMPATIBILITY AnyNewerVersion
+	)
+	install(FILES "${PROJECT_BINARY_DIR}/Config.cmake" "${PROJECT_BINARY_DIR}/ConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
+endif()
 
-include(CMakePackageConfigHelpers)
-configure_package_config_file(in/Config.cmake
-	"${PROJECT_BINARY_DIR}/Config.cmake"
-	INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake"
-	NO_SET_AND_CHECK_MACRO
-	NO_CHECK_REQUIRED_COMPONENTS_MACRO
-)
-write_basic_package_version_file(
-	"${PROJECT_BINARY_DIR}/ConfigVersion.cmake"
-	VERSION "${artccel_VERSION}"
-	COMPATIBILITY AnyNewerVersion
-)
-install(FILES "${PROJECT_BINARY_DIR}/Config.cmake" "${PROJECT_BINARY_DIR}/ConfigVersion.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
+if(ARTCCEL_STANDALONE)
+	include(InstallRequiredSystemLibraries)
+	set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING.COMBINED.txt")
+	set(CPACK_PACKAGE_VERSION_MAJOR "${artccel_VERSION_MAJOR}")
+	set(CPACK_PACKAGE_VERSION_MINOR "${artccel_VERSION_MINOR}")
+	set(CPACK_PACKAGE_VERSION_PATCH "${artccel_VERSION_PATCH}")
+	set(CPACK_SOURCE_GENERATOR "TGZ")
+	include(CPack)
+endif()
