@@ -3,6 +3,10 @@ if(WIN32)
 	add_definitions(-DNOMINMAX)
 endif()
 
+set(CMAKE_C_VISIBILITY_PRESET "hidden")
+set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
+set(CMAKE_VISIBILITY_INLINES_HIDDEN true)
+
 add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>
@@ -25,8 +29,6 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/source-charset:UTF-8>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fexec-charset=UTF-8>
 	$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:UTF-8>
-
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fvisibility=hidden>
 )
 add_link_options(
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>
