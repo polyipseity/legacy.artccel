@@ -5,7 +5,7 @@ set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "OPT_IN" CACHE STRING "https://cmake.org/
 
 function(find_package_or_fetch_content PACKAGE_NAME TARGET_NAME TARGET_OPTIONS PACKAGE_OPTIONS)
 	if(FETCHCONTENT_TRY_FIND_PACKAGE_MODE STREQUAL "OPT_IN")
-		message(WARNING "'FETCHCONTENT_TRY_FIND_PACKAGE_MODE' treated as 'ALWAYS'")
+		message(WARNING "'FETCHCONTENT_TRY_FIND_PACKAGE_MODE' is treated as 'ALWAYS'")
 		set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "ALWAYS")
 	endif()
 
@@ -43,4 +43,12 @@ FetchContent_Declare(Microsoft.GSL
 	GIT_PROGRESS true
 	FIND_PACKAGE_ARGS
 )
+FetchContent_Declare(tl-expected
+	GIT_REPOSITORY "https://github.com/TartanLlama/expected.git"
+	GIT_TAG "3d741708b967b83ca1e2888239196c4a67f9f9b0" # tag v1.0.0
+	GIT_SHALLOW true
+	GIT_PROGRESS true
+	FIND_PACKAGE_ARGS
+)
 find_package_or_fetch_content(Microsoft.GSL GSL "GSL_INSTALL;${ARTCCEL_INSTALL};GSL_TEST;${ARTCCEL_TEST}" "4.0.0;EXACT;REQUIRED;CONFIG")
+find_package_or_fetch_content(tl-expected expected "EXPECTED_BUILD_TESTS;${ARTCCEL_TEST}" "1.0.0;EXACT;REQUIRED;CONFIG")

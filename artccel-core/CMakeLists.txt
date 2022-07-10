@@ -21,7 +21,7 @@ add_library("${ARTCCEL_NAMESPACE}artccel-core" ALIAS artccel-core)
 configure_file("in/config.h" "include/artccel-core/config.h")
 generate_preset_export_header(artccel-core)
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
-target_link_libraries(artccel-core PUBLIC artccel Microsoft.GSL::GSL PRIVATE Threads::Threads)
+target_link_libraries(artccel-core PUBLIC artccel Microsoft.GSL::GSL tl-expected::expected PRIVATE Threads::Threads)
 
 add_executable(artccel-core-exe "sources/exe/main.cpp")
 add_executable("${ARTCCEL_NAMESPACE}artccel-core-exe" ALIAS artccel-core-exe)
