@@ -74,7 +74,7 @@ static auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
 }
 
 template <typename UTFCharT>
-static auto loc_enc_to_utf(std::string_view loc_enc) noexcept {
+static auto loc_enc_to_utf(std::string_view loc_enc) {
   Errno_guard const errno_guard{};
   std::basic_string<UTFCharT> result{};
   using return_type =
@@ -139,7 +139,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) noexcept {
   return return_type{std::move(result)};
 }
 template <typename UTFCharT>
-static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) noexcept {
+static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
   Errno_guard const errno_guard{};
   std::string result{};
   using return_type =
