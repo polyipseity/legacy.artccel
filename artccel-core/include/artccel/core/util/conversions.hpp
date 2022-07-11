@@ -7,7 +7,7 @@
 #include <limits>      // import std::numeric_limits
 #include <stdexcept>   // import std::overflow_error
 #include <string>      // import std::to_string
-#include <type_traits> // import std::conditional_t, std::is_nothrow_move_constructible_v, std::make_signed_t, std::make_unsigned_t, std::remove_cv_t
+#include <type_traits> // import std::conditional_t, std::is_nothrow_move_constructible_v, std::make_signed_t, std::make_unsigned_t, std::remove_cvref_t
 
 #include "concepts_extras.hpp" // import Regular_invocable_r
 #include "error_handling.hpp"  // import Error_with_exception
@@ -22,10 +22,11 @@ namespace detail {
 template <std::integral Int, typename Ret, auto ExactFunc, auto PosOverflowFunc,
           auto NegOverflowFunc, std::integral InInt>
 requires Regular_invocable_r<decltype(ExactFunc), Ret,
-                             std::remove_cv_t<InInt>> &&
+                             std::remove_cvref_t<InInt>> &&
     Regular_invocable_r<decltype(PosOverflowFunc), Ret,
-                        std::remove_cv_t<InInt>> &&
-    Regular_invocable_r<decltype(NegOverflowFunc), Ret, std::remove_cv_t<InInt>>
+                        std::remove_cvref_t<InInt>> &&
+    Regular_invocable_r<decltype(NegOverflowFunc), Ret,
+                        std::remove_cvref_t<InInt>>
 constexpr auto int_cast(InInt value) noexcept(
     noexcept(Ret{std::invoke(ExactFunc, value)}, void(),
              Ret{std::invoke(PosOverflowFunc, value)}, void(),
@@ -59,7 +60,7 @@ constexpr auto int_cast(InInt value) noexcept(
 namespace f {
 template <std::integral Int>
 constexpr auto int_modulo_cast(std::integral auto value) noexcept {
-  using out_type = std::remove_cv_t<Int>;
+  using out_type = std::remove_cvref_t<Int>;
   constexpr auto exact_and_overflow{[](std::integral auto val) noexcept {
     // value % 2^bits, non-implementation defined for signed since C++20
     return static_cast<out_type>(val);
@@ -69,10 +70,10 @@ constexpr auto int_modulo_cast(std::integral auto value) noexcept {
 }
 template <std::integral Int>
 constexpr auto int_exact_cast(std::integral auto value) noexcept {
-  using out_int_type = std::remove_cv_t<Int>;
+  using out_int_type = std::remove_cvref_t<Int>;
   using out_type =
       tl::expected<out_int_type,
-                   Error_with_exception<std::remove_cv_t<decltype(value)>>>;
+                   Error_with_exception<std::remove_cvref_t<decltype(value)>>>;
   constexpr auto exact{[](std::integral auto val) noexcept {
     return out_type{static_cast<out_int_type>(val)};
   }};
@@ -86,7 +87,7 @@ constexpr auto int_exact_cast(std::integral auto value) noexcept {
 }
 template <std::integral Int>
 constexpr auto int_clamp_cast(std::integral auto value) noexcept {
-  using out_type = std::remove_cv_t<Int>;
+  using out_type = std::remove_cvref_t<Int>;
   using out_limits = std::numeric_limits<out_type>;
   return detail::int_cast<Int, out_type,
                           [](std::integral auto val) noexcept {
