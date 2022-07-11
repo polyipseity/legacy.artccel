@@ -3,7 +3,6 @@ project(artccel VERSION 1.0.0 LANGUAGES C CXX)
 set(ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/")
 
 include("${ROOT_SOURCE_DIR}/build_auto/init.cmake")
-include("${ROOT_SOURCE_DIR}/build_auto/dependencies.cmake")
 
 add_library(artccel INTERFACE)
 add_library("${ARTCCEL_NAMESPACE}artccel" ALIAS artccel)
