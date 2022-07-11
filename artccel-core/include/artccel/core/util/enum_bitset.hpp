@@ -8,9 +8,9 @@
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <bitset>                // import std::bitset
 #include <cassert>               // import assert
-#include <cinttypes>             // import std::uint64_t
 #include <climits>               // import CHAR_BIT
 #include <cstddef>               // import std::size_t
+#include <cstdint>               // import std::uintmax_t
 #include <iostream>              // import std::cerr
 #include <string_view>           // import std::u8string_view
 #include <type_traits>           // import std::is_enum_v
@@ -18,7 +18,7 @@
 namespace artccel::core::util {
 struct ARTCCEL_CORE_EXPORT Enum_bitset;
 
-constexpr inline std::uint64_t empty_bitmask{0};
+constexpr inline std::uintmax_t empty_bitmask{0};
 template <typename Enum>
 requires std::is_enum_v<Enum>
 using Bitset_of = std::bitset<CHAR_BIT * sizeof(Enum)>;
@@ -28,7 +28,7 @@ using literals::encoding::operator""_as_utf8_compat;
 using operators::utf8_compat::ostream::operator<<;
 
 ARTCCEL_CORE_EXPORT consteval auto next_bitmask
-    [[nodiscard]] (std::uint64_t bitmask) {
+    [[nodiscard]] (std::uintmax_t bitmask) {
   return bitmask == empty_bitmask ? 1 : bitmask << 1U;
 }
 template <std::size_t Size>

@@ -10,8 +10,8 @@
 #include "string_extras.hpp"  // import Char_traits_c, Rebind_char_traits_t
 #include "utility_extras.hpp" // import dependent_false_v
 #include <cassert>            // import assert
-#include <cinttypes>          // import std::int8_t
 #include <concepts>           // import std::derived_from, std::same_as
+#include <cstdint>            // import std::int_fast8_t
 #include <cwchar>             // import std::mbstate_t
 #include <locale>             // import std::codecvt, std::codecvt_base
 #include <stdexcept>          // import std::range_error
@@ -29,10 +29,10 @@ template <typename Type>
 concept Codecvt_c = std::derived_from<
     Type, std::codecvt<typename Type::intern_type, typename Type::extern_type,
                        typename Type::state_type>>;
-enum struct Codecvt_error : std::int8_t;
+enum struct Codecvt_error : std::int_fast8_t;
 using Codecvt_error_with_exception = Error_with_exception<Codecvt_error>;
 
-enum struct Codecvt_error : std::int8_t { error, partial };
+enum struct Codecvt_error : std::int_fast8_t { error, partial };
 
 namespace detail {
 using literals::encoding::operator""_as_utf8_compat;

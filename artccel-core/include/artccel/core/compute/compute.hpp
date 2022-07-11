@@ -8,8 +8,8 @@
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
-#include <cinttypes>  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from
+#include <cstdint>    // import std::uint_fast8_t
 #include <functional> // import std::function, std::invoke
 #include <gsl/gsl>    // import gsl::owner
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
@@ -26,7 +26,7 @@ using namespace std::literals::string_literals;
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace util::operators::enum_bitset;
 
-enum struct Compute_option : std::uint8_t;
+enum struct Compute_option : std::uint_fast8_t;
 using Compute_options = util::Bitset_of<Compute_option>;
 template <std::copyable Ret> class Compute_io;
 template <typename Derived, std::copyable Ret> class Compute_in;
@@ -60,7 +60,7 @@ extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
     Odr_type_name<Compute_option>;
 } // namespace detail
 
-enum struct Compute_option : std::uint8_t {
+enum struct Compute_option : std::uint_fast8_t {
   empty = util::empty_bitmask,
   concurrent = util::f::next_bitmask(empty),
   defer = util::f::next_bitmask(concurrent),

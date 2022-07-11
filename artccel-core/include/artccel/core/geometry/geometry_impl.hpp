@@ -7,21 +7,21 @@
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
 #include <array>                 // import std::array
-#include <cinttypes>             // import std::int8_t
 #include <concepts>              // import std::convertible_to
+#include <cstdint>               // import std::int_fast8_t
 #include <gsl/gsl>               // import gsl::owner
 #include <type_traits>           // import std::is_nothrow_copy_constructible_v
 #include <typeinfo>              // import std::type_info
 #include <utility>               // import std::swap
 
 namespace artccel::core::geometry::impl {
-template <util::Nonnegative_interval<std::int8_t> Dim>
+template <util::Nonnegative_interval<std::int_fast8_t> Dim>
 class Geometry_impl : public virtual Geometry {
 public:
   // NOLINTNEXTLINE(fuchsia-statically-constructed-objects): constexpr ctor
   constexpr static auto dimension_{Dim};
   auto dimension [[nodiscard]] () const
-      -> util::Nonnegative_interval<std::int8_t> final {
+      -> util::Nonnegative_interval<std::int_fast8_t> final {
     return Dim;
   }
   ~Geometry_impl() noexcept override = default;
@@ -50,7 +50,7 @@ protected:
 #pragma warning(suppress : 4820)
 };
 
-template <util::Nonnegative_interval<std::int8_t> Dim>
+template <util::Nonnegative_interval<std::int_fast8_t> Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Primitive_impl : public virtual Primitive, public Geometry_impl<Dim> {
 public:
@@ -86,7 +86,7 @@ protected:
 #pragma warning(suppress : 4250 4820)
 };
 
-template <util::Nonnegative_interval<std::int8_t> Dim>
+template <util::Nonnegative_interval<std::int_fast8_t> Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Point_impl : public virtual Point, public Primitive_impl<Dim> {
 public:

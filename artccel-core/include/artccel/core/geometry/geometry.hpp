@@ -5,8 +5,8 @@
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <cinttypes>             // import std::int8_t
 #include <concepts>              // import std::derived_from
+#include <cstdint>               // import std::int_fast8_t
 #include <gsl/gsl>               // import gsl::owner
 #include <typeinfo>              // import typeid, std::type_info
 
@@ -32,7 +32,7 @@ protected:
 class Geometry {
 public:
   virtual auto dimension [[nodiscard]] () const
-      -> util::Nonnegative_interval<std::int8_t> = 0;
+      -> util::Nonnegative_interval<std::int_fast8_t> = 0;
   template <std::derived_from<Quality> Qly>
   auto try_get_quality [[nodiscard]] () {
     return dynamic_cast<util::Observer_ptr<Qly>>(try_get_quality(typeid(Qly)));

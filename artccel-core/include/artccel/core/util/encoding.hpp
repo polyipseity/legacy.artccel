@@ -11,8 +11,8 @@
 #include <algorithm>             // import std::ranges::transform
 #include <array> // import std::array, std::begin, std::data, std::size
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <cinttypes>             // import std::int8_t
 #include <cstddef>               // import std::size_t
+#include <cstdint>               // import std::int_fast8_t
 #include <cstring>               // import std::memcpy
 #include <istream>               // import std::basic_istream
 #include <ostream>               // import std::basic_ostream
@@ -23,13 +23,13 @@
 #include <utility>         // import std::as_const, std::move
 
 namespace artccel::core::util {
-enum struct Convert_error : std::int8_t;
+enum struct Convert_error : std::int_fast8_t;
 using Convert_error_with_exception = Error_with_exception<Convert_error>;
-enum struct Cuchar_error : std::int8_t;
+enum struct Cuchar_error : std::int_fast8_t;
 using Cuchar_error_with_exception = Error_with_exception<Cuchar_error>;
 
-enum struct Convert_error : std::int8_t { error, partial };
-enum struct Cuchar_error : std::int8_t { error, partial };
+enum struct Convert_error : std::int_fast8_t { error, partial };
+enum struct Cuchar_error : std::int_fast8_t { error, partial };
 
 namespace detail {
 template <typename AsCharT, Template_string Str>
