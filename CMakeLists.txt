@@ -15,9 +15,9 @@ add_subdirectory(artccel-core)
 if(ARTCCEL_INSTALL)
 	include(GNUInstallDirs)
 	install(TARGETS artccel EXPORT artccel-targets)
-	install(DIRECTORY include/ "${PROJECT_BINARY_DIR}/include/" TYPE INCLUDE)
-	install(EXPORT artccel-targets DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
-	export(EXPORT artccel-targets NAMESPACE "${ARTCCEL_NAMESPACE}" FILE "Targets.cmake")
+	install(DIRECTORY "include/" "${PROJECT_BINARY_DIR}/include/" TYPE INCLUDE)
+	install(EXPORT artccel-targets DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" NAMESPACE "${ARTCCEL_NAMESPACE}")
+	export(EXPORT artccel-targets NAMESPACE "${ARTCCEL_NAMESPACE}")
 
 	include(CMakePackageConfigHelpers)
 	configure_package_config_file(
