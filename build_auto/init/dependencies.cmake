@@ -31,6 +31,7 @@ function(find_package_or_fetch_content PACKAGE_NAME TARGET_NAME TARGET_OPTIONS P
 
 		FetchContent_MakeAvailable("${PACKAGE_NAME}")
 		add_library("${PACKAGE_NAME}::${TARGET_NAME}" ALIAS "${TARGET_NAME}")
+		export(TARGETS "${TARGET_NAME}" NAMESPACE "${PACKAGE_NAME}::" FILE "${TARGET_NAME}-targets.cmake")
 	else()
 		message(FATAL_ERROR "'FETCHCONTENT_TRY_FIND_PACKAGE_MODE' has invalid value: ${FETCHCONTENT_TRY_FIND_PACKAGE_MODE}")
 	endif()
