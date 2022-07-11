@@ -5,11 +5,12 @@ else()
 	set(ARTCCEL_STANDALONE false)
 endif()
 
+# external
 option(ARTCCEL_INSTALL "Generate and install targets" "${ARTCCEL_STANDALONE}")
 option(ARTCCEL_TEST "Build and perform tests" "${ARTCCEL_STANDALONE}")
 set(ARTCCEL_NAMESPACE "artccel::" CACHE STRING "Namespace of exported targets")
 
-option(ARTCCEL_SANITIZE_ALL "Enable all sanitizer" false)
+# sanitizers
 option(ARTCCEL_SANITIZE_ADDRESS "Enable address sanitizer" false)
 option(ARTCCEL_SANITIZE_MEMORY "Enable memory sanitizer" false)
 option(ARTCCEL_SANITIZE_THREAD "Enable thread sanitizer" false)
