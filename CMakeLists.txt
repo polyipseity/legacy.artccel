@@ -8,6 +8,7 @@ add_library(artccel INTERFACE)
 add_library("${ARTCCEL_NAMESPACE}artccel" ALIAS artccel)
 configure_file("in/config.h" "include/artccel/config.h")
 target_include_directories(artccel INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
+add_sanitizers(artccel)
 
 add_subdirectory(artccel-core)
 
