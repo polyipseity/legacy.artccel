@@ -14,7 +14,7 @@
 namespace artccel::core::util {
 template <typename Type> struct Semiregularize;
 template <typename Type, bool Explicit = true> struct Delegate;
-template <typename... Ts> struct Overloader;
+template <typename... Ts> struct Overload;
 
 template <typename> constexpr auto dependent_false_v{false};
 
@@ -128,11 +128,9 @@ protected:
 };
 
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-template <typename... Ts> struct Overloader : Ts... {
-  using Ts::operator()...;
-};
+template <typename... Ts> struct Overload : Ts... { using Ts::operator()...; };
 template <typename... Ts>
-Overloader(Ts &&...args) -> Overloader<std::remove_reference_t<Ts>...>;
+Overload(Ts &&...args) -> Overload<std::remove_reference_t<Ts>...>;
 } // namespace artccel::core::util
 
 #endif
