@@ -2,6 +2,8 @@
 #define ARTCCEL_CORE_MAIN_HOOKS_HPP
 #pragma once
 
+#pragma warning(push) // suppress <tl/expected.hpp>
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include "util/error_handling.hpp" // import util::Exception_error
 #include <artccel/core/export.h>   // import ARTCCEL_CORE_EXPORT
 #include <concepts>                // import std::invocable
@@ -16,6 +18,7 @@
 #include <utility>         // import std::forward
 #include <variant>         // import std::variant
 #include <vector>          // import std::vector
+#pragma warning(pop)
 
 namespace artccel::core {
 class ARTCCEL_CORE_EXPORT Main_program;

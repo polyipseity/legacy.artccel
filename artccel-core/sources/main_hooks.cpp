@@ -4,6 +4,8 @@
 #pragma warning(disable : 4626)
 #pragma warning(push) // suppress <gsl/util>
 #pragma warning(disable : 4820)
+#pragma warning(push) // suppress <tl/expected.hpp>
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include <artccel/core/main_hooks.hpp> // interface
 
 #include <algorithm> // import std::max, std::min, std::ranges::for_each, std::ranges::transform
@@ -37,6 +39,7 @@
 #include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleMode, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
 #include <artccel/core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
 #endif
+#pragma warning(pop)
 #pragma warning(pop)
 #pragma warning(pop)
 #pragma warning(pop)
@@ -90,18 +93,24 @@ public:
 private:
   std::unique_ptr<codecvt_type> codecvt_{std::make_unique<codecvt_type>()};
   std::mbstate_t mbstate_{};
+
+protected:
+  auto codecvt_max_length() noexcept -> decltype(assert_success(
+      util::f::int_unsigned_exact_cast(codecvt_->max_length()))) {
+    return assert_success(
+        util::f::int_unsigned_exact_cast(codecvt_->max_length()));
+  }
+
+private:
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
   std::unique_ptr<char_type[]> default_buffer_{
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
       std::make_unique_for_overwrite<char_type[]>(
-          default_buffer_code_point_size_ *
-          util::f::int_unsigned_exact_cast(codecvt_->max_length()) *
+          codecvt_max_length() * default_buffer_code_point_size_ *
           2)}; // double-buffered
-  std::span<char_type> buffer_{
-      default_buffer_.get(),
-      default_buffer_code_point_size_ *util::f::int_unsigned_exact_cast(
-          codecvt_->max_length()) *
-          2};
+  std::span<char_type> buffer_{default_buffer_.get(),
+                               codecvt_max_length() *
+                                   default_buffer_code_point_size_ * 2};
   pos_type converted_pos_{};
   HANDLE console_;
 
@@ -142,7 +151,7 @@ protected:
     auto const clamped_size{
         util::f::int_clamp_cast<typename decltype(buffer_)::size_type>(size)};
     if (auto const sect_size{section_size(clamped_size)};
-        sect_size >= util::f::int_unsigned_exact_cast(codecvt_->max_length())) {
+        sect_size >= codecvt_max_length()) {
       auto *const prev_egptr{egptr()};
       auto const transfer_size{std::min(
           sect_size, util::f::int_unsigned_clamp_cast(prev_egptr - eback()))};
@@ -205,9 +214,8 @@ protected:
     while (gptr() >= egptr()) {
       auto const read{[this] {
         auto const read_size_max{util::f::int_clamp_cast<DWORD>([this]() {
-          auto const init{
-              section_size(std::size(buffer_)) /
-              util::f::int_unsigned_exact_cast(codecvt_->max_length())};
+          auto const init{section_size(std::size(buffer_)) /
+                          codecvt_max_length()};
           assert(init > 0 && u8"Buffer is too small");
           return init;
         }())};
@@ -226,10 +234,7 @@ protected:
         return traits_type::eof();
       }
       auto const converted{[this, &read] {
-        std::u8string init(
-            util::f::int_unsigned_exact_cast(codecvt_->max_length()) *
-                std::size(read),
-            u8'\0');
+        std::u8string init(codecvt_max_length() * std::size(read), u8'\0');
         char8_t *write_ptr{std::data(init)};
         for (auto const *read_ptr{std::data(read)};
              read_ptr != util::f::atad(read);) {
@@ -256,8 +261,8 @@ protected:
             util::f::unreachable();
           }
         }
-        init.resize(
-            util::f::int_unsigned_exact_cast(write_ptr - std::data(init)));
+        init.resize(assert_success(
+            util::f::int_unsigned_exact_cast(write_ptr - std::data(init))));
         return init;
       }()};
       auto *const splitter{section_splitter(buffer_)};
@@ -280,7 +285,8 @@ protected:
     while (count > 0 && underflow() != traits_type::eof()) {
       auto const copy_count{std::min(
           count, util::f::int_clamp_cast<decltype(count)>(egptr() - gptr()))};
-      std::memcpy(out, gptr(), util::f::int_unsigned_exact_cast(copy_count));
+      std::memcpy(out, gptr(),
+                  assert_success(util::f::int_unsigned_exact_cast(copy_count)));
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       setg(eback(), gptr() + copy_count, egptr());
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -320,9 +326,9 @@ auto safe_main(
     std::ranges::transform(
         args, std::begin(init), [](gsl::not_null<gsl::cwzstring const> arg) {
           // copy arg as UTF-16 (no conversion) and then convert to UTF-8
-          return util::f::utf16_to_utf8(
+          return success_or_throw(util::f::utf16_to_utf8(
               // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-              std::u16string{arg.get(), arg.get() + std::wcslen(arg)});
+              std::u16string{arg.get(), arg.get() + std::wcslen(arg)}));
         });
     return init;
   }()};

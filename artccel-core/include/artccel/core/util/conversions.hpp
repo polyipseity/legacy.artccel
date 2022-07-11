@@ -2,6 +2,8 @@
 #define ARTCCEL_CORE_UTIL_CONVERSIONS_HPP
 #pragma once
 
+#pragma warning(push) // suppress <tl/expected.hpp>
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include "concepts_extras.hpp" // import Regular_invocable_r
 #include "error_handling.hpp"  // import Error_with_exception
 #include <concepts>            // import std::integral
@@ -11,6 +13,7 @@
 #include <string>              // import std::to_string
 #include <tl/expected.hpp>     // import tl::expected, tl::unexpect
 #include <type_traits> // import std::conditional_t, std::is_nothrow_move_constructible_v, std::make_signed_t, std::make_unsigned_t, std::remove_cv_t
+#pragma warning(pop)
 
 namespace artccel::core::util {
 namespace detail {

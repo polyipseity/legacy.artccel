@@ -2,6 +2,8 @@
 #define ARTCCEL_CORE_UTIL_ENCODING_HPP
 #pragma once
 
+#pragma warning(push) // suppress <tl/expected.hpp>
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include "containers_extras.hpp" // import f::const_array
 #include "conversions.hpp"       // import f::int_modulo_cast
 #include "error_handling.hpp"    // import Error_with_exception
@@ -21,6 +23,7 @@
 #include <tl/expected.hpp> // import tl::expected
 #include <tuple>           // import std::ignore
 #include <utility>         // import std::as_const, std::move
+#pragma warning(pop)
 
 namespace artccel::core::util {
 enum struct Convert_error : std::int_fast8_t;

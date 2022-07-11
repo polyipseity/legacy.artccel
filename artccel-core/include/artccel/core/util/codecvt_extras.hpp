@@ -2,6 +2,8 @@
 #define ARTCCEL_CORE_UTIL_CODECVT_EXTRAS_HPP
 #pragma once
 
+#pragma warning(push) // suppress <tl/expected.hpp>
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include "containers_extras.hpp" // import f::atad
 #include "conversions.hpp"       // import f::int_unsigned_exact_cast
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat
@@ -19,6 +21,7 @@
 #include <string_view>     // import std::basic_string_view
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect
 #include <type_traits>     // import std::conditional_t
+#pragma warning(pop)
 
 namespace artccel::core::util {
 using Codecvt_char_char = std::codecvt<char, char, std::mbstate_t>;

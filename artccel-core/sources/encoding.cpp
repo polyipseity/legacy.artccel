@@ -1,3 +1,5 @@
+#pragma warning(push) // suppress <tl/expected.hpp>
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #pragma warning(push) // suppress <xstring>
 #pragma warning(disable : 4365)
 #include <artccel/core/util/encoding.hpp> // interface
@@ -24,6 +26,7 @@
 #include <system_error>    // import std::generic_category, std::system_error
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect, tl::unexpected
 #include <utility>         // import std::as_const, std::move
+#pragma warning(pop)
 #pragma warning(pop)
 
 namespace artccel::core::util {

@@ -28,6 +28,7 @@ template <typename Error> struct Error_with_exception {
   using empty_error_type = std::monostate;
   constexpr static auto empty_v{std::same_as<error_type, empty_error_type>};
 
+#pragma warning(suppress : 4251)
   gsl::not_null<std::exception_ptr> exc_ptr_;
   Error error_ [[no_unique_address, msvc::no_unique_address]];
 
@@ -173,6 +174,7 @@ template <typename Error> struct Error_with_exception {
     }
     std::rethrow_exception(std::move(result).error().exc_ptr_);
   }
+#pragma warning(suppress : 4820)
 };
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION Error_with_exception<>;
 static_assert(Exception_error::empty_v, u8"Implementation error");
