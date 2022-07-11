@@ -1,0 +1,20 @@
+# preconditions
+if(NOT DEFINED ROOT_SOURCE_DIR)
+	message(FATAL_ERROR "'ROOT_SOURCE_DIR' is undefined")
+endif()
+
+# modules
+list(APPEND CMAKE_MODULE_PATH "${ROOT_SOURCE_DIR}/externals/sanitizers-cmake/cmake")
+find_package(Sanitizers)
+
+if(ARTCCEL_SANITIZE_ALL)
+	set(SANITIZE_ADDRESS true)
+	set(SANITIZE_MEMORY true)
+	set(SANITIZE_THREAD true)
+	set(SANITIZE_UNDEFINED true)
+else()
+	set(SANITIZE_ADDRESS "${ARTCCEL_SANITIZE_ADDRESS}")
+	set(SANITIZE_MEMORY "${ARTCCEL_SANITIZE_MEMORY}")
+	set(SANITIZE_THREAD "${ARTCCEL_SANITIZE_THREAD}")
+	set(SANITIZE_UNDEFINED "${ARTCCEL_SANITIZE_UNDEFINED}")
+endif()

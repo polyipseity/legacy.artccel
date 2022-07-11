@@ -23,10 +23,12 @@ configure_file("in/config.h" "include/artccel/core/config.h")
 generate_preset_export_header(artccel-core "include/artccel/core/export.h")
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
 target_link_libraries(artccel-core PUBLIC artccel Microsoft.GSL::GSL tl-expected::expected PRIVATE Threads::Threads)
+add_sanitizers(artccel-core)
 
 add_executable(artccel-core-exe "sources/exe/main.cpp")
 add_executable("${ARTCCEL_NAMESPACE}artccel-core-exe" ALIAS artccel-core-exe)
 target_link_libraries(artccel-core-exe artccel-core)
+add_sanitizers(artccel-core-exe)
 
 if(ARTCCEL_INSTALL)
 	include(GNUInstallDirs)
