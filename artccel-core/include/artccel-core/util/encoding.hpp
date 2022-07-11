@@ -4,22 +4,33 @@
 
 #include "containers_extras.hpp" // import f::const_array
 #include "conversions.hpp"       // import f::int_modulo_cast
+#include "error_handling.hpp"    // import Error_with_exception
 #include "meta.hpp"              // import Template_string
 #include "semantics.hpp"         // import null_terminator_size
 #include "string_extras.hpp"     // import Char_traits_c, Compatible_char_traits
 #include <algorithm>             // import std::ranges::transform
 #include <array> // import std::array, std::begin, std::data, std::size
 #include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <cinttypes>             // import std::int8_t
 #include <cstddef>               // import std::size_t
 #include <cstring>               // import std::memcpy
 #include <istream>               // import std::basic_istream
 #include <ostream>               // import std::basic_ostream
 #include <string> // import std::basic_string, std::getline, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
-#include <tuple>       // import std::ignore
-#include <utility>     // import std::as_const, std::move
+#include <tl/expected.hpp> // import tl::expected
+#include <tuple>           // import std::ignore
+#include <utility>         // import std::as_const, std::move
 
 namespace artccel::core::util {
+enum struct Convert_error : std::int8_t;
+using Convert_error_with_exception = Error_with_exception<Convert_error>;
+enum struct Cuchar_error : std::int8_t;
+using Cuchar_error_with_exception = Error_with_exception<Cuchar_error>;
+
+enum struct Convert_error : std::int8_t { error, partial };
+enum struct Cuchar_error : std::int8_t { error, partial };
+
 namespace detail {
 template <typename AsCharT, Template_string Str>
 constexpr auto reinterpretation_storage{[] {
@@ -68,30 +79,38 @@ ARTCCEL_CORE_EXPORT constexpr auto utf8_as_utf8_compat
 }
 
 ARTCCEL_CORE_EXPORT auto utf8_to_utf16(std::u8string_view utf8)
-    -> std::u16string;
-ARTCCEL_CORE_EXPORT auto utf8_to_utf16(char8_t utf8) -> std::u16string;
+    -> tl::expected<std::u16string, Convert_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto utf8_to_utf16(char8_t utf8)
+    -> tl::expected<std::u16string, Convert_error_with_exception>;
 ARTCCEL_CORE_EXPORT auto utf16_to_utf8(std::u16string_view utf16)
-    -> std::u8string;
-ARTCCEL_CORE_EXPORT auto utf16_to_utf8(char16_t utf16) -> std::u8string;
+    -> tl::expected<std::u8string, Convert_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto utf16_to_utf8(char16_t utf16)
+    -> tl::expected<std::u8string, Convert_error_with_exception>;
 
 ARTCCEL_CORE_EXPORT auto loc_enc_to_utf8(std::string_view loc_enc)
-    -> std::u8string;
-ARTCCEL_CORE_EXPORT auto loc_enc_to_utf8(char loc_enc) -> std::u8string;
+    -> tl::expected<std::u8string, Cuchar_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto loc_enc_to_utf8(char loc_enc)
+    -> tl::expected<std::u8string, Cuchar_error_with_exception>;
 ARTCCEL_CORE_EXPORT auto loc_enc_to_utf16(std::string_view loc_enc)
-    -> std::u16string;
-ARTCCEL_CORE_EXPORT auto loc_enc_to_utf16(char loc_enc) -> std::u16string;
+    -> tl::expected<std::u16string, Cuchar_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto loc_enc_to_utf16(char loc_enc)
+    -> tl::expected<std::u16string, Cuchar_error_with_exception>;
 ARTCCEL_CORE_EXPORT auto loc_enc_to_utf32(std::string_view loc_enc)
-    -> std::u32string;
-ARTCCEL_CORE_EXPORT auto loc_enc_to_utf32(char loc_enc) -> std::u32string;
+    -> tl::expected<std::u32string, Cuchar_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto loc_enc_to_utf32(char loc_enc)
+    -> tl::expected<std::u32string, Cuchar_error_with_exception>;
 ARTCCEL_CORE_EXPORT auto utf8_to_loc_enc(std::u8string_view utf8)
-    -> std::string;
-ARTCCEL_CORE_EXPORT auto utf8_to_loc_enc(char8_t utf8) -> std::string;
+    -> tl::expected<std::string, Cuchar_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto utf8_to_loc_enc(char8_t utf8)
+    -> tl::expected<std::string, Cuchar_error_with_exception>;
 ARTCCEL_CORE_EXPORT auto utf16_to_loc_enc(std::u16string_view utf16)
-    -> std::string;
-ARTCCEL_CORE_EXPORT auto utf16_to_loc_enc(char16_t utf16) -> std::string;
+    -> tl::expected<std::string, Cuchar_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto utf16_to_loc_enc(char16_t utf16)
+    -> tl::expected<std::string, Cuchar_error_with_exception>;
 ARTCCEL_CORE_EXPORT auto utf32_to_loc_enc(std::u32string_view utf32)
-    -> std::string;
-ARTCCEL_CORE_EXPORT auto utf32_to_loc_enc(char32_t utf32) -> std::string;
+    -> tl::expected<std::string, Cuchar_error_with_exception>;
+ARTCCEL_CORE_EXPORT auto utf32_to_loc_enc(char32_t utf32)
+    -> tl::expected<std::string, Cuchar_error_with_exception>;
 
 template <Char_traits_c StreamTraits,
           Compatible_char_traits<StreamTraits, char8_t> StrTraits,

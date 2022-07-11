@@ -12,6 +12,7 @@
 #include <artccel-core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
 #include <artccel-core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
 #include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
+#include <artccel-core/util/error_handling.hpp> // import util::Exception_error
 #include <artccel-core/util/polyfill.hpp>       // import util::f::unreachable
 #include <artccel-core/util/utility_extras.hpp> // import util::Semiregularize
 #include <cassert>                              // import assert
@@ -25,15 +26,13 @@
 #include <iostream> // import std::cin, std::clog, std::cout, std::ios_base::sync_with_stdio
 #include <locale> // import std::codecvt_base::result, std::locale, std::locale::global
 #include <memory> // import std::make_shared, std::make_unique, std::make_unique_for_overwrite, std::unique_ptr, std::weak_ptr
-#include <optional> // import std::nullopt, std::optional
 #include <span> // import std::begin, std::data, std::empty, std::size, std::span
-#include <streambuf>   // import std::streambuf
-#include <string>      // import std::u16string, std::u8string
-#include <string_view> // import std::string_view, std::u8string_view
-#include <type_traits> /// import std::is_unsigned_v
-#include <utility>     // import std::move
-#include <variant>     // import std::get_if, std::variant, std::visit
-#include <vector>      // import std::vector
+#include <streambuf>       // import std::streambuf
+#include <string>          // import std::u16string, std::u8string
+#include <string_view>     // import std::string_view, std::u8string_view
+#include <tl/expected.hpp> // import tl::expected
+#include <utility>         // import std::move
+#include <vector>          // import std::vector
 #ifdef _WIN32
 #include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleMode, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
 #include <artccel-core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
@@ -432,28 +431,13 @@ auto Main_program::arguments [[nodiscard]] () const
 }
 
 Argument::Argument(std::string_view argument)
-    : verbatim_{argument}, utf8_{[argument]() -> decltype(utf8_) {
-        std::u8string init{};
-        try {
-          init = util::f::loc_enc_to_utf8(argument);
-        } catch (...) {
-          return std::current_exception();
-        }
-        return init;
-      }()} {}
+    : verbatim_{argument}, utf8_{discard_err(
+                               util::f::loc_enc_to_utf8(argument))} {}
 auto Argument::verbatim [[nodiscard]] () const noexcept -> std::string_view {
   return verbatim_;
 }
 auto Argument::utf8 [[nodiscard]] () const
-    -> std::optional<std::u8string_view> {
-  if (auto const *val{std::get_if<std::u8string>(&utf8_)}) {
-    return std::u8string_view{*val};
-  }
-  return std::nullopt;
-}
-auto Argument::utf8_or_exc [[nodiscard]] () const
-    -> std::variant<std::u8string_view, gsl::not_null<std::exception_ptr>> {
-  using return_type = decltype(utf8_or_exc());
-  return std::visit([](auto &&var) -> return_type { return var; }, utf8_);
+    -> tl::expected<std::u8string_view, util::Exception_error> {
+  return utf8_;
 }
 } // namespace artccel::core

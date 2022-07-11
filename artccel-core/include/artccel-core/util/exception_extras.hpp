@@ -52,6 +52,34 @@ requires(
   detail::throw_multiple_as_nested<true>(std::forward<Top>(top),
                                          std::forward<Nested>(nested)...);
 }
+template <typename Top, typename... Nested>
+requires(
+    std::derived_from<std::remove_reference_t<Top>, std::exception> &&...
+        &&std::derived_from<
+            std::remove_reference_t<Nested>,
+            std::exception>) auto make_nested_exception(Top &&top,
+                                                        Nested &&...nested) {
+  try {
+    throw_multiple_as_nested(std::forward<Top>(top),
+                             std::forward<Nested>(nested)...);
+  } catch (Top const &) {
+    return std::current_exception();
+  }
+}
+template <typename Top, typename... Nested>
+requires(
+    std::derived_from<std::remove_reference_t<Top>, std::exception> &&...
+        &&std::derived_from<
+            std::remove_reference_t<Nested>,
+            std::exception>) auto remake_nested_exception(Top &&top,
+                                                          Nested &&...nested) {
+  try {
+    rethrow_multiple_as_nested(std::forward<Top>(top),
+                               std::forward<Nested>(nested)...);
+  } catch (Top const &) {
+    return std::current_exception();
+  }
+}
 } // namespace f
 } // namespace artccel::core::util
 

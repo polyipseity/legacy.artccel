@@ -2,11 +2,12 @@
 #pragma warning(disable : 4365)
 #include <artccel-core/util/encoding.hpp> // interface
 
-#include <algorithm> // import std::min, std::ranges::for_each
+#include <algorithm> // import std::min
 #include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
 #include <artccel-core/util/cerrno_extras.hpp>  // import Errno_guard
-#include <artccel-core/util/codecvt_extras.hpp> // import Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
-#include <artccel-core/util/exception_extras.hpp> // import f::throw_multiple_as_nested
+#include <artccel-core/util/codecvt_extras.hpp> // import Codecvt_error, Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
+#include <artccel-core/util/exception_extras.hpp> // import f::make_nested_exception
+#include <artccel-core/util/polyfill.hpp>         // import f::unreachable
 #include <artccel-core/util/semantics.hpp>        // import null_terminator_size
 #include <artccel-core/util/utility_extras.hpp> // import Semiregularize, dependent_false_v
 #include <cassert>                              // import assert
@@ -17,11 +18,12 @@
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
 #include <span>      // import std::span
-#include <stdexcept> // import std::invalid_argument, std::throw_with_nested
+#include <stdexcept> // import std::invalid_argument
 #include <string> // import std::basic_string, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
-#include <system_error> // import std::generic_category, std::system_error
-#include <utility>      // import std::as_const, std::move
+#include <system_error>    // import std::generic_category, std::system_error
+#include <tl/expected.hpp> // import tl::expected, tl::unexpect, tl::unexpected
+#include <utility>         // import std::as_const, std::move
 #pragma warning(pop)
 
 namespace artccel::core::util {
@@ -67,21 +69,34 @@ static auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
 }
 
 template <typename UTFCharT>
-static auto loc_enc_to_utf(std::string_view loc_enc) {
+static auto loc_enc_to_utf(std::string_view loc_enc) noexcept {
   Errno_guard const errno_guard{};
   std::basic_string<UTFCharT> result{};
+  using return_type =
+      tl::expected<decltype(result), Cuchar_error_with_exception>;
+
   std::mbstate_t state{};
   for (auto old_state{state}; !std::empty(loc_enc); old_state = state) {
     UTFCharT utf_c{}; // not written to if the next character is null
     switch (auto processed{mbrtoc(utf_c, loc_enc, state)}) {
       [[unlikely]] case cuchar_mbrtoc_error : {
         std::system_error errno_exc{errno, std::generic_category()};
-        f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
-                                    std::move(errno_exc));
+        return return_type{
+            tl::unexpect,
+            typename return_type::error_type{
+                f::make_nested_exception(
+                    std::invalid_argument{errno_exc.what()},
+                    std::move(errno_exc)),
+                Cuchar_error::error}}; // TODO: C++23: tl::in_place is broken
       }
-      [[unlikely]] case cuchar_mbrtoc_incomplete
-          : throw std::invalid_argument{
-                std::string{u8"Incomplete byte sequence"_as_utf8_compat}};
+      [[unlikely]] case cuchar_mbrtoc_incomplete :
+          // TODO: C++23: tl::in_place is broken
+          return return_type{
+              tl::unexpect,
+              typename return_type::error_type{
+                  std::invalid_argument{
+                      std::string{u8"Incomplete byte sequence"_as_utf8_compat}},
+                  Cuchar_error::partial}};
     case cuchar_mbrtoc_surrogate:
       break;
       [[unlikely]] case cuchar_mbrtoc_null : {
@@ -116,30 +131,63 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
        mbrtoc(utf_c, loc_enc, state) == cuchar_mbrtoc_surrogate;) {
     result.push_back(utf_c); // complete surrogate pair of the last character
   }
-  return result;
+  return return_type{std::move(result)};
 }
 template <typename UTFCharT>
-static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
+static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) noexcept {
   Errno_guard const errno_guard{};
   std::string result{};
+  using return_type =
+      tl::expected<decltype(result), Cuchar_error_with_exception>;
+
   std::mbstate_t state{};
-  std::array<char, MB_LEN_MAX> loc_enc{};
-  std::ranges::for_each(
-      std::as_const(utf), [&result, &state, &loc_enc](auto utf_c) {
-        switch (auto const processed{crtomb(loc_enc, utf_c, state)}) {
-          [[unlikely]] case cuchar_crtomb_error : {
-            std::system_error errno_exc{errno, std::generic_category()};
-            f::throw_multiple_as_nested(std::invalid_argument{errno_exc.what()},
-                                        std::move(errno_exc));
-          }
-        case cuchar_crtomb_surrogate:
-          [[fallthrough]];
-        default:
-          result.append(std::data(loc_enc), processed);
-          break;
-        }
-      });
-  return result;
+  for (std::array<char, MB_LEN_MAX> loc_enc{};
+       auto utf_c : std::as_const(utf)) {
+    switch (auto const processed{crtomb(loc_enc, utf_c, state)}) {
+      [[unlikely]] case cuchar_crtomb_error : {
+        std::system_error errno_exc{errno, std::generic_category()};
+        return return_type{
+            tl::unexpect,
+            typename return_type::error_type{
+                f::make_nested_exception(
+                    std::invalid_argument{errno_exc.what()},
+                    std::move(errno_exc)),
+                Cuchar_error::error}}; // TODO: C++23: tl::in_place is broken
+      }
+    case cuchar_crtomb_surrogate:
+      [[fallthrough]];
+    default:
+      result.append(std::data(loc_enc), processed);
+      break;
+    }
+  }
+  return return_type{std::move(result)};
+}
+static auto to_convert_err(Codecvt_error error) noexcept {
+  switch (error) {
+  case Codecvt_error::error:
+    return Convert_error::error;
+  case Codecvt_error::partial:
+    return Convert_error::partial;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+  default:
+#pragma clang diagnostic pop
+    f::unreachable();
+  }
+}
+static auto to_cuchar_err(Convert_error error) noexcept {
+  switch (error) {
+  case Convert_error::error:
+    return Cuchar_error::error;
+  case Convert_error::partial:
+    return Cuchar_error::partial;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+  default:
+#pragma clang diagnostic pop
+    f::unreachable();
+  }
 }
 } // namespace detail
 
@@ -151,57 +199,85 @@ auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
   return {std::cbegin(utf8), std::cend(utf8)};
 }
 
-auto utf8_to_utf16(std::u8string_view utf8) -> std::u16string {
-  return f::codecvt_convert_to_intern<Semiregularize<Codecvt_utf16_utf8>>(utf8);
+auto utf8_to_utf16(std::u8string_view utf8)
+    -> tl::expected<std::u16string, Convert_error_with_exception> {
+  return map_err(
+      f::codecvt_convert_to_intern<Semiregularize<Codecvt_utf16_utf8>>(utf8),
+      &detail::to_convert_err);
 }
-auto utf8_to_utf16(char8_t utf8) -> std::u16string {
+auto utf8_to_utf16(char8_t utf8)
+    -> tl::expected<std::u16string, Convert_error_with_exception> {
   return utf8_to_utf16({&utf8, 1});
 }
-auto utf16_to_utf8(std::u16string_view utf16) -> std::u8string {
-  return f::codecvt_convert_to_extern<Semiregularize<Codecvt_utf16_utf8>>(
-      utf16);
+auto utf16_to_utf8(std::u16string_view utf16)
+    -> tl::expected<std::u8string, Convert_error_with_exception> {
+  return map_err(
+      f::codecvt_convert_to_extern<Semiregularize<Codecvt_utf16_utf8>>(utf16),
+      &detail::to_convert_err);
 }
-auto utf16_to_utf8(char16_t utf16) -> std::u8string {
+auto utf16_to_utf8(char16_t utf16)
+    -> tl::expected<std::u8string, Convert_error_with_exception> {
   return utf16_to_utf8({&utf16, 1});
 }
 
-auto loc_enc_to_utf8(std::string_view loc_enc) -> std::u8string {
+auto loc_enc_to_utf8(std::string_view loc_enc)
+    -> tl::expected<std::u8string, Cuchar_error_with_exception> {
   // TODO: use std::mbrtoc8
-  return utf16_to_utf8(loc_enc_to_utf16(loc_enc));
+  auto u16{loc_enc_to_utf16(loc_enc)};
+  if (u16) {
+    return map_err(utf16_to_utf8(*u16), &detail::to_cuchar_err);
+  }
+  return tl::unexpected{std::move(u16).error()};
 }
-auto loc_enc_to_utf8(char loc_enc) -> std::u8string {
+auto loc_enc_to_utf8(char loc_enc)
+    -> tl::expected<std::u8string, Cuchar_error_with_exception> {
   return loc_enc_to_utf8({&loc_enc, 1});
 }
-auto loc_enc_to_utf16(std::string_view loc_enc) -> std::u16string {
+auto loc_enc_to_utf16(std::string_view loc_enc)
+    -> tl::expected<std::u16string, Cuchar_error_with_exception> {
   return detail::loc_enc_to_utf<char16_t>(loc_enc);
 }
-auto loc_enc_to_utf16(char loc_enc) -> std::u16string {
+auto loc_enc_to_utf16(char loc_enc)
+    -> tl::expected<std::u16string, Cuchar_error_with_exception> {
   return loc_enc_to_utf16({&loc_enc, 1});
 }
-auto loc_enc_to_utf32(std::string_view loc_enc) -> std::u32string {
+auto loc_enc_to_utf32(std::string_view loc_enc)
+    -> tl::expected<std::u32string, Cuchar_error_with_exception> {
   return detail::loc_enc_to_utf<char32_t>(loc_enc);
 }
-auto loc_enc_to_utf32(char loc_enc) -> std::u32string {
+auto loc_enc_to_utf32(char loc_enc)
+    -> tl::expected<std::u32string, Cuchar_error_with_exception> {
   return loc_enc_to_utf32({&loc_enc, 1});
 }
 
-auto utf8_to_loc_enc(std::u8string_view utf8) -> std::string {
+auto utf8_to_loc_enc(std::u8string_view utf8)
+    -> tl::expected<std::string, Cuchar_error_with_exception> {
   // TODO: use std::c8rtomb
-  return utf16_to_loc_enc(utf8_to_utf16(utf8));
+  auto u16{utf8_to_utf16(utf8)};
+  if (u16) {
+    return utf16_to_loc_enc(*u16);
+  }
+  return tl::unexpected{
+      map_err(std::move(u16), &detail::to_cuchar_err).error()};
 }
-auto utf8_to_loc_enc(char8_t utf8) -> std::string {
+auto utf8_to_loc_enc(char8_t utf8)
+    -> tl::expected<std::string, Cuchar_error_with_exception> {
   return utf8_to_loc_enc({&utf8, 1});
 }
-auto utf16_to_loc_enc(std::u16string_view utf16) -> std::string {
+auto utf16_to_loc_enc(std::u16string_view utf16)
+    -> tl::expected<std::string, Cuchar_error_with_exception> {
   return detail::utf_to_loc_enc(utf16);
 }
-auto utf16_to_loc_enc(char16_t utf16) -> std::string {
+auto utf16_to_loc_enc(char16_t utf16)
+    -> tl::expected<std::string, Cuchar_error_with_exception> {
   return utf16_to_loc_enc({&utf16, 1});
 }
-auto utf32_to_loc_enc(std::u32string_view utf32) -> std::string {
+auto utf32_to_loc_enc(std::u32string_view utf32)
+    -> tl::expected<std::string, Cuchar_error_with_exception> {
   return detail::utf_to_loc_enc(utf32);
 }
-auto utf32_to_loc_enc(char32_t utf32) -> std::string {
+auto utf32_to_loc_enc(char32_t utf32)
+    -> tl::expected<std::string, Cuchar_error_with_exception> {
   return utf32_to_loc_enc({&utf32, 1});
 }
 } // namespace f

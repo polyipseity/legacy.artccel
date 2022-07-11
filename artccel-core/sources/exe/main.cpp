@@ -6,14 +6,12 @@
 #include <artccel-core/util/meta.hpp>     // import util::Template_string
 #include <artccel-core/util/reflect.hpp>  // import util::f::type_name_array
 #include <artccel-core/util/semantics.hpp> // import util::null_terminator_size
-#include <artccel-core/util/utility_extras.hpp> // import util::Overloader
-#include <exception> // import std::exception, std::exception_ptr, std::rethrow_exception
-#include <gsl/gsl> // import gsl::final_action, gsl::index, gsl::not_null, gsl::wzstring, gsl::zstring
+#include <exception> // import std::exception, std::rethrow_exception
+#include <gsl/gsl> // import gsl::final_action, gsl::index, gsl::wzstring, gsl::zstring
 #include <iostream>    // import std::cin, std::cout, std::flush
 #include <memory>      // import std::make_shared
 #include <string>      // import std::u8string
 #include <string_view> // import std::u8string_view
-#include <variant>     // import std::visit
 #pragma warning(pop)
 
 namespace artccel::core::detail {
@@ -28,29 +26,24 @@ static void print_args(Main_program const &program) {
               << u8":\n"_as_utf8_compat;
     std::cout << u8" |- verbatim: "_as_utf8_compat << arg.verbatim()
               << u8'\n'_as_utf8_compat;
-    std::visit(
-        util::Overloader{
-            [](std::u8string_view u8arg) {
-              std::cout << u8" |- UTF-8: "_as_utf8_compat << u8arg
-                        << u8'\n'_as_utf8_compat;
-            },
-            [](gsl::not_null<std::exception_ptr const> const &exc_ptr) {
-              std::cout << u8" |- UTF-8: (exception)\n"_as_utf8_compat;
-              try {
-                std::rethrow_exception(exc_ptr);
-              } catch (std::exception const &exc) {
-                constexpr static auto exception_type_name{
-                    util::f::utf8_as_utf8_compat<util::Template_string{
-                        util::f::type_name_array<std::exception>()}>()};
-                std::cout << u8"  |- "_as_utf8_compat << exception_type_name
-                          << u8": "_as_utf8_compat << exc.what()
-                          << u8'\n'_as_utf8_compat;
-              } catch (...) {
-                std::cout
-                    << u8"  |- (unknown type): (unavailable)\n"_as_utf8_compat;
-              }
-            }},
-        arg.utf8_or_exc());
+    if (auto const u8arg{arg.utf8()}) {
+      std::cout << u8" |- UTF-8: "_as_utf8_compat << *u8arg
+                << u8'\n'_as_utf8_compat;
+    } else {
+      std::cout << u8" |- UTF-8: (exception)\n"_as_utf8_compat;
+      try {
+        std::rethrow_exception(u8arg.error().exc_ptr_);
+      } catch (std::exception const &exc) {
+        constexpr static auto exception_type_name{
+            util::f::utf8_as_utf8_compat<util::Template_string{
+                util::f::type_name_array<std::exception>()}>()};
+        std::cout << u8"  |- "_as_utf8_compat << exception_type_name
+                  << u8": "_as_utf8_compat << exc.what()
+                  << u8'\n'_as_utf8_compat;
+      } catch (...) {
+        std::cout << u8"  |- (unknown type): (unavailable)\n"_as_utf8_compat;
+      }
+    }
   });
   std::cout.flush();
 }

@@ -2,19 +2,20 @@
 #define ARTCCEL_CORE_MAIN_HOOKS_HPP
 #pragma once
 
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <concepts>              // import std::invocable
-#include <exception>             // import std::exception_ptr
-#include <functional>            // import std::function
-#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null
-#include <memory>   // import std::make_shared, std::shared_ptr, std::weak_ptr
-#include <optional> // import std::optional
-#include <span>     // import std::span
-#include <string>   // import std::u8string
-#include <string_view> // import std::string_view, std::u8string_view
-#include <utility>     // import std::forward
-#include <variant>     // import std::variant
-#include <vector>      // import std::vector
+#include "util/error_handling.hpp" // import util::Exception_error
+#include <artccel-core/export.h>   // import ARTCCEL_CORE_EXPORT
+#include <concepts>                // import std::invocable
+#include <exception>               // import std::exception_ptr
+#include <functional>              // import std::function
+#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action
+#include <memory>  // import std::make_shared, std::shared_ptr, std::weak_ptr
+#include <span>    // import std::span
+#include <string>  // import std::u8string
+#include <string_view>     // import std::string_view, std::u8string_view
+#include <tl/expected.hpp> // import tl::expected
+#include <utility>         // import std::forward
+#include <variant>         // import std::variant
+#include <vector>          // import std::vector
 
 namespace artccel::core {
 class ARTCCEL_CORE_EXPORT Main_program;
@@ -31,6 +32,7 @@ using Argv_string_t = gsl::czstring;
 } // namespace detail
 
 namespace f {
+// TODO: C++23: std::move_only_function
 ARTCCEL_CORE_EXPORT auto safe_main(
     std::function<int(Raw_arguments)> const &main_func, int argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
@@ -73,16 +75,15 @@ private:
 #pragma warning(push)
 #pragma warning(disable : 4251)
   std::string_view verbatim_;
-  std::variant<std::u8string, gsl::not_null<std::exception_ptr>> utf8_;
+  tl::expected<std::u8string, util::Exception_error> utf8_;
 #pragma warning(pop)
 
 public:
   constexpr Argument() noexcept = default;
   explicit Argument(std::string_view argument);
   auto verbatim [[nodiscard]] () const noexcept -> std::string_view;
-  auto utf8 [[nodiscard]] () const -> std::optional<std::u8string_view>;
-  auto utf8_or_exc [[nodiscard]] () const
-      -> std::variant<std::u8string_view, gsl::not_null<std::exception_ptr>>;
+  auto utf8 [[nodiscard]] () const
+      -> tl::expected<std::u8string_view, util::Exception_error>;
 };
 } // namespace artccel::core
 
