@@ -71,7 +71,8 @@ public:
   }
 #pragma warning(suppress : 4820)
 };
-static_assert(std::semiregular<Semiregular_once_flag>);
+static_assert(std::semiregular<Semiregular_once_flag>,
+              u8"Implementation error");
 
 struct Null_lockable {
   consteval Null_lockable() noexcept = default;
