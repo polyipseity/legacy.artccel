@@ -16,5 +16,5 @@ WarningsAsErrors: >
   -clang-diagnostic-unknown-pragmas,
   -clang-diagnostic-unknown-attributes,
   -llvm-header-guard,
-HeaderFilterRegex: .
+HeaderFilterRegex: ^artccel/.+
 FormatStyle: LLVM
