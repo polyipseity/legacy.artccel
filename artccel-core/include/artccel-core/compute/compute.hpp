@@ -398,7 +398,7 @@ protected:
   explicit Compute_value(
       Compute_value const &other,
       std::remove_cv_t<decltype(mutex_)>
-          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
+          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)}, void(),
                                    decltype(value_){other.value_}))
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 };
@@ -625,8 +625,8 @@ protected:
   explicit Compute_function(
       Compute_function const &other,
       std::remove_cv_t<decltype(mutex_)>
-          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
-                                   decltype(function_){other.function_},
+          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)}, void(),
+                                   decltype(function_){other.function_}, void(),
                                    decltype(bound_){other.bound_}))
       : mutex_{std::move(mutex)}, function_{other.function_},
         bound_{other.bound_} {}

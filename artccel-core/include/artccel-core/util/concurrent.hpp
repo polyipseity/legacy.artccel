@@ -161,7 +161,7 @@ public:
     { null_lockable_.lock() } -> std::same_as<void>;
   }
   constexpr void lock() const
-      noexcept(noexcept(this->value_->lock(), null_lockable_.lock())) {
+      noexcept(noexcept(this->value_->lock(), void(), null_lockable_.lock())) {
     if (this->value_) {
       this->value_->lock();
     } else {
@@ -174,7 +174,8 @@ public:
     { null_lockable_.unlock() } -> std::same_as<void>;
   }
   constexpr void unlock() const
-      noexcept(noexcept(this->value_->unlock(), null_lockable_.unlock())) {
+      noexcept(noexcept(this->value_->unlock(), void(),
+                        null_lockable_.unlock())) {
     if (this->value_) {
       this->value_->unlock();
     } else {
@@ -254,7 +255,7 @@ public:
     { null_lockable_.lock_shared() } -> std::same_as<void>;
   }
   constexpr void lock_shared() const
-      noexcept(noexcept(this->value_->lock_shared(),
+      noexcept(noexcept(this->value_->lock_shared(), void(),
                         null_lockable_.lock_shared())) {
     if (this->value_) {
       this->value_->lock_shared();
@@ -282,7 +283,7 @@ public:
     { null_lockable_.unlock_shared() } -> std::same_as<void>;
   }
   constexpr void unlock_shared() const
-      noexcept(noexcept(this->value_->unlock_shared(),
+      noexcept(noexcept(this->value_->unlock_shared(), void(),
                         null_lockable_.unlock_shared())) {
     if (this->value_) {
       this->value_->unlock_shared();
