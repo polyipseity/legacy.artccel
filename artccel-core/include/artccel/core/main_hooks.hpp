@@ -16,7 +16,10 @@
 #include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 #include <tl/expected.hpp> // import tl::expected
+#pragma clang diagnostic pop
 #pragma warning(pop)
 
 #include "util/error_handling.hpp" // import util::Exception_error

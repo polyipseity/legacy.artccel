@@ -10,11 +10,8 @@
 #include <utility>     // import std::forward, std::move
 #include <variant>     // import std::monostate
 
-#include <gsl/gsl> // import gsl::not_null
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
+#include <gsl/gsl>         // import gsl::not_null
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect
-#pragma clang diagnostic pop
 
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
