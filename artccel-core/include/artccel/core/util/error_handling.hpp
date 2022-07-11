@@ -2,19 +2,21 @@
 #define ARTCCEL_CORE_UTIL_ERROR_HANDLING_HPP
 #pragma once
 
-#pragma clang diagnostic push // suppress <tl/expected.hpp>
-#pragma clang diagnostic ignored "-Wpadded"
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
-#include <cassert>               // import assert
+#include <cassert> // import assert
 #include <concepts> // import std::default_initializable, std::invocable, std::same_as
 #include <exception> // import std::exception_ptr, std::make_exception_ptr, std::rethrow_exception
-#include <functional>      // import std::invoke
-#include <gsl/gsl>         // import gsl::not_null
-#include <tl/expected.hpp> // import tl::expected, tl::unexpect
+#include <functional>  // import std::invoke
 #include <type_traits> // import std::invoke_result_t, std::is_empty_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::remove_reference_t
 #include <utility>     // import std::forward, std::move
 #include <variant>     // import std::monostate
+
+#include <gsl/gsl> // import gsl::not_null
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#include <tl/expected.hpp> // import tl::expected, tl::unexpect
 #pragma clang diagnostic pop
+
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
 template <typename Error = std::monostate> struct Error_with_exception;

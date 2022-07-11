@@ -2,13 +2,15 @@
 #define ARTCCEL_CORE_GEOMETRY_GEOMETRY_HPP
 #pragma once
 
+#include <concepts> // import std::derived_from
+#include <cstdint>  // import std::int_fast8_t
+#include <typeinfo> // import typeid, std::type_info
+
+#include <gsl/gsl> // import gsl::owner
+
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <concepts>              // import std::derived_from
-#include <cstdint>               // import std::int_fast8_t
-#include <gsl/gsl>               // import gsl::owner
-#include <typeinfo>              // import typeid, std::type_info
 
 namespace artccel::core::geometry {
 class ARTCCEL_CORE_EXPORT Geometry;

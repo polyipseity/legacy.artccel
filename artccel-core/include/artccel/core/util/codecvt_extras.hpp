@@ -2,8 +2,21 @@
 #define ARTCCEL_CORE_UTIL_CODECVT_EXTRAS_HPP
 #pragma once
 
-#pragma warning(push) // suppress <tl/expected.hpp>
+#include <cassert>   // import assert
+#include <concepts>  // import std::derived_from, std::same_as
+#include <cstdint>   // import std::int_fast8_t
+#include <cwchar>    // import std::mbstate_t
+#include <locale>    // import std::codecvt, std::codecvt_base
+#include <stdexcept> // import std::range_error
+#include <string> // import std::basic_string, std::data, std::size, std::string
+#include <string_view> // import std::basic_string_view
+#include <type_traits> // import std::conditional_t
+
+#pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
+#include <tl/expected.hpp> // import tl::expected, tl::unexpect
+#pragma warning(pop)
+
 #include "containers_extras.hpp" // import f::atad
 #include "conversions.hpp"       // import f::int_unsigned_exact_cast
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat
@@ -11,17 +24,6 @@
 #include "polyfill.hpp"       // import f::unreachable
 #include "string_extras.hpp"  // import Char_traits_c, Rebind_char_traits_t
 #include "utility_extras.hpp" // import dependent_false_v
-#include <cassert>            // import assert
-#include <concepts>           // import std::derived_from, std::same_as
-#include <cstdint>            // import std::int_fast8_t
-#include <cwchar>             // import std::mbstate_t
-#include <locale>             // import std::codecvt, std::codecvt_base
-#include <stdexcept>          // import std::range_error
-#include <string> // import std::basic_string, std::data, std::size, std::string
-#include <string_view>     // import std::basic_string_view
-#include <tl/expected.hpp> // import tl::expected, tl::unexpect
-#include <type_traits>     // import std::conditional_t
-#pragma warning(pop)
 
 namespace artccel::core::util {
 using Codecvt_char_char = std::codecvt<char, char, std::mbstate_t>;

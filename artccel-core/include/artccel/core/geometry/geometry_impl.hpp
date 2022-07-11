@@ -2,17 +2,19 @@
 #define ARTCCEL_CORE_GEOMETRY_GEOMETRY_IMPL_HPP
 #pragma once
 
+#include <array>       // import std::array
+#include <concepts>    // import std::convertible_to
+#include <cstdint>     // import std::int_fast8_t
+#include <type_traits> // import std::is_nothrow_copy_constructible_v
+#include <typeinfo>    // import std::type_info
+#include <utility>     // import std::swap
+
+#include <gsl/gsl> // import gsl::owner
+
 #include "geometry.hpp" // interface
 
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
-#include <array>                 // import std::array
-#include <concepts>              // import std::convertible_to
-#include <cstdint>               // import std::int_fast8_t
-#include <gsl/gsl>               // import gsl::owner
-#include <type_traits>           // import std::is_nothrow_copy_constructible_v
-#include <typeinfo>              // import std::type_info
-#include <utility>               // import std::swap
 
 namespace artccel::core::geometry::impl {
 template <util::Nonnegative_interval<std::int_fast8_t> Dim>

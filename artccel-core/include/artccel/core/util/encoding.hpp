@@ -2,28 +2,30 @@
 #define ARTCCEL_CORE_UTIL_ENCODING_HPP
 #pragma once
 
-#pragma warning(push) // suppress <tl/expected.hpp>
+#include <algorithm> // import std::ranges::transform
+#include <array>     // import std::array, std::begin, std::data, std::size
+#include <cstddef>   // import std::size_t
+#include <cstdint>   // import std::int_fast8_t
+#include <cstring>   // import std::memcpy
+#include <istream>   // import std::basic_istream
+#include <ostream>   // import std::basic_ostream
+#include <string> // import std::basic_string, std::getline, std::string, std::u16string, std::u32string, std::u8string
+#include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
+#include <tuple>       // import std::ignore
+#include <utility>     // import std::as_const, std::move
+
+#pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
+#include <tl/expected.hpp> // import tl::expected
+#pragma warning(pop)
+
 #include "containers_extras.hpp" // import f::const_array
 #include "conversions.hpp"       // import f::int_modulo_cast
 #include "error_handling.hpp"    // import Error_with_exception
 #include "meta.hpp"              // import Template_string
 #include "semantics.hpp"         // import null_terminator_size
 #include "string_extras.hpp"     // import Char_traits_c, Compatible_char_traits
-#include <algorithm>             // import std::ranges::transform
-#include <array> // import std::array, std::begin, std::data, std::size
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <cstddef>               // import std::size_t
-#include <cstdint>               // import std::int_fast8_t
-#include <cstring>               // import std::memcpy
-#include <istream>               // import std::basic_istream
-#include <ostream>               // import std::basic_ostream
-#include <string> // import std::basic_string, std::getline, std::string, std::u16string, std::u32string, std::u8string
-#include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
-#include <tl/expected.hpp> // import tl::expected
-#include <tuple>           // import std::ignore
-#include <utility>         // import std::as_const, std::move
-#pragma warning(pop)
 
 namespace artccel::core::util {
 enum struct Convert_error : std::int_fast8_t;

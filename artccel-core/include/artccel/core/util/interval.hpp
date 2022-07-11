@@ -2,14 +2,15 @@
 #define ARTCCEL_CORE_UTIL_INTERVAL_HPP
 #pragma once
 
+#include <cassert>     // import assert
+#include <compare>     // import std::partial_ordering
+#include <concepts>    // import std::totally_ordered
+#include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
+#include <utility>     // import std::move
+
 #include "concepts_extras.hpp"   // import Derived_from_but_not
 #include "utility_extras.hpp"    // import Delegate
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <cassert>               // import assert
-#include <compare>               // import std::partial_ordering
-#include <concepts>              // import std::totally_ordered
-#include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
-#include <utility>     // import std::move
 
 namespace artccel::core::util {
 template <std::totally_ordered Type> struct Bound;

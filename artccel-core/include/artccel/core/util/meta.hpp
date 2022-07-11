@@ -2,13 +2,14 @@
 #define ARTCCEL_CORE_UTIL_META_HPP
 #pragma once
 
+#include <array>    // import std::array
+#include <concepts> // import std::same_as
+#include <cstddef>  // import std::size_t
+#include <span>     // import std::dynamic_extent, std::span
+#include <utility>  // import std::move
+
 #include "containers_extras.hpp" // import f::to_array_cv
 #include "semantics.hpp"         // import null_terminator_size
-#include <array>                 // import std::array
-#include <concepts>              // import std::same_as
-#include <cstddef>               // import std::size_t
-#include <span>                  // import std::dynamic_extent, std::span
-#include <utility>               // import std::move
 
 namespace artccel::core::util {
 template <typename CharT, std::size_t Size> struct Template_string;

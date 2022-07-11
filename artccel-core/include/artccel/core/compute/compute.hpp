@@ -2,16 +2,9 @@
 #define ARTCCEL_CORE_COMPUTE_COMPUTE_HPP
 #pragma once
 
-#include "../util/concepts_extras.hpp" // import util::Invocable_r
-#include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
-#include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::check_bitset, util::f::next_bitmask, util::operators::enum_bitset
-#include "../util/polyfill.hpp"    // import util::f::unreachable
-#include "../util/utility_extras.hpp" // import util::f::forward_apply
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 #include <concepts>   // import std::copyable, std::derived_from
 #include <cstdint>    // import std::uint_fast8_t
 #include <functional> // import std::function, std::invoke
-#include <gsl/gsl>    // import gsl::owner
 #include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
 #include <mutex>  // import std::lock_guard, std::scoped_lock
 #include <optional>     // import std::nullopt, std::optional
@@ -20,6 +13,15 @@
 #include <string_view>  // import std::u8string_view
 #include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
 #include <utility> // import std::declval, std::exchange, std::forward, std::move, std::swap
+
+#include <gsl/gsl> // import gsl::owner
+
+#include "../util/concepts_extras.hpp" // import util::Invocable_r
+#include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
+#include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::check_bitset, util::f::next_bitmask, util::operators::enum_bitset
+#include "../util/polyfill.hpp"    // import util::f::unreachable
+#include "../util/utility_extras.hpp" // import util::f::forward_apply
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::compute {
 using namespace std::literals::string_literals;

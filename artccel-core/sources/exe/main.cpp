@@ -1,18 +1,20 @@
-#pragma warning(push) // suppress <gsl/util>
-#pragma warning(disable : 4820)
-#include <algorithm>                   // import std::ranges::for_each
-#include <artccel-core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
-#include <artccel-core/util/encoding.hpp> // import util::f::getline_utf8, util::f::utf8_as_utf8_compat, util::literals::encoding::operator""_as_utf8_compat, util::operators::utf8_compat::ostream::operator<<
-#include <artccel-core/util/meta.hpp>     // import util::Template_string
-#include <artccel-core/util/reflect.hpp>  // import util::f::type_name_array
-#include <artccel-core/util/semantics.hpp> // import util::null_terminator_size
-#include <exception> // import std::exception, std::rethrow_exception
-#include <gsl/gsl> // import gsl::final_action, gsl::index, gsl::wzstring, gsl::zstring
+#include <algorithm>   // import std::ranges::for_each
+#include <exception>   // import std::exception, std::rethrow_exception
 #include <iostream>    // import std::cin, std::cout, std::flush
 #include <memory>      // import std::make_shared
 #include <string>      // import std::u8string
 #include <string_view> // import std::u8string_view
+
+#pragma warning(push)
+#pragma warning(disable : 4820)
+#include <gsl/gsl> // import gsl::final_action, gsl::index, gsl::wzstring, gsl::zstring
 #pragma warning(pop)
+
+#include <artccel/core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
+#include <artccel/core/util/encoding.hpp> // import util::f::getline_utf8, util::f::utf8_as_utf8_compat, util::literals::encoding::operator""_as_utf8_compat, util::operators::utf8_compat::ostream::operator<<
+#include <artccel/core/util/meta.hpp>     // import util::Template_string
+#include <artccel/core/util/reflect.hpp>  // import util::f::type_name_array
+#include <artccel/core/util/semantics.hpp> // import util::null_terminator_size
 
 namespace artccel::core::detail {
 using util::literals::encoding::operator""_as_utf8_compat;

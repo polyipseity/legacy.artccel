@@ -1,14 +1,38 @@
-#pragma warning(push) // suppress <Windows.h>
-#pragma warning(disable : 4668 5039)
-#pragma warning(push) // suppress <gsl/pointers>
-#pragma warning(disable : 4626)
-#pragma warning(push) // suppress <gsl/util>
-#pragma warning(disable : 4820)
-#pragma warning(push) // suppress <tl/expected.hpp>
+#include <algorithm> // import std::max, std::min, std::ranges::for_each, std::ranges::transform
+#include <cassert>    // import assert
+#include <concepts>   // import std::integral, std::same_as
+#include <cstring>    // import std::memcpy, std::memmove, std::size_t
+#include <cwchar>     // import std::mbsinit, std::mbstate_t, std::wcslen
+#include <exception>  // import std::current_exception, std::exception_ptr
+#include <functional> // import std::function
+#include <ios> // import std::ios_base::openmode, std::ios_base::seekdir, std::streamsize
+#include <iostream> // import std::cin, std::clog, std::cout, std::ios_base::sync_with_stdio
+#include <locale> // import std::codecvt_base::result, std::locale, std::locale::global
+#include <memory> // import std::make_shared, std::make_unique, std::make_unique_for_overwrite, std::unique_ptr, std::weak_ptr
+#include <span> // import std::begin, std::data, std::empty, std::size, std::span
+#include <streambuf>   // import std::streambuf
+#include <string>      // import std::u16string, std::u8string
+#include <string_view> // import std::string_view, std::u8string_view
+#include <utility>     // import std::move
+#include <vector>      // import std::vector
+
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
+#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null
+#pragma warning(pop)
+#pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
+#include <tl/expected.hpp> // import tl::expected
+#pragma warning(pop)
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4668 5039)
+#include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleMode, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
+#pragma warning(pop)
+#endif
+
 #include <artccel/core/main_hooks.hpp> // interface
 
-#include <algorithm> // import std::max, std::min, std::ranges::for_each, std::ranges::transform
 #include <artccel/core/export.h>                // import ARTCCEL_CORE_NO_EXPORT
 #include <artccel/core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
 #include <artccel/core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
@@ -17,32 +41,9 @@
 #include <artccel/core/util/error_handling.hpp> // import util::Exception_error
 #include <artccel/core/util/polyfill.hpp>       // import util::f::unreachable
 #include <artccel/core/util/utility_extras.hpp> // import util::Semiregularize
-#include <cassert>                              // import assert
-#include <concepts>   // import std::integral, std::same_as
-#include <cstring>    // import std::memcpy, std::memmove, std::size_t
-#include <cwchar>     // import std::mbsinit, std::mbstate_t, std::wcslen
-#include <exception>  // import std::current_exception, std::exception_ptr
-#include <functional> // import std::function
-#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null
-#include <ios> // import std::ios_base::openmode, std::ios_base::seekdir, std::streamsize
-#include <iostream> // import std::cin, std::clog, std::cout, std::ios_base::sync_with_stdio
-#include <locale> // import std::codecvt_base::result, std::locale, std::locale::global
-#include <memory> // import std::make_shared, std::make_unique, std::make_unique_for_overwrite, std::unique_ptr, std::weak_ptr
-#include <span> // import std::begin, std::data, std::empty, std::size, std::span
-#include <streambuf>       // import std::streambuf
-#include <string>          // import std::u16string, std::u8string
-#include <string_view>     // import std::string_view, std::u8string_view
-#include <tl/expected.hpp> // import tl::expected
-#include <utility>         // import std::move
-#include <vector>          // import std::vector
 #ifdef _WIN32
-#include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleMode, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
 #include <artccel/core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
 #endif
-#pragma warning(pop)
-#pragma warning(pop)
-#pragma warning(pop)
-#pragma warning(pop)
 
 namespace artccel::core {
 namespace detail {

@@ -2,8 +2,9 @@
 #define ARTCCEL_CORE_UTIL_POLYFILL_HPP
 #pragma once
 
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <type_traits> // import std::is_enum_v, std::underlying_type_t
+
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core::util::f {
 constexpr auto to_underlying [[nodiscard]] (

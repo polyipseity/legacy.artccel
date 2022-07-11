@@ -1,33 +1,35 @@
-#pragma warning(push) // suppress <tl/expected.hpp>
-#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
-#pragma warning(push) // suppress <xstring>
+#pragma warning(push)
 #pragma warning(disable : 4365)
-#include <artccel/core/util/encoding.hpp> // interface
-
 #include <algorithm> // import std::min
 #include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
-#include <artccel/core/util/cerrno_extras.hpp>  // import Errno_guard
-#include <artccel/core/util/codecvt_extras.hpp> // import Codecvt_error, Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
-#include <artccel/core/util/exception_extras.hpp> // import f::make_nested_exception
-#include <artccel/core/util/polyfill.hpp>         // import f::unreachable
-#include <artccel/core/util/semantics.hpp>        // import null_terminator_size
-#include <artccel/core/util/utility_extras.hpp> // import Semiregularize, dependent_false_v
-#include <cassert>                              // import assert
-#include <cerrno>                               // import errno
-#include <climits>                              // import MB_LEN_MAX
-#include <concepts>                             // import std::same_as
-#include <cstring>                              // import std::strerror
+#include <cassert>  // import assert
+#include <cerrno>   // import errno
+#include <climits>  // import MB_LEN_MAX
+#include <concepts> // import std::same_as
+#include <cstring>  // import std::strerror
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
 #include <span>      // import std::span
 #include <stdexcept> // import std::invalid_argument
 #include <string> // import std::basic_string, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
-#include <system_error>    // import std::generic_category, std::system_error
+#include <system_error> // import std::generic_category, std::system_error
+#include <utility>      // import std::as_const, std::move
+#pragma warning(pop)
+
+#pragma warning(push)
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect, tl::unexpected
-#include <utility>         // import std::as_const, std::move
 #pragma warning(pop)
-#pragma warning(pop)
+
+#include <artccel/core/util/encoding.hpp> // interface
+
+#include <artccel/core/util/cerrno_extras.hpp>  // import Errno_guard
+#include <artccel/core/util/codecvt_extras.hpp> // import Codecvt_error, Codecvt_utf16_utf8, f::codecvt_convert_to_extern, f::codecvt_convert_to_intern
+#include <artccel/core/util/exception_extras.hpp> // import f::make_nested_exception
+#include <artccel/core/util/polyfill.hpp>         // import f::unreachable
+#include <artccel/core/util/semantics.hpp>        // import null_terminator_size
+#include <artccel/core/util/utility_extras.hpp> // import Semiregularize, dependent_false_v
 
 namespace artccel::core::util {
 namespace detail {

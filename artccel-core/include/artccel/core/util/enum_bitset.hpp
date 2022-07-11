@@ -2,18 +2,19 @@
 #define ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
 #pragma once
 
+#include <bitset>      // import std::bitset
+#include <cassert>     // import assert
+#include <climits>     // import CHAR_BIT
+#include <cstddef>     // import std::size_t
+#include <cstdint>     // import std::uintmax_t
+#include <iostream>    // import std::cerr
+#include <string_view> // import std::u8string_view
+#include <type_traits> // import std::is_enum_v
+
 #include "conversions.hpp" // import f::int_unsigned_cast
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat, operators::utf8_compat::ostream::operator<<
 #include "polyfill.hpp" // import f::to_underlying
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-#include <bitset>                // import std::bitset
-#include <cassert>               // import assert
-#include <climits>               // import CHAR_BIT
-#include <cstddef>               // import std::size_t
-#include <cstdint>               // import std::uintmax_t
-#include <iostream>              // import std::cerr
-#include <string_view>           // import std::u8string_view
-#include <type_traits>           // import std::is_enum_v
 
 namespace artccel::core::util {
 struct ARTCCEL_CORE_EXPORT Enum_bitset;

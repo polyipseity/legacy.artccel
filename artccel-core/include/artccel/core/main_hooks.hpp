@@ -2,23 +2,25 @@
 #define ARTCCEL_CORE_MAIN_HOOKS_HPP
 #pragma once
 
-#pragma warning(push) // suppress <tl/expected.hpp>
+#include <concepts>   // import std::invocable
+#include <exception>  // import std::exception_ptr
+#include <functional> // import std::function
+#include <memory>     // import std::make_shared, std::shared_ptr, std::weak_ptr
+#include <span>       // import std::span
+#include <string>     // import std::u8string
+#include <string_view> // import std::string_view, std::u8string_view
+#include <utility>     // import std::forward
+#include <variant>     // import std::variant
+#include <vector>      // import std::vector
+
+#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action
+#pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
+#include <tl/expected.hpp> // import tl::expected
+#pragma warning(pop)
+
 #include "util/error_handling.hpp" // import util::Exception_error
 #include <artccel/core/export.h>   // import ARTCCEL_CORE_EXPORT
-#include <concepts>                // import std::invocable
-#include <exception>               // import std::exception_ptr
-#include <functional>              // import std::function
-#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action
-#include <memory>  // import std::make_shared, std::shared_ptr, std::weak_ptr
-#include <span>    // import std::span
-#include <string>  // import std::u8string
-#include <string_view>     // import std::string_view, std::u8string_view
-#include <tl/expected.hpp> // import tl::expected
-#include <utility>         // import std::forward
-#include <variant>         // import std::variant
-#include <vector>          // import std::vector
-#pragma warning(pop)
 
 namespace artccel::core {
 class ARTCCEL_CORE_EXPORT Main_program;

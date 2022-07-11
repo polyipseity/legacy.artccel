@@ -2,8 +2,6 @@
 #define ARTCCEL_CORE_UTIL_CONCURRENT_HPP
 #pragma once
 
-#include "utility_extras.hpp" // import Delegate
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 #include <chrono>   // import std::chrono::duration, std::chrono::time_point
 #include <concepts> // import std::invocable, std::semiregular, std::same_as
 #include <memory>   // import std::make_unique, std::unique_ptr
@@ -11,6 +9,9 @@
 #include <shared_mutex> // import std::shared_mutex, std::shared_timed_mutex
 #include <type_traits>  // import std::is_nothrow_move_constructible_v
 #include <utility> // import std::declval, std::forward, std::move, std::swap
+
+#include "utility_extras.hpp" // import Delegate
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
 class ARTCCEL_CORE_EXPORT Semiregular_once_flag;

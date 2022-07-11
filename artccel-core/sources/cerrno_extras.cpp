@@ -1,6 +1,6 @@
-#include <artccel/core/util/cerrno_extras.hpp> // interface
-
 #include <cerrno> // import errno
+
+#include <artccel/core/util/cerrno_extras.hpp> // interface
 
 namespace artccel::core::util {
 Errno_guard::Errno_guard() noexcept = default;

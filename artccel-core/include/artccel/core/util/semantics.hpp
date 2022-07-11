@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cstddef> // import std::size_t
+
 #include <gsl/gsl> // import gsl::basic_zstring, gsl::dynamic_extent
 
 namespace artccel::core::util {

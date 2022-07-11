@@ -2,10 +2,11 @@
 #define ARTCCEL_CORE_UTIL_STRING_EXTRAS_HPP
 #pragma once
 
-#include "meta.hpp" // import Replace_all_t
 #include <concepts> // import std::derived_from, std::same_as
 #include <sstream>  // import std::basic_stringbuf, std::basic_stringstream
 #include <string>   // import std::basjc_string
+
+#include "meta.hpp" // import Replace_all_t
 
 namespace artccel::core::util {
 template <typename Type>
