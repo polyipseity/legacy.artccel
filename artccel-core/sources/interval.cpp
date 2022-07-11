@@ -1,1 +1,1 @@
-#include <artccel-core/util/interval.hpp> // interface
+#include <artccel/core/util/interval.hpp> // interface

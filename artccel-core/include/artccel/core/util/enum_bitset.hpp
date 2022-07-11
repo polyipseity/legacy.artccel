@@ -5,7 +5,7 @@
 #include "conversions.hpp" // import f::int_unsigned_cast
 #include "encoding.hpp" // import literals::encoding::operator""_as_utf8_compat, operators::utf8_compat::ostream::operator<<
 #include "polyfill.hpp" // import f::to_underlying
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <bitset>                // import std::bitset
 #include <cassert>               // import assert
 #include <cinttypes>             // import std::uint64_t

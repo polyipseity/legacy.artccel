@@ -10,7 +10,7 @@
 #include "string_extras.hpp"     // import Char_traits_c, Compatible_char_traits
 #include <algorithm>             // import std::ranges::transform
 #include <array> // import std::array, std::begin, std::data, std::size
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <cinttypes>             // import std::int8_t
 #include <cstddef>               // import std::size_t
 #include <cstring>               // import std::memcpy

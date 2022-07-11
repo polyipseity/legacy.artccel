@@ -1,7 +1,5 @@
 # generation
-include(GenerateExportHeader)
-
-function(generate_preset_export_header LIBRARY_TARGET)
+function(generate_preset_export_header LIBRARY_TARGET EXPORT_FILE_NAME)
 	string(REPLACE "-" "_" LIBRARY_TARGET_CODE "${LIBRARY_TARGET}")
 	string(TOUPPER "${LIBRARY_TARGET_CODE}" LIBRARY_TARGET_CODE_UPPER)
 	set(CUSTOM_EXPORT_HEADER "
@@ -33,7 +31,8 @@ function(generate_preset_export_header LIBRARY_TARGET)
 #	endif
 #endif
 ")
+	include(GenerateExportHeader)
 	generate_export_header("${LIBRARY_TARGET}"
-		EXPORT_FILE_NAME "include/${LIBRARY_TARGET}/export.h"
+		EXPORT_FILE_NAME "${EXPORT_FILE_NAME}"
 		CUSTOM_CONTENT_FROM_VARIABLE CUSTOM_EXPORT_HEADER)
 endfunction()

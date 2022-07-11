@@ -1,4 +1,4 @@
-#include <artccel-core/util/cerrno_extras.hpp> // interface
+#include <artccel/core/util/cerrno_extras.hpp> // interface
 
 #include <cerrno> // import errno
 

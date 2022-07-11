@@ -1,11 +1,15 @@
 #pragma warning(push) // suppress <gsl/util>
 #pragma warning(disable : 4820)
-#include <algorithm>                   // import std::ranges::for_each
-#include <artccel-core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
-#include <artccel-core/util/encoding.hpp> // import util::f::getline_utf8, util::f::utf8_as_utf8_compat, util::literals::encoding::operator""_as_utf8_compat, util::operators::utf8_compat::ostream::operator<<
-#include <artccel-core/util/meta.hpp>     // import util::Template_string
-#include <artccel-core/util/reflect.hpp>  // import util::f::type_name_array
-#include <artccel-core/util/semantics.hpp> // import util::null_terminator_size
+#include <algorithm> // import std::ranges::for_each
+#include <artccel/core/compute/compute.hpp>
+#include <artccel/core/geometry/geometry.hpp>
+#include <artccel/core/geometry/geometry_impl.hpp>
+#include <artccel/core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
+#include <artccel/core/util/clone.hpp>
+#include <artccel/core/util/encoding.hpp> // import util::f::getline_utf8, util::f::utf8_as_utf8_compat, util::literals::encoding::operator""_as_utf8_compat, util::operators::utf8_compat::ostream::operator<<
+#include <artccel/core/util/meta.hpp>     // import util::Template_string
+#include <artccel/core/util/reflect.hpp>  // import util::f::type_name_array
+#include <artccel/core/util/semantics.hpp> // import util::null_terminator_size
 #include <exception> // import std::exception, std::rethrow_exception
 #include <gsl/gsl> // import gsl::final_action, gsl::index, gsl::wzstring, gsl::zstring
 #include <iostream>    // import std::cin, std::cout, std::flush
@@ -69,6 +73,40 @@ static auto main_0(Raw_arguments arguments) -> int {
   Main_program const program{program_dtor_excs, arguments};
   print_args(program);
   echo_cin();
+  {
+    auto help = [](auto const &ptr) -> decltype(auto) {
+      // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+      return ptr.clone_unmodified();
+    };
+    auto aaa = util::f::clone_shared(
+        compute::Compute_function<double(int, int)>::create_const(
+            [](int asdasdasd, int bsdbsdbsd) { return asdasdasd + bsdbsdbsd; },
+            0, 0),
+        help);
+    constexpr auto bbbfv{2.1};
+    constexpr auto bbbf{[] { return bbbfv; }};
+    auto bbb = util::f::clone_shared(
+        compute::Compute_function_constant<double, bbbf>::create_const(), help);
+    bbb = util::f::clone_shared(bbb, help);
+    constexpr auto cccfv{3.};
+    auto ccc = util::f::clone_shared(
+        compute::Compute_value<double>::create_const(cccfv),
+        [](auto const &ptr) -> decltype(auto) {
+          // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+          return ptr.clone_unmodified();
+        });
+    *aaa << std::forward_as_tuple(1, 0);
+    geometry::impl::Point_impl<4> ddd{
+        compute::Out_t{} << *aaa, compute::Out_t{} << *bbb,
+        compute::Out_t{} << *ccc, compute::Out_t{} << *ccc};
+    auto eee = util::f::clone_unique(&ddd);
+    auto sss1 = compute::Out_t{} << *aaa;
+    auto sss2 = compute::Out_t{} << *aaa;
+    swap(sss1, sss2);
+    std::cout << (compute::Out_t{} << *aaa)() << '\n';
+    std::cout << (compute::Out_t{} << *bbb)() << '\n';
+    std::cout << (compute::Out_t{} << *ccc)() << '\n';
+  }
   return 0;
 }
 } // namespace artccel::core::detail

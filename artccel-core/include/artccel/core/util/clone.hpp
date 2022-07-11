@@ -4,7 +4,7 @@
 
 #include "meta.hpp" // import Replace_all_t, Replace_all_t_t, Replace_target
 #include "utility_extras.hpp" // import dependent_false_v, f::unify_ptr_to_ref, f::unify_ref_to_ptr
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 #include <cassert>               // import assert
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as
 #include <functional> // import std::invoke

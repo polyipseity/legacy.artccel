@@ -2,7 +2,7 @@
 #define ARTCCEL_CORE_UTIL_CERRNO_EXTRAS_HPP
 #pragma once
 
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <cerrno>                // import errno
 #include <type_traits>           // import std::decay_t
 

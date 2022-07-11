@@ -3,7 +3,7 @@
 #pragma once
 
 #include "util/error_handling.hpp" // import util::Exception_error
-#include <artccel-core/export.h>   // import ARTCCEL_CORE_EXPORT
+#include <artccel/core/export.h>   // import ARTCCEL_CORE_EXPORT
 #include <concepts>                // import std::invocable
 #include <exception>               // import std::exception_ptr
 #include <functional>              // import std::function

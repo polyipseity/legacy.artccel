@@ -1,7 +1,7 @@
-#include <artccel-core/util/clone.hpp> // interface
+#include <artccel/core/util/clone.hpp> // interface
 
-#include <artccel-core/export.h>      // import ARTCCEL_CORE_EXPORT_DEFINITION
-#include <artccel-core/util/meta.hpp> // import Replace_target
+#include <artccel/core/export.h>      // import ARTCCEL_CORE_EXPORT_DEFINITION
+#include <artccel/core/util/meta.hpp> // import Replace_target
 
 namespace artccel::core::util {
 template struct ARTCCEL_CORE_EXPORT_DEFINITION

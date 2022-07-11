@@ -4,7 +4,7 @@
 
 #include "concepts_extras.hpp"   // import Derived_from_but_not
 #include "utility_extras.hpp"    // import Delegate
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <cassert>               // import assert
 #include <compare>               // import std::partial_ordering
 #include <concepts>              // import std::totally_ordered

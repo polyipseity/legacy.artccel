@@ -4,17 +4,17 @@
 #pragma warning(disable : 4626)
 #pragma warning(push) // suppress <gsl/util>
 #pragma warning(disable : 4820)
-#include <artccel-core/main_hooks.hpp> // interface
+#include <artccel/core/main_hooks.hpp> // interface
 
 #include <algorithm> // import std::max, std::min, std::ranges::for_each, std::ranges::transform
-#include <artccel-core/export.h>                // import ARTCCEL_CORE_NO_EXPORT
-#include <artccel-core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
-#include <artccel-core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
-#include <artccel-core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
-#include <artccel-core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
-#include <artccel-core/util/error_handling.hpp> // import util::Exception_error
-#include <artccel-core/util/polyfill.hpp>       // import util::f::unreachable
-#include <artccel-core/util/utility_extras.hpp> // import util::Semiregularize
+#include <artccel/core/export.h>                // import ARTCCEL_CORE_NO_EXPORT
+#include <artccel/core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
+#include <artccel/core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
+#include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
+#include <artccel/core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
+#include <artccel/core/util/error_handling.hpp> // import util::Exception_error
+#include <artccel/core/util/polyfill.hpp>       // import util::f::unreachable
+#include <artccel/core/util/utility_extras.hpp> // import util::Semiregularize
 #include <cassert>                              // import assert
 #include <concepts>   // import std::integral, std::same_as
 #include <cstring>    // import std::memcpy, std::memmove, std::size_t
@@ -35,7 +35,7 @@
 #include <vector>          // import std::vector
 #ifdef _WIN32
 #include <Windows.h> // import ::FlushConsoleInputBuffer, ::GetConsoleCP, ::GetConsoleMode, ::GetConsoleOutputCP, ::GetStdHandle, ::ReadConsoleW, ::SetConsoleCP, ::SetConsoleOutputCP, CP_UTF8, DWORD, HANDLE, INVALID_HANDLE_VALUE, STD_INPUT_HANDLE
-#include <artccel-core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
+#include <artccel/core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
 #endif
 #pragma warning(pop)
 #pragma warning(pop)

@@ -1,4 +1,4 @@
-#include <artccel-core/geometry/geometry.hpp> // interface
+#include <artccel/core/geometry/geometry.hpp> // interface
 
 namespace artccel::core::geometry {
 Geometry::Geometry() noexcept = default;

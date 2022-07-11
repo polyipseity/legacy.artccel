@@ -4,7 +4,7 @@
 
 #pragma clang diagnostic push // suppress <tl/expected.hpp>
 #pragma clang diagnostic ignored "-Wpadded"
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 #include <cassert>               // import assert
 #include <concepts> // import std::default_initializable, std::invocable, std::same_as
 #include <exception> // import std::exception_ptr, std::make_exception_ptr, std::rethrow_exception

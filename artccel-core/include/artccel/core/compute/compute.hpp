@@ -7,7 +7,7 @@
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::check_bitset, util::f::next_bitmask, util::operators::enum_bitset
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 #include <cinttypes>  // import std::uint8_t
 #include <concepts>   // import std::copyable, std::derived_from
 #include <functional> // import std::function, std::invoke

@@ -4,7 +4,7 @@
 
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
-#include <artccel-core/export.h> // import ARTCCEL_CORE_EXPORT
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 #include <cinttypes>             // import std::int8_t
 #include <concepts>              // import std::derived_from
 #include <gsl/gsl>               // import gsl::owner

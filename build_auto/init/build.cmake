@@ -51,9 +51,8 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	)
 endif()
 
-include(CheckIPOSupported)
-
 function(enable_ipo_if_supported)
+	include(CheckIPOSupported)
 	check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_OUTPUT)
 
 	if(IPO_SUPPORTED)
