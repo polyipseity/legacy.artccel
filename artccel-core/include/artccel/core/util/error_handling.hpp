@@ -2,11 +2,11 @@
 #define ARTCCEL_CORE_UTIL_ERROR_HANDLING_HPP
 #pragma once
 
-#include <cassert> // import assert
-#include <concepts> // import std::default_initializable, std::invocable, std::same_as
+#include <cassert>  // import assert
+#include <concepts> // import std::default_initializable, std::equality_comparable_with, std::invocable, std::same_as
 #include <exception> // import std::exception_ptr, std::make_exception_ptr, std::rethrow_exception
 #include <functional>  // import std::invoke
-#include <type_traits> // import std::invoke_result_t, std::is_empty_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::remove_reference_t
+#include <type_traits> // import std::invoke_result_t, std::is_empty_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::remove_cvref_t
 #include <utility>     // import std::forward, std::move
 #include <variant>     // import std::monostate
 
@@ -45,15 +45,14 @@ template <typename Error> struct Error_with_exception {
       std::is_empty_v<Error> && std::default_initializable<Error>
       : Error_with_exception{std::move(exc_ptr), Error{}} {}
   template <typename Exception>
-  requires(!std::same_as<std::remove_reference_t<Exception>, std::exception_ptr>) explicit Error_with_exception(
+  requires(!std::same_as<std::remove_cvref_t<Exception>, std::exception_ptr>) explicit Error_with_exception(
       Exception &&exc, Error error) noexcept(noexcept(Error_with_exception{
       std::make_exception_ptr(std::forward<Exception>(exc)), std::move(error)}))
       : Error_with_exception{
             std::make_exception_ptr(std::forward<Exception>(exc)),
             std::move(error)} {}
   template <typename Exception>
-  requires(
-      !std::same_as<std::remove_reference_t<Exception>, std::exception_ptr>) &&
+  requires(!std::same_as<std::remove_cvref_t<Exception>, std::exception_ptr>) &&
       std::is_empty_v<Error>
           &&std::default_initializable<Error> explicit Error_with_exception(
               Exception &&exc) noexcept(noexcept(Error_with_exception{
@@ -180,6 +179,32 @@ template <typename Error> struct Error_with_exception {
 };
 extern template struct ARTCCEL_CORE_EXPORT_DECLARATION Error_with_exception<>;
 static_assert(Exception_error::empty_v, u8"Implementation error");
+
+namespace f {
+constexpr auto
+expect_zero(std::equality_comparable_with<decltype(0)> auto &&result) {
+  using out_type = tl::expected<void, std::remove_cvref_t<decltype(result)>>;
+  return result == 0
+             ? out_type{}
+             : out_type{tl::unexpect, std::forward<decltype(result)>(result)};
+}
+constexpr auto
+expect_nonzero(std::equality_comparable_with<decltype(0)> auto &&result) {
+  using out_type = tl::expected<std::remove_cvref_t<decltype(result)>,
+                                std::remove_cvref_t<decltype(result)>>;
+  return result == 0
+             ? out_type{tl::unexpect, std::forward<decltype(result)>(result)}
+             : out_type{std::forward<decltype(result)>(result)};
+}
+template <typename Ret, std::equality_comparable_with<Ret> Invalid>
+constexpr auto expect_noninvalid(Ret &&result, Invalid &&invalid) {
+  using out_type = tl::expected<std::remove_cvref_t<decltype(result)>,
+                                std::remove_cvref_t<decltype(invalid)>>;
+  return result == invalid
+             ? out_type{tl::unexpect, std::forward<decltype(invalid)>(invalid)}
+             : out_type{std::forward<decltype(result)>(result)};
+}
+} // namespace f
 } // namespace artccel::core::util
 
 #endif

@@ -38,7 +38,7 @@
 #include <artccel/core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
 #include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
 #include <artccel/core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
-#include <artccel/core/util/error_handling.hpp> // import util::Exception_error
+#include <artccel/core/util/error_handling.hpp> // import util::Exception_error, util::f::expect_noninvalid, util::f::expect_nonzero
 #include <artccel/core/util/polyfill.hpp>       // import util::f::unreachable
 #include <artccel/core/util/utility_extras.hpp> // import util::Semiregularize
 #ifdef _WIN32
@@ -202,7 +202,7 @@ protected:
     return pos;
   }
   auto sync() -> int override {
-    if (::FlushConsoleInputBuffer(console_) == 0) {
+    if (!util::f::expect_nonzero(::FlushConsoleInputBuffer(console_))) {
       platform::windows::f::print_last_error();
       return -1;
     }
@@ -221,9 +221,9 @@ protected:
           return init;
         }())};
         std::u16string init(read_size_max, u'\0');
-        if (DWORD read_size{};
-            ::ReadConsoleW(console_, std::data(init), read_size_max, &read_size,
-                           nullptr)) {
+        if (DWORD read_size{}; util::f::expect_nonzero(
+                ::ReadConsoleW(console_, std::data(init), read_size_max,
+                               &read_size, nullptr))) {
           init.resize(read_size);
         } else {
           platform::windows::f::print_last_error();
@@ -364,36 +364,42 @@ Main_program::Main_program(
         finalizers.emplace_back(make_copyable_finalizer(
             [prev_locale] { std::locale::global(prev_locale); }));
 
-        if (auto const prev_console_output_cp{::GetConsoleOutputCP()};
-            prev_console_output_cp != 0 && ::SetConsoleOutputCP(CP_UTF8) != 0) {
+        if (auto const prev_console_output_cp{
+                util::f::expect_nonzero(::GetConsoleOutputCP())};
+            prev_console_output_cp &&
+            util::f::expect_nonzero(::SetConsoleOutputCP(CP_UTF8))) {
           finalizers.emplace_back(
-              make_copyable_finalizer([prev_console_output_cp] {
-                if (::SetConsoleOutputCP(prev_console_output_cp) == 0) {
+              make_copyable_finalizer([pcocp{*prev_console_output_cp}] {
+                if (!util::f::expect_nonzero(::SetConsoleOutputCP(pcocp))) {
                   platform::windows::f::throw_last_error();
                 }
               }));
         } else {
           platform::windows::f::print_last_error();
         }
-        if (auto const prev_console_cp{::GetConsoleCP()};
-            prev_console_cp != 0 && ::SetConsoleCP(CP_UTF8) != 0) {
-          finalizers.emplace_back(make_copyable_finalizer([prev_console_cp] {
-            if (::SetConsoleCP(prev_console_cp) == 0) {
-              platform::windows::f::throw_last_error();
-            }
-          }));
+        if (auto const prev_console_cp{
+                util::f::expect_nonzero(::GetConsoleCP())};
+            prev_console_cp &&
+            util::f::expect_nonzero(::SetConsoleCP(CP_UTF8))) {
+          finalizers.emplace_back(
+              make_copyable_finalizer([pccp{*prev_console_cp}] {
+                if (!util::f::expect_nonzero(::SetConsoleCP(pccp))) {
+                  platform::windows::f::throw_last_error();
+                }
+              }));
         } else {
           platform::windows::f::print_last_error();
         }
-        if (auto *const std_handle{::GetStdHandle(STD_INPUT_HANDLE)};
-            // NOLINTNEXTLINE(performance-no-int-to-ptr,cppcoreguidelines-pro-type-cstyle-cast)
-            std_handle != INVALID_HANDLE_VALUE) {
-          if (DWORD console_mode{};
-              std_handle != nullptr &&
-              ::GetConsoleMode(std_handle, &console_mode) != 0) {
+
+        if (auto const std_handle{util::f::expect_noninvalid(
+                // NOLINTNEXTLINE(performance-no-int-to-ptr,cppcoreguidelines-pro-type-cstyle-cast)
+                ::GetStdHandle(STD_INPUT_HANDLE), INVALID_HANDLE_VALUE)}) {
+          if (DWORD console_mode{}; *std_handle != nullptr &&
+                                    util::f::expect_nonzero(::GetConsoleMode(
+                                        *std_handle, &console_mode))) {
             auto new_rdbuf{
                 std::make_shared<detail::Windows_console_input_buffer>(
-                    std_handle)}; // TODO: C++23: std::make_unique
+                    *std_handle)}; // TODO: C++23: std::make_unique
             auto *const prev_rdbuf{std::cin.rdbuf(new_rdbuf.get())};
             finalizers.emplace_back(make_copyable_finalizer(
                 [prev_rdbuf, new_rdbuf{std::move(new_rdbuf)}]() mutable {
