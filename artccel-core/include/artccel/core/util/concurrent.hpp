@@ -35,7 +35,7 @@ public:
   void call_once(Func &&func, Args &&...args) {
     std::call_once(
         *value_, [this, &func, &args...]() noexcept(noexcept(std::invoke(
-                     std::forward<Func>(func), std::forward<Args>(args)...))) {
+                     std::declval<Func>(), std::declval<Args>()...))) {
           std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
           flag_ = true; // after invocation because std::invoke may throw
         });

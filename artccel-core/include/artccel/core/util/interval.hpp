@@ -5,7 +5,7 @@
 #include <cassert>     // import assert
 #include <compare>     // import std::partial_ordering
 #include <concepts>    // import std::totally_ordered
-#include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_move_constructible_v
+#include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_destructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::move
 
 #include "concepts_extras.hpp"   // import Derived_from_but_not
@@ -332,7 +332,8 @@ public:
   constexpr Interval(type value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
       std::is_nothrow_constructible_v<typename Interval::Delegate,
                                       decltype(std::move(value))>
-          &&noexcept(check(this->value_)))
+          &&noexcept(check(this->value_)) &&
+      std::is_nothrow_destructible_v<type>)
       : Interval::Delegate{std::move(value)} {
     check(this->value_);
   }

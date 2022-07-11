@@ -6,7 +6,7 @@
 #include <concepts> // import std::default_initializable, std::equality_comparable_with, std::invocable, std::same_as
 #include <exception> // import std::exception_ptr, std::make_exception_ptr, std::rethrow_exception
 #include <functional>  // import std::invoke
-#include <type_traits> // import std::invoke_result_t, std::is_empty_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::remove_cvref_t
+#include <type_traits> // import std::invoke_result_t, std::is_empty_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v, std::remove_cvref_t
 #include <utility>     // import std::forward, std::move
 #include <variant>     // import std::monostate
 
@@ -34,20 +34,18 @@ template <typename Error> struct Error_with_exception {
   gsl::not_null<std::exception_ptr> exc_ptr_;
   Error error_ [[no_unique_address, msvc::no_unique_address]];
 
-  explicit Error_with_exception(
-      gsl::not_null<std::exception_ptr> exc_ptr,
-      Error error) noexcept(std::is_nothrow_move_constructible_v<Error>)
+  explicit Error_with_exception(gsl::not_null<std::exception_ptr> exc_ptr,
+                                Error error)
       : exc_ptr_{std::move(exc_ptr)}, error_{std::move(error)} {}
   explicit Error_with_exception(
-      gsl::not_null<std::exception_ptr>
-          exc_ptr) noexcept(noexcept(Error_with_exception{std::move(exc_ptr),
-                                                          Error{}})) requires
+      gsl::not_null<std::exception_ptr> exc_ptr) requires
       std::is_empty_v<Error> && std::default_initializable<Error>
       : Error_with_exception{std::move(exc_ptr), Error{}} {}
   template <typename Exception>
-  requires(!std::same_as<std::remove_cvref_t<Exception>, std::exception_ptr>) explicit Error_with_exception(
-      Exception &&exc, Error error) noexcept(noexcept(Error_with_exception{
-      std::make_exception_ptr(std::forward<Exception>(exc)), std::move(error)}))
+  requires(!std::same_as<
+           std::remove_cvref_t<Exception>,
+           std::exception_ptr>) explicit Error_with_exception(Exception &&exc,
+                                                              Error error)
       : Error_with_exception{
             std::make_exception_ptr(std::forward<Exception>(exc)),
             std::move(error)} {}
@@ -55,15 +53,12 @@ template <typename Error> struct Error_with_exception {
   requires(!std::same_as<std::remove_cvref_t<Exception>, std::exception_ptr>) &&
       std::is_empty_v<Error>
           &&std::default_initializable<Error> explicit Error_with_exception(
-              Exception &&exc) noexcept(noexcept(Error_with_exception{
-              std::forward<Exception>(exc), Error{}}))
+              Exception &&exc)
       : Error_with_exception{std::forward<Exception>(exc), Error{}} {}
 
   template <typename Ret>
-  friend auto discard_exc [[nodiscard]] (
-      tl::expected<Ret, Error_with_exception> const
-          &result) noexcept(std::is_nothrow_copy_constructible_v<Ret>
-                                &&std::is_nothrow_copy_constructible_v<Error>) {
+  friend auto discard_exc
+      [[nodiscard]] (tl::expected<Ret, Error_with_exception> const &result) {
     using out_type = tl::expected<Ret, Error>;
     if (result) {
       return out_type{*result};
@@ -72,9 +67,7 @@ template <typename Error> struct Error_with_exception {
   }
   template <typename Ret>
   friend auto discard_exc
-      [[nodiscard]] (tl::expected<Ret, Error_with_exception> &&result) noexcept(
-          std::is_nothrow_move_constructible_v<Ret>
-              &&std::is_nothrow_move_constructible_v<Error>) {
+      [[nodiscard]] (tl::expected<Ret, Error_with_exception> &&result) {
     using out_type = tl::expected<Ret, Error>;
     if (result) {
       return out_type{*std::move(result)};
@@ -82,15 +75,9 @@ template <typename Error> struct Error_with_exception {
     return out_type{tl::unexpect, std::move(result).error()};
   }
   template <typename Ret>
-  friend auto map_err [[nodiscard]] (
-      tl::expected<Ret, Error_with_exception> const &result,
-      std::invocable<Error> auto
-          &&func) noexcept(std::is_nothrow_invocable_v<decltype(func), Error>
-                               &&std::is_nothrow_copy_constructible_v<Ret>
-                                   &&std::is_nothrow_copy_constructible_v<Error>
-                                       &&std::is_nothrow_copy_constructible_v<
-                                           std::invoke_result_t<decltype(func),
-                                                                Error>>) {
+  friend auto map_err
+      [[nodiscard]] (tl::expected<Ret, Error_with_exception> const &result,
+                     std::invocable<Error> auto &&func) {
     using out_err_type = std::invoke_result_t<decltype(func), Error>;
     using out_type = tl::expected<Ret, Error_with_exception<out_err_type>>;
     if (result) {
@@ -105,15 +92,9 @@ template <typename Error> struct Error_with_exception {
             std::invoke(std::forward<decltype(func)>(func), std::move(error))}};
   }
   template <typename Ret>
-  friend auto map_err [[nodiscard]] (
-      tl::expected<Ret, Error_with_exception> &&result,
-      std::invocable<Error> auto
-          &&func) noexcept(std::is_nothrow_invocable_v<decltype(func), Error>
-                               &&std::is_nothrow_move_constructible_v<Ret>
-                                   &&std::is_nothrow_move_constructible_v<Error>
-                                       &&std::is_nothrow_move_constructible_v<
-                                           std::invoke_result_t<decltype(func),
-                                                                Error>>) {
+  friend auto map_err
+      [[nodiscard]] (tl::expected<Ret, Error_with_exception> &&result,
+                     std::invocable<Error> auto &&func) {
     using out_err_type = std::invoke_result_t<decltype(func), Error>;
     using out_type = tl::expected<Ret, Error_with_exception<out_err_type>>;
     if (result) {
@@ -128,17 +109,15 @@ template <typename Error> struct Error_with_exception {
             std::invoke(std::forward<decltype(func)>(func), std::move(error))}};
   }
   template <typename Ret>
-  requires(!empty_v) friend auto discard_err [[nodiscard]] (
-      tl::expected<Ret, Error_with_exception> const
-          &result) noexcept(std::is_nothrow_copy_constructible_v<Ret>) {
+  requires(!empty_v) friend auto discard_err
+      [[nodiscard]] (tl::expected<Ret, Error_with_exception> const &result) {
     return map_err(result, [](Error const &discard [[maybe_unused]]) noexcept {
       return std::monostate{};
     });
   }
   template <typename Ret>
   requires(!empty_v) friend auto discard_err
-      [[nodiscard]] (tl::expected<Ret, Error_with_exception> &&result) noexcept(
-          std::is_nothrow_move_constructible_v<Ret>) {
+      [[nodiscard]] (tl::expected<Ret, Error_with_exception> &&result) {
     return map_err(std::move(result),
                    [](Error const &discard [[maybe_unused]]) noexcept {
                      return std::monostate{};

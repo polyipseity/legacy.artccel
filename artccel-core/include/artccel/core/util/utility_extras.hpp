@@ -8,7 +8,7 @@
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
-#include <type_traits> // import std::invoke_result_t, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_cvref_t, std::remove_reference_t
+#include <type_traits> // import std::invoke_result_t, std::is_nothrow_destructible_v, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_cvref_t, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 namespace artccel::core::util {
@@ -121,8 +121,9 @@ template <typename Type, bool Explicit> struct Delegate {
   }
 
 protected:
-  explicit constexpr Delegate(Type value) noexcept(noexcept(decltype(value_){
-      std::move(value)}))
+  explicit constexpr Delegate(Type value) noexcept(
+      noexcept(decltype(value_){std::move(value)}) &&
+      std::is_nothrow_destructible_v<type>)
       : value_{std::move(value)} {}
 #pragma warning(suppress : 4625 4626)
 };
