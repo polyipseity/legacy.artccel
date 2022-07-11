@@ -82,8 +82,8 @@ class Argument {
 private:
 #pragma warning(push)
 #pragma warning(disable : 4251)
-  std::string_view verbatim_;
-  tl::expected<std::u8string, util::Exception_error> utf8_;
+  std::string_view verbatim_{};
+  tl::expected<std::u8string, util::Exception_error> utf8_{};
 #pragma warning(pop)
 
 public:
