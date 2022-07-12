@@ -25,7 +25,5 @@
 #include "util/semantics.hpp"
 #include "util/string_extras.hpp"
 #include "util/utility_extras.hpp"
-#include <artccel/core/config.h>
-#include <artccel/core/export.h>
 
 #endif

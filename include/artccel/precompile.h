@@ -28,6 +28,4 @@
 #include <windows.h>
 #endif
 
-#include <artccel/config.h>
-
 #endif
