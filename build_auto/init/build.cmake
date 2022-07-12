@@ -45,6 +45,10 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 		-Wno-error=unknown-warning-option
 		-Wno-error=unknown-attributes
 	)
+
+	if(WIN32)
+		add_compile_options(-Wno-error=nonportable-system-include-path)
+	endif()
 endif()
 
 if(ARTCCEL_PROFILE_COMPILATION)
