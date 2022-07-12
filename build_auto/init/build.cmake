@@ -14,6 +14,7 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/Wall>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
 	$<$<CXX_COMPILER_ID:MSVC>:/WX>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=attributes>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-error=unknown-pragmas>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4068> # unknown pragma
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4464> # relative include path contains '..'
@@ -34,16 +35,16 @@ add_compile_options(
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	add_compile_options(
 		-Weverything
+		-Wno-c++20-compat
+		-Wno-c++98-c++11-c++14-compat
 		-Wno-c++98-compat
 		-Wno-c++98-compat-pedantic
-		-Wno-c++98-c++11-c++14-compat
-		-Wno-c++20-compat
-		-Wno-return-std-move-in-c++11
-		-Wno-missing-variable-declarations
 		-Wno-ctad-maybe-unsupported
+		-Wno-missing-variable-declarations
+		-Wno-return-std-move-in-c++11,
 		-Wno-error=unknown-argument
-		-Wno-error=unknown-warning-option
 		-Wno-error=unknown-attributes
+		-Wno-error=unknown-warning-option
 	)
 
 	if(WIN32)
