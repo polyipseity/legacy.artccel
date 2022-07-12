@@ -1,20 +1,28 @@
 Checks: >
   *,
-  -llvmlibc-*,
-  -fuchsia-overloaded-operator,
-  -fuchsia-virtual-inheritance,
-  -fuchsia-default-arguments-calls,
-  -fuchsia-default-arguments-declarations,
-  -fuchsia-trailing-return,
+  -altera-id-dependent-backward-branch,
   -altera-struct-pack-align,
   -altera-unroll-loops,
-  -altera-id-dependent-backward-branch,
+  -clang-diagnostic-c++20-compat,
+  -clang-diagnostic-c++98-c++11-c++14-compat,
+  -clang-diagnostic-c++98-compat,
+  -clang-diagnostic-c++98-compat-pedantic,
+  -clang-diagnostic-ctad-maybe-unsupported,
+  -clang-diagnostic-missing-variable-declarations,
+  -clang-diagnostic-return-std-move-in-c++11,
+  -fuchsia-default-arguments-calls,
+  -fuchsia-default-arguments-declarations,
+  -fuchsia-overloaded-operator,
+  -fuchsia-trailing-return,
+  -fuchsia-virtual-inheritance,
   -google-readability-todo,
+  -llvmlibc-*,
 # 'llvm-header-guard' dislikes Windows-style paths
 WarningsAsErrors: >
   *,
-  -clang-diagnostic-unknown-pragmas,
+  -clang-diagnostic-pragma-system-header-outside-header,
   -clang-diagnostic-unknown-attributes,
+  -clang-diagnostic-unknown-pragmas,
   -llvm-header-guard,
-HeaderFilterRegex: ^artccel/.+
+HeaderFilterRegex: ^artccel/.+$
 FormatStyle: LLVM
