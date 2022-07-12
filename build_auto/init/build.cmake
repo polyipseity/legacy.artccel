@@ -76,3 +76,15 @@ function(enable_ipo_if_supported)
 endfunction()
 
 enable_ipo_if_supported()
+
+function(try_match_pic_and_reuse_precompile_headers_for_executable TARGET OTHER_TARGET)
+	get_target_property(LINK_PIC "${OTHER_TARGET}" POSITION_INDEPENDENT_CODE)
+
+	# the commented code adds '-fPIE' instead of '-fPIC' for executables
+	# set_target_properties("${TARGET}" PROPERTIES POSITION_INDEPENDENT_CODE "${LINK_PIC}")
+	if(LINK_PIC)
+		target_compile_options("${TARGET}" PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fPIC>)
+	endif()
+
+	target_precompile_headers("${TARGET}" REUSE_FROM "${OTHER_TARGET}")
+endfunction()

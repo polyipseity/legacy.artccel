@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(artccel VERSION 1.0.0 LANGUAGES C CXX)
 set(ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/")
 
@@ -8,7 +8,10 @@ add_library(artccel INTERFACE)
 add_library("${ARTCCEL_NAMESPACE}artccel" ALIAS artccel)
 configure_file("in/config.h" "include/artccel/config.h")
 target_include_directories(artccel INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
-add_sanitizers(artccel)
+target_link_libraries(artccel INTERFACE Threads::Threads Microsoft.GSL::GSL tl-expected::expected)
+
+add_library(artccel-private INTERFACE)
+target_precompile_headers(artccel-private INTERFACE "include/artccel/precompile.h")
 
 add_subdirectory(artccel-core)
 

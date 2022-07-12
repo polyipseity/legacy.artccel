@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(artccel-core VERSION 1.0.0 LANGUAGES C CXX)
 set(ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../")
 
@@ -21,12 +21,14 @@ add_library(artccel-core SHARED
 add_library("${ARTCCEL_NAMESPACE}artccel-core" ALIAS artccel-core)
 configure_file("in/config.h" "include/artccel/core/config.h")
 generate_preset_export_header(artccel-core "include/artccel/core/export.h")
+target_precompile_headers(artccel-core PRIVATE "include/artccel/core/precompile.h")
 target_include_directories(artccel-core PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
-target_link_libraries(artccel-core PUBLIC artccel Microsoft.GSL::GSL tl-expected::expected PRIVATE Threads::Threads)
+target_link_libraries(artccel-core PUBLIC artccel PRIVATE artccel-private)
 add_sanitizers(artccel-core)
 
 add_executable(artccel-core-exe "sources/exe/main.cpp")
 add_executable("${ARTCCEL_NAMESPACE}artccel-core-exe" ALIAS artccel-core-exe)
+try_match_pic_and_reuse_precompile_headers_for_executable(artccel-core-exe artccel-core)
 target_link_libraries(artccel-core-exe artccel-core)
 add_sanitizers(artccel-core-exe)
 
