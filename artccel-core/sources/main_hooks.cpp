@@ -22,10 +22,7 @@
 #pragma warning(pop)
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
 #include <tl/expected.hpp> // import tl::expected
-#pragma clang diagnostic pop
 #pragma warning(pop)
 #ifdef _WIN32
 #pragma warning(push)
