@@ -196,11 +196,13 @@ static auto to_cuchar_err(Convert_error error) noexcept {
 namespace f {
 auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string {
   std::u8string ret(std::size(utf8_compat), char8_t{});
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.InnerPointer)
   std::memcpy(std::data(ret), std::data(utf8_compat), std::size(ret));
   return ret;
 }
 auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
   std::string ret(std::size(utf8), char{});
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.InnerPointer)
   std::memcpy(std::data(ret), std::data(utf8), std::size(ret));
   return ret;
 }
