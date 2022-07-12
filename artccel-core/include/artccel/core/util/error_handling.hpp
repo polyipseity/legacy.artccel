@@ -10,8 +10,14 @@
 #include <utility>     // import std::forward, std::move
 #include <variant>     // import std::monostate
 
-#include <gsl/gsl>         // import gsl::not_null
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
+#include <gsl/gsl> // import gsl::not_null
+#pragma warning(pop)
+#pragma warning(push)
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect
+#pragma warning(pop)
 
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 

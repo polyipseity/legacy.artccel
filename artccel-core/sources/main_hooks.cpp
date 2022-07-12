@@ -1,7 +1,8 @@
 #include <algorithm> // import std::max, std::min, std::ranges::for_each, std::ranges::transform
 #include <cassert>    // import assert
 #include <concepts>   // import std::integral, std::same_as
-#include <cstring>    // import std::memcpy, std::memmove, std::size_t
+#include <cstddef>    // import std::ptrdiff_t, std::size_t
+#include <cstring>    // import std::memcpy, std::memmove
 #include <cwchar>     // import std::mbsinit, std::mbstate_t, std::wcslen
 #include <exception>  // import std::current_exception, std::exception_ptr
 #include <functional> // import std::function
@@ -40,7 +41,7 @@
 #include <artccel/core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
 #include <artccel/core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
 #include <artccel/core/util/containers_extras.hpp> // import util::f::atad, util::f::const_span
-#include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
+#include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_clamp_casts, util::f::int_exact_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
 #include <artccel/core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel/core/util/error_handling.hpp> // import util::Exception_error, util::f::expect_noninvalid, util::f::expect_nonzero
 #include <artccel/core/util/polyfill.hpp>       // import util::f::unreachable
@@ -180,7 +181,10 @@ protected:
           case std::ios_base::end:
             return converted_pos_ + offset;
           case std::ios_base::cur:
-            return converted_pos_ - (egptr() - gptr()) + offset;
+            return converted_pos_ -
+                   success_or_throw(
+                       util::f::int_exact_cast<off_type>(egptr() - gptr())) +
+                   offset;
           default:
             util::f::unreachable();
           }
@@ -221,7 +225,7 @@ protected:
           assert(init > 0 && u8"Buffer is too small");
           return init;
         }())};
-        std::u16string init(read_size_max, u'\0');
+        std::u16string init(read_size_max, char16_t{});
         if (DWORD read_size{}; util::f::expect_nonzero(
                 ::ReadConsoleW(console_, std::data(init), read_size_max,
                                &read_size, nullptr))) {
@@ -236,7 +240,7 @@ protected:
         return traits_type::eof();
       }
       auto const converted{[this, &read] {
-        std::u8string init(codecvt_max_length() * std::size(read), u8'\0');
+        std::u8string init(codecvt_max_length() * std::size(read), char8_t{});
         char8_t *write_ptr{std::data(init)};
         for (auto const *read_ptr{std::data(read)};
              read_ptr != util::f::atad(read);) {
@@ -285,18 +289,20 @@ protected:
     count = std::max(count, decltype(count){0});
     auto const init_count{count};
     while (count > 0 && underflow() != traits_type::eof()) {
-      auto const copy_count{std::min(
-          count, util::f::int_clamp_cast<decltype(count)>(egptr() - gptr()))};
-      std::memcpy(out, gptr(),
-                  assert_success(util::f::int_unsigned_exact_cast(copy_count)));
+      auto const [copy_count_uz, copy_count_pd,
+                  copy_count_ss]{util::f::int_clamp_casts<
+          std::size_t, std::ptrdiff_t, std::streamsize>(std::min(
+          count, util::f::int_clamp_cast<decltype(count)>(egptr() - gptr())))};
+      std::memcpy(out, gptr(), copy_count_uz);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-      setg(eback(), gptr() + copy_count, egptr());
+      setg(eback(), gptr() + copy_count_pd, egptr());
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-      out += copy_count;
-      count -= copy_count;
+      out += copy_count_pd;
+      count -= copy_count_ss;
     }
     return init_count - count;
   }
+#pragma warning(suppress : 4820)
 };
 #endif
 } // namespace detail

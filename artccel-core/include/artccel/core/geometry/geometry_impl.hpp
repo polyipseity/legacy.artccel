@@ -9,7 +9,10 @@
 #include <typeinfo>    // import std::type_info
 #include <utility>     // import std::swap
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
 #include <gsl/gsl> // import gsl::owner
+#pragma warning(pop)
 
 #include "geometry.hpp" // interface
 

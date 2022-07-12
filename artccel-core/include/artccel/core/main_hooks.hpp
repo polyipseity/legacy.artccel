@@ -13,7 +13,10 @@
 #include <variant>     // import std::variant
 #include <vector>      // import std::vector
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
 #include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action
+#pragma warning(pop)
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #pragma clang diagnostic push
