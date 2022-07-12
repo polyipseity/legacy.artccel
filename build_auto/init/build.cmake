@@ -82,6 +82,13 @@ endfunction()
 enable_ipo_if_supported()
 
 function(try_match_pic_and_reuse_precompile_headers_for_executable TARGET OTHER_TARGET)
+	if(WIN32) # symbol export and import are not symmetric, disable
+		message(STATUS "Reusing recompile headers is disabled on Windows")
+		get_target_property(OTHER_TARGET_PRECOMPILE_HEADERS "${OTHER_TARGET}" PRECOMPILE_HEADERS)
+		target_precompile_headers("${TARGET}" PRIVATE ${OTHER_TARGET_PRECOMPILE_HEADERS})
+		return()
+	endif()
+
 	include(CheckPIESupported)
 	check_pie_supported(LANGUAGES ${ENABLED_LANGUAGES})
 	get_target_property(LINK_PIC "${OTHER_TARGET}" POSITION_INDEPENDENT_CODE)
@@ -99,10 +106,7 @@ function(try_match_pic_and_reuse_precompile_headers_for_executable TARGET OTHER_
 		if(LINK_PIE_SUPPORTED)
 			# the below line adds '-fPIE' instead of '-fPIC' for executables
 			# set_target_properties("${TARGET}" PROPERTIES POSITION_INDEPENDENT_CODE "${LINK_PIE_SUPPORTED}")
-			if(NOT WIN32) # unsupported
-				target_compile_options("${TARGET}" PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fPIC>)
-			endif()
-
+			target_compile_options("${TARGET}" PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fPIC>)
 			target_precompile_headers("${TARGET}" REUSE_FROM "${OTHER_TARGET}")
 			return()
 		endif()
