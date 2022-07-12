@@ -3,6 +3,9 @@
 # build directory/ies
 build/
 
+# compilation profiling
+-.json
+
 # ----------
 ## C
 # Prerequisites
