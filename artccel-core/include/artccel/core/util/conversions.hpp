@@ -7,6 +7,7 @@
 #include <limits>      // import std::numeric_limits
 #include <stdexcept>   // import std::overflow_error
 #include <string>      // import std::to_string
+#include <tuple>       // import std::tuple
 #include <type_traits> // import std::conditional_t, std::is_nothrow_move_constructible_v, std::make_signed_t, std::make_unsigned_t, std::remove_cvref_t
 
 #include "concepts_extras.hpp" // import Regular_invocable_r
@@ -58,6 +59,23 @@ constexpr auto int_cast(InInt value) noexcept(
 } // namespace detail
 
 namespace f {
+constexpr auto int_strict_equal(std::integral auto left,
+                                std::integral auto right) noexcept {
+  using left_limits = std::numeric_limits<decltype(left)>;
+  using right_limits = std::numeric_limits<decltype(right)>;
+  if constexpr (left_limits::is_signed != right_limits::is_signed) {
+    if constexpr (left_limits::is_signed) {
+      if (left < 0) {
+        return false;
+      }
+    } else {
+      if (right < 0) {
+        return false;
+      }
+    }
+    return left == right;
+  }
+}
 template <std::integral Int>
 constexpr auto int_modulo_cast(std::integral auto value) noexcept {
   using out_type = std::remove_cvref_t<Int>;
@@ -138,6 +156,27 @@ constexpr auto int_unsigned_clamp_cast(std::integral auto value) noexcept {
 }
 constexpr auto int_signed_clamp_cast(std::integral auto value) noexcept {
   return f::int_signedness_clamp_cast<false>(value);
+}
+} // namespace f
+namespace detail {
+template <std::integral Int, std::integral... Ints>
+constexpr auto int_roundrobin_clamp_cast(std::integral auto value) noexcept {
+  if constexpr (sizeof...(Ints) == 0) {
+    return f::int_clamp_cast<Int>(value);
+  } else {
+    return f::int_clamp_cast<Int>(
+        detail::int_roundrobin_clamp_cast<Ints...>(value));
+  }
+}
+} // namespace detail
+namespace f {
+template <std::integral Int, std::integral... Ints>
+constexpr auto int_clamp_casts(std::integral auto value) noexcept {
+  using out_types =
+      std::tuple<std::remove_cvref_t<Int>, std::remove_cvref_t<Ints>...>;
+  auto const ret{detail::int_roundrobin_clamp_cast<Int, Ints...>(value)};
+  return out_types{assert_success(f::int_exact_cast<Int>(ret)),
+                   assert_success(f::int_exact_cast<Ints>(ret))...};
 }
 } // namespace f
 } // namespace artccel::core::util

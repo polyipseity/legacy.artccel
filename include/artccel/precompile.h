@@ -16,10 +16,19 @@
 #include <span>
 #include <string_view>
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
 #include <gsl/gsl>
+#pragma warning(pop)
+#pragma warning(push)
+#pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include <tl/expected.hpp>
+#pragma warning(pop)
 #ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4668 5039)
 #include <windows.h>
+#pragma warning(pop)
 #endif
 
 #endif

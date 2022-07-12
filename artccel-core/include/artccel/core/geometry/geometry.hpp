@@ -6,7 +6,10 @@
 #include <cstdint>  // import std::int_fast8_t
 #include <typeinfo> // import typeid, std::type_info
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
 #include <gsl/gsl> // import gsl::owner
+#pragma warning(pop)
 
 #include "../util/interval.hpp"  // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr

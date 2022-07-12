@@ -1,12 +1,10 @@
-#pragma warning(push)
-#pragma warning(disable : 4365)
 #include <algorithm> // import std::min
-#include <array> // import std::array, std::cbegin, std::cend, std::data, std::empty, std::size
-#include <cassert>  // import assert
-#include <cerrno>   // import errno
-#include <climits>  // import MB_LEN_MAX
-#include <concepts> // import std::same_as
-#include <cstring>  // import std::strerror
+#include <array>     // import std::array, std::data, std::empty, std::size
+#include <cassert>   // import assert
+#include <cerrno>    // import errno
+#include <climits>   // import MB_LEN_MAX
+#include <concepts>  // import std::same_as
+#include <cstring>   // import std::memcpy
 #include <cuchar> // import std::c16rtomb, std::c32rtomb, std::mbrtoc16, std::mbrtoc32
 #include <cwchar>    // import std::mbrlen, std::mbstate_t, std::size_t
 #include <span>      // import std::span
@@ -15,7 +13,6 @@
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 #include <system_error> // import std::generic_category, std::system_error
 #include <utility>      // import std::as_const, std::move
-#pragma warning(pop)
 
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
@@ -83,7 +80,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
   std::mbstate_t state{};
   for (auto old_state{state}; !std::empty(loc_enc); old_state = state) {
     UTFCharT utf_c{}; // not written to if the next character is null
-    switch (auto processed{mbrtoc(utf_c, loc_enc, state)}) {
+    switch (auto processed{detail::mbrtoc(utf_c, loc_enc, state)}) {
       [[unlikely]] case cuchar_mbrtoc_error : {
         std::system_error errno_exc{errno, std::generic_category()};
         return return_type{
@@ -133,7 +130,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
     result.push_back(utf_c);
   }
   for (UTFCharT utf_c{};
-       mbrtoc(utf_c, loc_enc, state) == cuchar_mbrtoc_surrogate;) {
+       detail::mbrtoc(utf_c, loc_enc, state) == cuchar_mbrtoc_surrogate;) {
     result.push_back(utf_c); // complete surrogate pair of the last character
   }
   return return_type{std::move(result)};
@@ -148,7 +145,7 @@ static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
   std::mbstate_t state{};
   for (std::array<char, MB_LEN_MAX> loc_enc{};
        auto utf_c : std::as_const(utf)) {
-    switch (auto const processed{crtomb(loc_enc, utf_c, state)}) {
+    switch (auto const processed{detail::crtomb(loc_enc, utf_c, state)}) {
       [[unlikely]] case cuchar_crtomb_error : {
         std::system_error errno_exc{errno, std::generic_category()};
         return return_type{
@@ -198,10 +195,14 @@ static auto to_cuchar_err(Convert_error error) noexcept {
 
 namespace f {
 auto utf8_compat_as_utf8(std::string_view utf8_compat) -> std::u8string {
-  return {std::cbegin(utf8_compat), std::cend(utf8_compat)};
+  std::u8string ret(std::size(utf8_compat), char8_t{});
+  std::memcpy(std::data(ret), std::data(utf8_compat), std::size(ret));
+  return ret;
 }
 auto utf8_as_utf8_compat(std::u8string_view utf8) -> std::string {
-  return {std::cbegin(utf8), std::cend(utf8)};
+  std::string ret(std::size(utf8), char{});
+  std::memcpy(std::data(ret), std::data(utf8), std::size(ret));
+  return ret;
 }
 
 auto utf8_to_utf16(std::u8string_view utf8)

@@ -14,7 +14,10 @@
 #include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
 #include <utility> // import std::declval, std::exchange, std::forward, std::move, std::swap
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
 #include <gsl/gsl> // import gsl::owner
+#pragma warning(pop)
 
 #include "../util/concepts_extras.hpp" // import util::Invocable_r
 #include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag

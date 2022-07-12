@@ -110,6 +110,8 @@
 		"xtree": "cpp",
 		"set": "cpp",
 		"complex": "cpp",
-		"regex": "cpp"
+		"regex": "cpp",
+		"any": "cpp",
+		"unordered_set": "cpp"
 	}
 }

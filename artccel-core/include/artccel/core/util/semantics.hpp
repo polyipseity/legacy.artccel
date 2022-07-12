@@ -4,7 +4,10 @@
 
 #include <cstddef> // import std::size_t
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
 #include <gsl/gsl> // import gsl::basic_zstring, gsl::dynamic_extent
+#pragma warning(pop)
 
 namespace artccel::core::util {
 constexpr inline std::size_t null_terminator_size{1}; // TODO: C++23: UZ
