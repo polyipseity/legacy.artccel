@@ -83,7 +83,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
   std::mbstate_t state{};
   for (auto old_state{state}; !std::empty(loc_enc); old_state = state) {
     UTFCharT utf_c{}; // not written to if the next character is null
-    switch (auto processed{mbrtoc(utf_c, loc_enc, state)}) {
+    switch (auto processed{detail::mbrtoc(utf_c, loc_enc, state)}) {
       [[unlikely]] case cuchar_mbrtoc_error : {
         std::system_error errno_exc{errno, std::generic_category()};
         return return_type{
@@ -133,7 +133,7 @@ static auto loc_enc_to_utf(std::string_view loc_enc) {
     result.push_back(utf_c);
   }
   for (UTFCharT utf_c{};
-       mbrtoc(utf_c, loc_enc, state) == cuchar_mbrtoc_surrogate;) {
+       detail::mbrtoc(utf_c, loc_enc, state) == cuchar_mbrtoc_surrogate;) {
     result.push_back(utf_c); // complete surrogate pair of the last character
   }
   return return_type{std::move(result)};
@@ -148,7 +148,7 @@ static auto utf_to_loc_enc(std::basic_string_view<UTFCharT> utf) {
   std::mbstate_t state{};
   for (std::array<char, MB_LEN_MAX> loc_enc{};
        auto utf_c : std::as_const(utf)) {
-    switch (auto const processed{crtomb(loc_enc, utf_c, state)}) {
+    switch (auto const processed{detail::crtomb(loc_enc, utf_c, state)}) {
       [[unlikely]] case cuchar_crtomb_error : {
         std::system_error errno_exc{errno, std::generic_category()};
         return return_type{

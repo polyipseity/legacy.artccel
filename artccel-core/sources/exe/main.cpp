@@ -69,8 +69,8 @@ static auto main_0(Raw_arguments arguments) -> int {
                           [](auto exc) { std::rethrow_exception(exc); });
   }};
   Main_program const program{program_dtor_excs, arguments};
-  print_args(program);
-  echo_cin();
+  detail::print_args(program);
+  detail::echo_cin();
   return 0;
 }
 } // namespace artccel::core::detail
