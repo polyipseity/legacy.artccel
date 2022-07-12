@@ -82,13 +82,46 @@ endfunction()
 enable_ipo_if_supported()
 
 function(try_match_pic_and_reuse_precompile_headers_for_executable TARGET OTHER_TARGET)
+	include(CheckPIESupported)
+	check_pie_supported(LANGUAGES ${ENABLED_LANGUAGES})
 	get_target_property(LINK_PIC "${OTHER_TARGET}" POSITION_INDEPENDENT_CODE)
 
-	# the commented code adds '-fPIE' instead of '-fPIC' for executables
-	# set_target_properties("${TARGET}" PROPERTIES POSITION_INDEPENDENT_CODE "${LINK_PIC}")
 	if(LINK_PIC)
-		target_compile_options("${TARGET}" PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fPIC>)
+		set(LINK_PIE_SUPPORTED true)
+
+		foreach(LANGUAGE IN LISTS ENABLED_LANGUAGES)
+			if(NOT "CMAKE_${LANGUAGE}_LINK_PIE_SUPPORTED")
+				set(LINK_PIE_SUPPORTED false)
+				break()
+			endif()
+		endforeach()
+
+		if(LINK_PIE_SUPPORTED)
+			# the below line adds '-fPIE' instead of '-fPIC' for executables
+			# set_target_properties("${TARGET}" PROPERTIES POSITION_INDEPENDENT_CODE "${LINK_PIE_SUPPORTED}")
+			if(NOT WIN32) # unsupported
+				target_compile_options("${TARGET}" PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fPIC>)
+			endif()
+
+			target_precompile_headers("${TARGET}" REUSE_FROM "${OTHER_TARGET}")
+			return()
+		endif()
+	else()
+		set(LINK_NO_PIE_SUPPORTED true)
+
+		foreach(LANGUAGE IN LISTS ENABLED_LANGUAGES)
+			if(NOT "CMAKE_${LANGUAGE}_LINK_NO_PIE_SUPPORTED")
+				set(LINK_NO_PIE_SUPPORTED false)
+				break()
+			endif()
+		endforeach()
+
+		if(LINK_NO_PIE_SUPPORTED)
+			set_target_properties("${TARGET}" PROPERTIES POSITION_INDEPENDENT_CODE false)
+			target_precompile_headers("${TARGET}" REUSE_FROM "${OTHER_TARGET}")
+			return()
+		endif()
 	endif()
 
-	target_precompile_headers("${TARGET}" REUSE_FROM "${OTHER_TARGET}")
+	message(WARNING "Failed to reuse precompile headers from '${OTHER_TARGET}' with '${TARGET}'")
 endfunction()
