@@ -83,7 +83,7 @@ enable_ipo_if_supported()
 
 function(try_match_pic_and_reuse_precompile_headers_for_executable TARGET OTHER_TARGET)
 	if(WIN32) # symbol export and import are not symmetric, disable
-		message(STATUS "Reusing recompile headers is disabled on Windows")
+		message(STATUS "Reusing precompile headers is disabled on Windows")
 	else()
 		include(CheckPIESupported)
 		check_pie_supported(LANGUAGES ${ENABLED_LANGUAGES})
