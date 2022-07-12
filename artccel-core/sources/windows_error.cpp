@@ -5,7 +5,7 @@
 
 #pragma warning(push)
 #pragma warning(disable : 4668 5039)
-#include <Windows.h> // import ::GetLastError
+#include <windows.h> // import ::GetLastError
 #pragma warning(pop)
 
 #include <artccel/core/platform/windows_error.hpp> // interface

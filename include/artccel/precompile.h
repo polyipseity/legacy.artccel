@@ -25,7 +25,7 @@
 #include <gsl/gsl>
 #include <tl/expected.hpp>
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 #include <artccel/config.h>
