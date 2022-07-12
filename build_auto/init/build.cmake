@@ -30,10 +30,6 @@ add_compile_options(
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fexec-charset=UTF-8>
 	$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:UTF-8>
 )
-add_link_options(
-	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>
-	$<$<CXX_COMPILER_ID:MSVC>:/WX>
-)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	add_compile_options(
@@ -51,6 +47,22 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	)
 endif()
 
+if(ARTCCEL_PROFILE_COMPILATION)
+	message(STATUS "Compilation profiling is enabled")
+	add_compile_options($<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-ftime-report>)
+
+	if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+		add_compile_options(-ftime-trace)
+	endif()
+
+	# MSVC: vcperf
+endif()
+
+add_link_options(
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>
+	$<$<CXX_COMPILER_ID:MSVC>:/WX>
+)
+
 function(enable_ipo_if_supported)
 	include(CheckIPOSupported)
 	check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_OUTPUT)
@@ -59,7 +71,7 @@ function(enable_ipo_if_supported)
 		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION true)
 		message(STATUS "Interprocedural optimization is enabled")
 	else()
-		message(STATUS "Interprocedural optimization is not supported: ${IPO_OUTPUT}")
+		message(WARNING "Interprocedural optimization is not supported: ${IPO_OUTPUT}")
 	endif()
 endfunction()
 
