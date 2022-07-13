@@ -10,7 +10,19 @@ add_custom_target(clang-tidy
 	VERBATIM)
 
 function(target_integrate_clang_tidy target language link_filter_excludes arguments)
+	# evaluate incompatible generator expressions
+	function(eval_incompatible_genexps out_var str)
+		set(_result "${str}")
+		string(REPLACE "$<C_COMPILER_ID:Clang>" "1" _result "${_result}")
+		string(REPLACE "$<CXX_COMPILER_ID:Clang>" "1" _result "${_result}")
+		string(REGEX REPLACE "\\$<C_COMPILER_ID:[^>]*>" "0" _result "${_result}")
+		string(REGEX REPLACE "\\$<CXX_COMPILER_ID:[^>]*>" "0" _result "${_result}")
+		set("${out_var}" "${result}" PARENT_SCOPE)
+	endfunction()
+
 	# workaround: make up for a lack of a usable filter
+	eval_incompatible_genexps(link_filter_excludes "${link_filter_excludes}")
+
 	foreach(_exclude IN LISTS link_filter_excludes)
 		string(APPEND _line_filters "{\"name\": \"${_exclude}\", \"lines\": [[2, 1]]},")
 	endforeach()
@@ -26,37 +38,30 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 ")
 	endif()
 
-	# evaluate incompatible generator expressions
-	function(eval_incompatible_genexps out_var str)
-		set(_result "${str}")
-		string(REPLACE "$<C_COMPILER_ID:Clang>" "1" _result "${_result}")
-		string(REPLACE "$<CXX_COMPILER_ID:Clang>" "1" _result "${_result}")
-		string(REGEX REPLACE "\\$<C_COMPILER_ID:[^>]*>" "0" _result "${_result}")
-		string(REGEX REPLACE "\\$<CXX_COMPILER_ID:[^>]*>" "0" _result "${_result}")
-		set("${out_var}" "${result}" PARENT_SCOPE)
-	endfunction()
-
 	# actual work
+	set(_target_include_directories "$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>")
+	get_target_property(_target_compile_definitions "${target}" COMPILE_DEFINITIONS)
+	eval_incompatible_genexps(_target_compile_definitions "${_target_compile_definitions}")
+	get_target_property(_target_compile_options "${target}" COMPILE_OPTIONS)
+	eval_incompatible_genexps(_target_compile_options "${_target_compile_options}")
+
 	set(_lang_std "${language}")
 	string(REPLACE "X" "+" _lang_std "${_lang_std}")
 	string(TOLOWER "${_lang_std}" _lang_std)
 	string(APPEND _lang_std "${CMAKE_${language}_STANDARD}")
-	set(_target_include_directories "$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>")
-	get_target_property(_target_compile_options "${target}" COMPILE_OPTIONS)
-	eval_incompatible_genexps(_target_compile_options "${_target_compile_options}")
-	get_target_property(_target_compile_definitions "${target}" COMPILE_DEFINITIONS)
-	eval_incompatible_genexps(_target_compile_definitions "${_target_compile_definitions}")
+	eval_incompatible_genexps(arguments "${arguments}")
 	get_target_property(_target_sources "${target}" SOURCES)
 
 	foreach(_source IN LISTS _target_sources)
-		get_filename_component(_source_real "${_source}" REALPATH BASE_DIR "${PROJECT_SOURCE_DIR}")
-		string(SHA3_512 _source_hash "${_source_real}")
 		get_source_file_property(_source_include_directories "${_source}" INCLUDE_DIRECTORIES)
 		eval_incompatible_genexps(_source_include_directories "${_source_include_directories}")
-		get_source_file_property(_source_compile_options "${_source}" COMPILE_OPTIONS)
-		eval_incompatible_genexps(_source_compile_options "${_source_compile_options}")
 		get_source_file_property(_source_compile_definitions "${_source}" COMPILE_DEFINITIONS)
 		eval_incompatible_genexps(_source_compile_definitions "${_source_compile_definitions}")
+		get_source_file_property(_source_compile_options "${_source}" COMPILE_OPTIONS)
+		eval_incompatible_genexps(_source_compile_options "${_source_compile_options}")
+
+		get_filename_component(_source_real "${_source}" REALPATH BASE_DIR "${PROJECT_SOURCE_DIR}")
+		string(SHA3_512 _source_hash "${_source_real}")
 		add_custom_command(
 			OUTPUT "clang-tidy/${_source_hash}.timestamp"
 			COMMAND clang-tidy ARGS
@@ -65,9 +70,11 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 			"${_source_real}"
 			--
 			"$<$<BOOL:${_target_include_directories}>:-I$<JOIN:${_target_include_directories},;-I>>"
-			"${_target_compile_options}" "${_target_compile_definitions}"
+			"$<$<BOOL:${_target_compile_definitions}>:-D$<JOIN:${_target_compile_definitions},;-D>>"
+			"${_target_compile_options}"
 			"$<$<BOOL:${_source_include_directories}>:-I$<JOIN:${_source_include_directories},;-I>>"
-			"${_source_compile_options}" "${_source_compile_definitions}"
+			"$<$<BOOL:${_source_compile_definitions}>:-D$<JOIN:${_source_compile_definitions},;-D>>"
+			"${_source_compile_options}"
 
 			# workaround: make clang-tidy include non-default system headers
 			"$<$<BOOL:${CMAKE_${language}_IMPLICIT_INCLUDE_DIRECTORIES}>:-isystem$<JOIN:${CMAKE_${language}_IMPLICIT_INCLUDE_DIRECTORIES},;-isystem>>"
