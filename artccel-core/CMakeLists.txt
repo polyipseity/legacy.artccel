@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(artccel-core VERSION 1.0.0 LANGUAGES C CXX)
-set(ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/../")
+set(ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/..")
 
 include("${ROOT_SOURCE_DIR}/build_auto/init.cmake")
 
