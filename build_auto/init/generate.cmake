@@ -1,38 +1,38 @@
 # generation
-function(generate_preset_export_header LIBRARY_TARGET EXPORT_FILE_NAME)
-	string(REPLACE "-" "_" LIBRARY_TARGET_CODE "${LIBRARY_TARGET}")
-	string(TOUPPER "${LIBRARY_TARGET_CODE}" LIBRARY_TARGET_CODE_UPPER)
+function(generate_preset_export_header target filename)
+	string(REPLACE "-" "_" _target_macro_lowercase "${target}")
+	string(TOUPPER "${_target_macro_lowercase}" _target_macro)
 	set(CUSTOM_EXPORT_HEADER "
-#ifdef ${LIBRARY_TARGET_CODE_UPPER}_STATIC_DEFINE
-#	define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION
-#	define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
+#ifdef ${_target_macro}_STATIC_DEFINE
+#	define ${_target_macro}_EXPORT_DECLARATION
+#	define ${_target_macro}_EXPORT_DEFINITION
 #else
-#	ifndef ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION
-#		ifdef ${LIBRARY_TARGET_CODE}_EXPORTS
+#	ifndef ${_target_macro}_EXPORT_DECLARATION
+#		ifdef ${_target_macro_lowercase}_EXPORTS
 #			ifdef _MSC_VER
-#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION
+#				define ${_target_macro}_EXPORT_DECLARATION
 #			else
-#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
+#				define ${_target_macro}_EXPORT_DECLARATION ${_target_macro}_EXPORT
 #			endif
 #		else
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DECLARATION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
+#			define ${_target_macro}_EXPORT_DECLARATION ${_target_macro}_EXPORT
 #		endif
 #	endif
-#	ifndef ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
-#		ifdef ${LIBRARY_TARGET_CODE}_EXPORTS
+#	ifndef ${_target_macro}_EXPORT_DEFINITION
+#		ifdef ${_target_macro_lowercase}_EXPORTS
 #			ifdef _MSC_VER
-#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION ${LIBRARY_TARGET_CODE_UPPER}_EXPORT
+#				define ${_target_macro}_EXPORT_DEFINITION ${_target_macro}_EXPORT
 #			else
-#				define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
+#				define ${_target_macro}_EXPORT_DEFINITION
 #			endif
 #		else
-#			define ${LIBRARY_TARGET_CODE_UPPER}_EXPORT_DEFINITION
+#			define ${_target_macro}_EXPORT_DEFINITION
 #		endif
 #	endif
 #endif
 ")
 	include(GenerateExportHeader)
-	generate_export_header("${LIBRARY_TARGET}"
-		EXPORT_FILE_NAME "${EXPORT_FILE_NAME}"
+	generate_export_header("${target}"
+		EXPORT_FILE_NAME "${filename}"
 		CUSTOM_CONTENT_FROM_VARIABLE CUSTOM_EXPORT_HEADER)
 endfunction()

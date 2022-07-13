@@ -3,38 +3,42 @@ include(FetchContent)
 # helpers
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "OPT_IN" CACHE STRING "https://cmake.org/cmake/help/latest/module/FetchContent.html?highlight=fetchcontent_try_find_package_mode#variable:FETCHCONTENT_TRY_FIND_PACKAGE_MODE")
 
-function(find_package_or_fetch_content PACKAGE_NAME TARGET_NAME TARGET_OPTIONS PACKAGE_OPTIONS)
+function(find_package_or_fetch_content package target target_options package_options)
 	if(FETCHCONTENT_TRY_FIND_PACKAGE_MODE STREQUAL "OPT_IN")
 		set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "ALWAYS")
 		message(WARNING "'FETCHCONTENT_TRY_FIND_PACKAGE_MODE' is treated as 'ALWAYS'")
 	endif()
 
 	if(FETCHCONTENT_TRY_FIND_PACKAGE_MODE STREQUAL "ALWAYS")
-		list(REMOVE_ITEM PACKAGE_OPTIONS "REQUIRED")
-		find_package("${PACKAGE_NAME}" ${PACKAGE_OPTIONS})
-
-		if(NOT "${PACKAGE_NAME}_FOUND")
-			set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "NEVER")
-		endif()
-	endif()
-
-	if(FETCHCONTENT_TRY_FIND_PACKAGE_MODE STREQUAL "NEVER")
-		list(LENGTH TARGET_OPTIONS TARGET_OPTIONS_LENGTH)
-		math(EXPR TARGET_OPTIONS_LENGTH "${TARGET_OPTIONS_LENGTH} - 1")
-
-		foreach(TARGET_OPTION_INDEX RANGE 0 "${TARGET_OPTIONS_LENGTH}" 2)
-			math(EXPR TARGET_OPTION_VALUE_INDEX "${TARGET_OPTION_INDEX} + 1")
-			list(GET TARGET_OPTIONS "${TARGET_OPTION_INDEX}" TARGET_OPTION)
-			list(GET TARGET_OPTIONS "${TARGET_OPTION_VALUE_INDEX}" TARGET_OPTION_VALUE)
-			set("${TARGET_OPTION}" "${TARGET_OPTION_VALUE}")
-		endforeach()
-
-		FetchContent_MakeAvailable("${PACKAGE_NAME}")
-		add_library("${PACKAGE_NAME}::${TARGET_NAME}" ALIAS "${TARGET_NAME}")
-		export(TARGETS "${TARGET_NAME}" NAMESPACE "${PACKAGE_NAME}::" FILE "${TARGET_NAME}-targets.cmake")
+		set(_find_package true)
+	elseif(FETCHCONTENT_TRY_FIND_PACKAGE_MODE STREQUAL "NEVER")
+		set(_find_package false)
 	else()
 		message(FATAL_ERROR "'FETCHCONTENT_TRY_FIND_PACKAGE_MODE' has invalid value: ${FETCHCONTENT_TRY_FIND_PACKAGE_MODE}")
 	endif()
+
+	if(_find_package)
+		list(REMOVE_ITEM package_options "REQUIRED")
+		find_package("${package}" ${package_options})
+
+		if("${package}_FOUND")
+			return()
+		endif()
+	endif()
+
+	list(LENGTH target_options _target_options_len)
+	math(EXPR _target_options_len "${_target_options_len} - 1")
+
+	foreach(_target_option_idx RANGE 0 "${_target_options_len}" 2)
+		math(EXPR _target_option_val_idx "${_target_option_idx} + 1")
+		list(GET target_options "${_target_option_idx}" _target_option)
+		list(GET target_options "${_target_option_val_idx}" _target_option_val)
+		set("${_target_option}" "${_target_option_val}")
+	endforeach()
+
+	FetchContent_MakeAvailable("${package}")
+	add_library("${package}::${target}" ALIAS "${target}")
+	export(TARGETS "${target}" NAMESPACE "${package}::" FILE "${target}-targets.cmake")
 endfunction()
 
 # dependencies

@@ -9,18 +9,18 @@ add_custom_target(clang-tidy
 	COMMENT "Running clang-tidy on all clang-tidy-integrated targets"
 	VERBATIM)
 
-function(target_integrate_clang_tidy TARGET LANGUAGE LINE_FILTER_EXCLUDES ARGUMENTS)
+function(target_integrate_clang_tidy target language link_filter_excludes arguments)
 	# workaround: make up for a lack of a usable filter
-	set(LINE_FILTER "")
+	set(_line_filters "")
 
-	foreach(LINE_FILTER_EXCLUDE IN LISTS LINE_FILTER_EXCLUDES)
-		string(APPEND LINE_FILTER "{\"name\": \"${LINE_FILTER_EXCLUDE}\", \"lines\": [[2, 1]]},")
+	foreach(_exclude IN LISTS link_filter_excludes)
+		string(APPEND _line_filters "{\"name\": \"${_exclude}\", \"lines\": [[2, 1]]},")
 	endforeach()
 
-	string(APPEND LINE_FILTER "{\"name\": \".h\"}, {\"name\": \".c\"},")
+	string(APPEND _line_filters "{\"name\": \".h\"}, {\"name\": \".c\"},")
 
-	if(LANGUAGE STREQUAL "CXX")
-		string(APPEND LINE_FILTER "\
+	if(language STREQUAL "CXX")
+		string(APPEND _line_filters "\
 {\"name\": \".hpp\"}, {\"name\": \".cpp\"},\
 {\"name\": \".hxx\"}, {\"name\": \".cxx\"},\
 {\"name\": \".hh\"}, {\"name\": \".cc\"},\
@@ -39,60 +39,60 @@ function(target_integrate_clang_tidy TARGET LANGUAGE LINE_FILTER_EXCLUDES ARGUME
 	endfunction()
 
 	# actual work
-	string(REPLACE "X" "+" LANGUAGE_PROPER_NAME "${LANGUAGE}")
-	string(TOLOWER "${LANGUAGE_PROPER_NAME}" LANGUAGE_PROPER_NAME)
-	set(TARGET_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:${TARGET},INCLUDE_DIRECTORIES>")
-	get_target_property(TARGET_COMPILE_OPTIONS "${TARGET}" COMPILE_OPTIONS)
-	eval_incompatible_genexps(TARGET_COMPILE_OPTIONS "${TARGET_COMPILE_OPTIONS}")
-	get_target_property(TARGET_COMPILE_DEFINITIONS "${TARGET}" COMPILE_DEFINITIONS)
-	eval_incompatible_genexps(TARGET_COMPILE_DEFINITIONS "${TARGET_COMPILE_DEFINITIONS}")
-	set(CLANG_TIDY_OUTPUTS "")
-	get_target_property(TARGET_SOURCES "${TARGET}" SOURCES)
+	set(_lang_std "${language}")
+	string(REPLACE "X" "+" _lang_std "${_lang_std}")
+	string(TOLOWER "${_lang_std}" _lang_std)
+	string(APPEND _lang_std "${CMAKE_${language}_STANDARD}")
+	set(_target_include_directories "$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>")
+	get_target_property(_target_compile_options "${target}" COMPILE_OPTIONS)
+	eval_incompatible_genexps(_target_compile_options "${_target_compile_options}")
+	get_target_property(_target_compile_definitions "${target}" COMPILE_DEFINITIONS)
+	eval_incompatible_genexps(_target_compile_definitions "${_target_compile_definitions}")
+	set(_clang_tidy_outputs "")
+	get_target_property(_target_sources "${target}" SOURCES)
 
-	foreach(TARGET_SOURCE IN LISTS TARGET_SOURCES)
-		get_filename_component(TARGET_SOURCE_REAL "${TARGET_SOURCE}" REALPATH BASE_DIR "${PROJECT_SOURCE_DIR}")
-		string(SHA3_512 TARGET_SOURCE_HASH "${TARGET_SOURCE_REAL}")
-		get_source_file_property(SOURCE_COMPILE_OPTIONS "${TARGET_SOURCE}" COMPILE_OPTIONS)
-		eval_incompatible_genexps(SOURCE_COMPILE_OPTIONS "${SOURCE_COMPILE_OPTIONS}")
-		get_source_file_property(SOURCE_COMPILE_DEFINITIONS "${TARGET_SOURCE}" COMPILE_DEFINITIONS)
-		eval_incompatible_genexps(SOURCE_COMPILE_DEFINITIONS "${SOURCE_COMPILE_DEFINITIONS}")
-		get_source_file_property(SOURCE_INCLUDE_DIRECTORIES "${TARGET_SOURCE}" INCLUDE_DIRECTORIES)
-		eval_incompatible_genexps(SOURCE_INCLUDE_DIRECTORIES "${SOURCE_INCLUDE_DIRECTORIES}")
+	foreach(_source IN LISTS _target_sources)
+		get_filename_component(_source_real "${_source}" REALPATH BASE_DIR "${PROJECT_SOURCE_DIR}")
+		string(SHA3_512 _source_hash "${_source_real}")
+		get_source_file_property(_source_include_directories "${_source}" INCLUDE_DIRECTORIES)
+		eval_incompatible_genexps(_source_include_directories "${_source_include_directories}")
+		get_source_file_property(_source_compile_options "${_source}" COMPILE_OPTIONS)
+		eval_incompatible_genexps(_source_compile_options "${_source_compile_options}")
+		get_source_file_property(_source_compile_definitions "${_source}" COMPILE_DEFINITIONS)
+		eval_incompatible_genexps(_source_compile_definitions "${_source_compile_definitions}")
 		add_custom_command(
-			OUTPUT "clang-tidy/${TARGET_SOURCE_HASH}.timestamp"
+			OUTPUT "clang-tidy/${_source_hash}.timestamp"
 			COMMAND clang-tidy ARGS
 			"--config-file=${ROOT_SOURCE_DIR}/.clang-tidy"
-			"--line-filter=[${LINE_FILTER}]"
-			"${TARGET_SOURCE_REAL}"
+			"--line-filter=[${_line_filters}]"
+			"${_source_real}"
 			--
-			"$<$<BOOL:${TARGET_INCLUDE_DIRECTORIES}>:-I$<JOIN:${TARGET_INCLUDE_DIRECTORIES},;-I>>"
-			"${TARGET_COMPILE_OPTIONS}" "${TARGET_COMPILE_DEFINITIONS}"
-			"$<$<BOOL:${SOURCE_INCLUDE_DIRECTORIES}>:-I$<JOIN:${SOURCE_INCLUDE_DIRECTORIES},;-I>>"
-			"${SOURCE_COMPILE_OPTIONS}" "${SOURCE_COMPILE_DEFINITIONS}"
+			"$<$<BOOL:${_target_include_directories}>:-I$<JOIN:${_target_include_directories},;-I>>"
+			"${_target_compile_options}" "${_target_compile_definitions}"
+			"$<$<BOOL:${_source_include_directories}>:-I$<JOIN:${_source_include_directories},;-I>>"
+			"${_source_compile_options}" "${_source_compile_definitions}"
 
 			# workaround: make clang-tidy include non-default system headers
-			"$<$<BOOL:${CMAKE_${LANGUAGE}_IMPLICIT_INCLUDE_DIRECTORIES}>:-isystem$<JOIN:${CMAKE_${LANGUAGE}_IMPLICIT_INCLUDE_DIRECTORIES},;-isystem>>"
+			"$<$<BOOL:${CMAKE_${language}_IMPLICIT_INCLUDE_DIRECTORIES}>:-isystem$<JOIN:${CMAKE_${language}_IMPLICIT_INCLUDE_DIRECTORIES},;-isystem>>"
 
-			"-std=${LANGUAGE_PROPER_NAME}${CMAKE_${LANGUAGE}_STANDARD}"
-			"${ARGUMENTS}"
-			COMMAND "${CMAKE_COMMAND}" ARGS -E touch "${PROJECT_BINARY_DIR}/clang-tidy/${TARGET_SOURCE_HASH}.timestamp"
-			DEPENDS "${TARGET_SOURCE_REAL}" # MAIN_DEPENDENCY silently overwrites compilation
-			IMPLICIT_DEPENDS "${LANGUAGE}" "${TARGET_SOURCE_REAL}"
-			WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-			COMMENT "Running clang-tidy on '${TARGET_SOURCE}' of '${TARGET}'"
+			"-std=${_lang_std}" "${arguments}"
+			COMMAND "${CMAKE_COMMAND}" ARGS -E touch "${PROJECT_BINARY_DIR}/clang-tidy/${_source_hash}.timestamp"
+			DEPENDS "${_source_real}" # MAIN_DEPENDENCY silently overwrites compilation
+			IMPLICIT_DEPENDS "${language}" "${_source_real}"
+			COMMENT "Running clang-tidy on '${_source}' of '${target}'"
 			VERBATIM COMMAND_EXPAND_LISTS # dumb generator expression with spaces is a time waster
 		)
-		list(APPEND CLANG_TIDY_OUTPUTS "clang-tidy/${TARGET_SOURCE_HASH}.timestamp")
+		list(APPEND _clang_tidy_outputs "clang-tidy/${_source_hash}.timestamp")
 	endforeach()
 
-	add_custom_target("${TARGET}-clang-tidy"
-		DEPENDS ${CLANG_TIDY_OUTPUTS}
-		COMMENT "Running clang-tidy on '${TARGET}'"
+	add_custom_target("${target}-clang-tidy"
+		DEPENDS ${_clang_tidy_outputs}
+		COMMENT "Running clang-tidy on '${target}'"
 		VERBATIM
 	)
-	add_dependencies(clang-tidy "${TARGET}-clang-tidy")
+	add_dependencies(clang-tidy "${target}-clang-tidy")
 
 	if(ARTCCEL_RUN_CLANG_TIDY)
-		add_dependencies("${TARGET}" "${TARGET}-clang-tidy")
+		add_dependencies("${target}" "${target}-clang-tidy")
 	endif()
 endfunction()
