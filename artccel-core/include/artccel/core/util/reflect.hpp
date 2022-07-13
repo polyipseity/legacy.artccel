@@ -2,13 +2,12 @@
 #define ARTCCEL_CORE_UTIL_REFLECT_HPP
 #pragma once
 
-#include <algorithm> // import std::ranges::copy
-#include <array> // import std::array, std::begin, std::data, std::size, std::to_array
 #include <cstddef>     // import std::size_t
+#include <span>        // import std::data, std::size, std::span
 #include <string_view> // import std::string_view, std::u8string_view
 #include <utility>     // import std::move
 
-#include "containers_extras.hpp" // import f::const_array
+#include "containers_extras.hpp" // import f::const_array, f::static_span
 #include "encoding.hpp"          // import f::utf8_compat_as_utf8_array
 #include "meta.hpp"              // import Template_string
 #include "semantics.hpp"         // import null_terminator_size
@@ -46,7 +45,7 @@ public:
 template <typename Type>
 constexpr static auto type_name_storage{[] {
   if constexpr (type_name_format.junk_prefix_ == std::string_view::npos) {
-    return std::to_array(/*u8*/ "<type name unavailable>");
+    return f::to_array_cv(/*u8*/ "<type name unavailable>");
   } else {
     constexpr auto type_name{[] {
       auto init{raw_type_name<Type>()};
@@ -54,9 +53,8 @@ constexpr static auto type_name_storage{[] {
       init.remove_suffix(type_name_format.junk_suffix_);
       return init;
     }()};
-    std::array<char, std::size(type_name) + null_terminator_size> init{};
-    std::ranges::copy(type_name, std::begin(init));
-    return f::const_array(std::move(init));
+    return f::const_array<std::size(type_name) + null_terminator_size>(
+        f::static_span<std::size(type_name)>(type_name));
   }
 }()};
 } // namespace detail
