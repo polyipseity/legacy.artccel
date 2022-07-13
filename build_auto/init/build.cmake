@@ -42,7 +42,7 @@ add_compile_options(
 	"$<$<BOOL:${CXX_CLANG_LIKE_COMPILER}>:-Wno-error=unknown-argument>"
 	"$<$<BOOL:${CXX_CLANG_LIKE_COMPILER}>:-Wno-error=unknown-attributes>"
 	"$<$<BOOL:${CXX_CLANG_LIKE_COMPILER}>:-Wno-error=unknown-warning-option>"
-	"$<$<AND:$<BOOL:${CX_CLANG_LIKE_COMPILER}>,$<BOOL:${WIN32}>>:-Wno-error=nonportable-system-include-path>"
+	"$<$<AND:$<BOOL:${CXX_CLANG_LIKE_COMPILER}>,$<BOOL:${WIN32}>>:-Wno-error=nonportable-system-include-path>"
 
 	# #pragma warning(disable : XXXX) seems to be broken for below warnings
 	"$<$<CXX_COMPILER_ID:MSVC>:/wd4868>" # compiler may not enforce left-to-right evaluation order in braced initializer list
