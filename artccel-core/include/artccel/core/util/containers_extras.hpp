@@ -47,7 +47,7 @@ template <typename Type, std::size_t Size>
 constexpr auto const_array [[nodiscard]] (std::array<Type, Size> const &array) {
   return [&array]<std::size_t... Idx>(
       [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
-    return std::array<Type const, Size>{{array[Idx]...}};
+    return std::array<Type const, Size>{array[Idx]...};
   }
   (std::make_index_sequence<Size>{});
 }
@@ -55,7 +55,7 @@ template <typename Type, std::size_t Size>
 constexpr auto const_array [[nodiscard]] (std::array<Type, Size> &&array) {
   return [&array]<std::size_t... Idx>(
       [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
-    return std::array<Type const, Size>{{std::move(array[Idx])...}};
+    return std::array<Type const, Size>{std::move(array[Idx])...};
   }
   (std::make_index_sequence<Size>{});
 }
@@ -74,7 +74,7 @@ constexpr auto to_array_cv(Type (&array)[Size]) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
   return [&array]<std::size_t... Idx>(
       [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
-    return std::array<Type, Size>{{array[Idx]...}};
+    return std::array<Type, Size>{array[Idx]...};
   }
   (std::make_index_sequence<Size>{});
 }
@@ -84,7 +84,7 @@ constexpr auto to_array_cv(Type (&&array)[Size]) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
   return [&array]<std::size_t... Idx>(
       [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
-    return std::array<Type, Size>{{std::move(array[Idx])...}};
+    return std::array<Type, Size>{std::move(array[Idx])...};
   }
   (std::make_index_sequence<Size>{});
 }
@@ -93,7 +93,7 @@ requires(Size != std::dynamic_extent) constexpr auto to_array_cv(
     std::span<Type, Size> span) {
   return [span]<std::size_t... Idx>(
       [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
-    return std::array<Type, Size>{{span[Idx]...}};
+    return std::array<Type, Size>{span[Idx]...};
   }
   (std::make_index_sequence<Size>{});
 }
