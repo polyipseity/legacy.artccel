@@ -28,7 +28,8 @@ add_sanitizers(artccel-core)
 
 add_executable(artccel-core-exe "sources/exe/main.cpp")
 add_executable("${ARTCCEL_NAMESPACE}artccel-core-exe" ALIAS artccel-core-exe)
-target_precompile_headers(artccel-core PRIVATE "include/artccel/core/precompile.h")
+get_target_property(artccel-core_PRECOMPILE_HEADERS artccel-core PRECOMPILE_HEADERS)
+target_precompile_headers(artccel-core-exe PRIVATE ${artccel-core_PRECOMPILE_HEADERS})
 target_link_libraries(artccel-core-exe artccel-core)
 add_sanitizers(artccel-core-exe)
 
