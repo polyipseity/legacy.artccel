@@ -43,6 +43,11 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	get_target_property(_target_compile_definitions "${target}" COMPILE_DEFINITIONS)
 	eval_incompatible_genexps(_target_compile_definitions "${_target_compile_definitions}")
 	get_target_property(_target_compile_options "${target}" COMPILE_OPTIONS)
+
+	if(_target_compile_options STREQUAL "NOTFOUND")
+		set(_target_compile_options "")
+	endif()
+
 	eval_incompatible_genexps(_target_compile_options "${_target_compile_options}")
 
 	set(_lang_std "${language}")
@@ -54,10 +59,25 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 
 	foreach(_source IN LISTS _target_sources)
 		get_source_file_property(_source_include_directories "${_source}" INCLUDE_DIRECTORIES)
+
+		if(_source_include_directories STREQUAL "NOTFOUND")
+			set(_source_include_directories "")
+		endif()
+
 		eval_incompatible_genexps(_source_include_directories "${_source_include_directories}")
 		get_source_file_property(_source_compile_definitions "${_source}" COMPILE_DEFINITIONS)
+
+		if(_source_compile_definitions STREQUAL "NOTFOUND")
+			set(_source_compile_definitions "")
+		endif()
+
 		eval_incompatible_genexps(_source_compile_definitions "${_source_compile_definitions}")
 		get_source_file_property(_source_compile_options "${_source}" COMPILE_OPTIONS)
+
+		if(_source_compile_options STREQUAL "NOTFOUND")
+			set(_source_compile_options "")
+		endif()
+
 		eval_incompatible_genexps(_source_compile_options "${_source_compile_options}")
 
 		get_filename_component(_source_real "${_source}" REALPATH BASE_DIR "${PROJECT_SOURCE_DIR}")
