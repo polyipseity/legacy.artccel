@@ -55,11 +55,11 @@ add_compile_options(
 )
 
 if(ARTCCEL_PROFILE_COMPILATION)
-	message(STATUS "Compilation profiling is enabled")
 	add_compile_options(
 		"$<$<BOOL:${CXX_GCC_LIKE_COMPILER}>:-ftime-report>"
 		"$<$<BOOL:${CXX_CLANG_LIKE_COMPILER}>:-ftime-trace>"
 	)
+	message(STATUS "Compilation profiling is enabled")
 
 	# MSVC: vcperf
 endif()
