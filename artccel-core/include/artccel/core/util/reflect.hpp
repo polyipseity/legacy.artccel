@@ -2,10 +2,9 @@
 #define ARTCCEL_CORE_UTIL_REFLECT_HPP
 #pragma once
 
-#include <cstddef>     // import std::size_t
-#include <span>        // import std::data, std::size, std::span
-#include <string_view> // import std::string_view, std::u8string_view
-#include <utility>     // import std::move
+#include <cstddef> // import std::size_t, std::span
+#include <string_view> // import std::data, std::size, std::string_view, std::u8string_view
+#include <utility> // import std::move
 
 #include "containers.hpp" // import f::const_array, f::static_span
 #include "encoding.hpp"   // import f::utf8_compat_as_utf8_array
