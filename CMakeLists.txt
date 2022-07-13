@@ -11,7 +11,11 @@ target_include_directories(artccel INTERFACE
 	"$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 	"$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>"
 	"$<INSTALL_INTERFACE:include>")
-target_link_libraries(artccel INTERFACE Threads::Threads Microsoft.GSL::GSL tl-expected::expected)
+target_link_libraries(artccel INTERFACE
+	Microsoft.GSL::GSL
+	Threads::Threads
+	ofats::any_invocable
+	tl-expected::expected)
 
 add_library(artccel-private INTERFACE)
 target_precompile_headers(artccel-private INTERFACE "include/artccel/precompile.h")
