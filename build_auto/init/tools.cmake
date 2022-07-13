@@ -40,8 +40,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 
 	# actual work
 	set(_target_include_directories "$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>")
-	get_target_property(_target_compile_definitions "${target}" COMPILE_DEFINITIONS)
-	eval_incompatible_genexps(_target_compile_definitions "${_target_compile_definitions}")
+	set(_target_compile_definitions "$<TARGET_PROPERTY:${target},COMPILE_DEFINITIONS>")
 	get_target_property(_target_compile_options "${target}" COMPILE_OPTIONS)
 
 	if(_target_compile_options STREQUAL "NOTFOUND")
