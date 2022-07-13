@@ -20,7 +20,6 @@ Checks: >
 # 'llvm-header-guard' dislikes Windows-style paths
 WarningsAsErrors: >
   *,
-  -clang-diagnostic-pragma-system-header-outside-header,
   -clang-diagnostic-unknown-attributes,
   -clang-diagnostic-unknown-pragmas,
   -llvm-header-guard,
