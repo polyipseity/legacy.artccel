@@ -7,7 +7,10 @@ include("${ROOT_SOURCE_DIR}/build_auto/init.cmake")
 add_library(artccel INTERFACE)
 add_library("${ARTCCEL_NAMESPACE}artccel" ALIAS artccel)
 configure_file("in/config.h" "include/artccel/config.h")
-target_include_directories(artccel INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include> $<INSTALL_INTERFACE:include>)
+target_include_directories(artccel INTERFACE
+	"$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+	"$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>"
+	"$<INSTALL_INTERFACE:include>")
 target_link_libraries(artccel INTERFACE Threads::Threads Microsoft.GSL::GSL tl-expected::expected)
 
 add_library(artccel-private INTERFACE)
