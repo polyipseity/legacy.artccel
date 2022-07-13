@@ -6,7 +6,7 @@ include("${ROOT_SOURCE_DIR}/build_auto/init.cmake")
 
 add_library(artccel INTERFACE)
 add_library("${ARTCCEL_NAMESPACE}artccel" ALIAS artccel)
-configure_file("in/config.h" "include/artccel/config.h")
+configure_file("in/config.h" "include/artccel/config.h" @ONLY)
 target_include_directories(artccel INTERFACE
 	"$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 	"$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>"
