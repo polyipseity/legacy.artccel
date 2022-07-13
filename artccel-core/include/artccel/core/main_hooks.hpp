@@ -2,12 +2,11 @@
 #define ARTCCEL_CORE_MAIN_HOOKS_HPP
 #pragma once
 
-#include <concepts>   // import std::invocable
-#include <exception>  // import std::exception_ptr
-#include <functional> // import std::function
-#include <memory>     // import std::make_shared, std::shared_ptr, std::weak_ptr
-#include <span>       // import std::span
-#include <string>     // import std::u8string
+#include <concepts>  // import std::invocable
+#include <exception> // import std::exception_ptr
+#include <memory>    // import std::make_unique, std::unique_ptr, std::weak_ptr
+#include <span>      // import std::span
+#include <string>    // import std::u8string
 #include <string_view> // import std::string_view, std::u8string_view
 #include <utility>     // import std::forward
 #include <variant>     // import std::variant
@@ -23,6 +22,7 @@
 #pragma warning(pop)
 
 #include "util/error_handling.hpp" // import util::Exception_error
+#include "util/polyfill.hpp"       // import util::Move_only_function
 #include <artccel/core/export.h>   // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core {
@@ -40,29 +40,29 @@ using Argv_string_t = gsl::czstring;
 } // namespace detail
 
 namespace f {
-// TODO: C++23: std::move_only_function
 ARTCCEL_CORE_EXPORT auto safe_main(
-    std::function<int(Raw_arguments)> const &main_func, int argc,
+    util::Move_only_function<int(Raw_arguments) const &> const &main_func,
+    int argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     detail::Argv_string_t const argv[]) -> int;
 } // namespace f
 
 class Main_program {
 public:
-  using copyable_finalizer_type = std::shared_ptr<gsl::final_action<
-      std::function<void()>>>; // TODO: C++23: use std::move_only_function
+  using unique_finalizer_type =
+      std::unique_ptr<gsl::final_action<util::Move_only_function<void()>>>;
   using destructor_exceptions_out_type = std::vector<std::exception_ptr>;
-  static auto make_copyable_finalizer(std::invocable<> auto &&finalizer) {
-    return std::make_shared<typename copyable_finalizer_type::element_type>(
+  static auto make_unique_finalizer(std::invocable<> auto &&finalizer) {
+    return std::make_unique<typename unique_finalizer_type::element_type>(
         std::forward<decltype(finalizer)>(finalizer));
   }
 
 private:
 #pragma warning(push)
 #pragma warning(disable : 4251)
-  copyable_finalizer_type early_structor_;
+  unique_finalizer_type early_structor_;
   std::vector<Argument> arguments_;
-  copyable_finalizer_type late_structor_;
+  unique_finalizer_type late_structor_;
 #pragma warning(pop)
 
 public:

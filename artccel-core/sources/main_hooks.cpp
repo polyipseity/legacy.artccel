@@ -1,15 +1,14 @@
 #include <algorithm> // import std::max, std::min, std::ranges::for_each, std::ranges::transform
-#include <cassert>    // import assert
-#include <concepts>   // import std::integral, std::same_as
-#include <cstddef>    // import std::ptrdiff_t, std::size_t
-#include <cstring>    // import std::memcpy, std::memmove
-#include <cwchar>     // import std::mbsinit, std::mbstate_t, std::wcslen
-#include <exception>  // import std::current_exception, std::exception_ptr
-#include <functional> // import std::function
+#include <cassert>   // import assert
+#include <concepts>  // import std::integral, std::same_as
+#include <cstddef>   // import std::ptrdiff_t, std::size_t
+#include <cstring>   // import std::memcpy, std::memmove
+#include <cwchar>    // import std::mbsinit, std::mbstate_t, std::wcslen
+#include <exception> // import std::current_exception, std::exception_ptr
 #include <ios> // import std::ios_base::openmode, std::ios_base::seekdir, std::streamsize
 #include <iostream> // import std::cin, std::clog, std::cout, std::ios_base::sync_with_stdio
 #include <locale> // import std::codecvt_base::result, std::locale, std::locale::global
-#include <memory> // import std::make_shared, std::make_unique, std::make_unique_for_overwrite, std::unique_ptr, std::weak_ptr
+#include <memory> // import std::make_unique, std::make_unique_for_overwrite, std::unique_ptr, std::weak_ptr
 #include <span> // import std::begin, std::data, std::empty, std::size, std::span
 #include <streambuf>   // import std::streambuf
 #include <string>      // import std::u16string, std::u8string
@@ -41,14 +40,13 @@
 #include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_clamp_casts, util::f::int_exact_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
 #include <artccel/core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel/core/util/error_handling.hpp> // import util::Exception_error, util::f::expect_noninvalid, util::f::expect_nonzero
-#include <artccel/core/util/polyfill.hpp>       // import util::f::unreachable
+#include <artccel/core/util/polyfill.hpp> // import util::Move_only_function, util::f::unreachable
 #include <artccel/core/util/utility_extras.hpp> // import util::Semiregularize
 
 namespace artccel::core {
 namespace detail {
-// NOLINTNEXTLINE(readability-function-cognitive-complexity): 26/25
 static auto run_finalizer_save_excepts(
-    std::vector<Main_program::copyable_finalizer_type> finalizers,
+    std::vector<Main_program::unique_finalizer_type> finalizers,
     std::weak_ptr<Main_program::destructor_exceptions_out_type>
         dtor_excs_out) noexcept {
   return [finalizers{std::move(finalizers)},
@@ -56,8 +54,6 @@ static auto run_finalizer_save_excepts(
     if (auto const dtor_excs{dtor_excs_out.lock()}) {
       std::ranges::for_each(finalizers, [&dtor_excs](auto &finalizer) noexcept {
         try {
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-          assert(finalizer.use_count() == 1 && u8"Non-unique finalizer");
           finalizer.reset();
         } catch (...) {
           try {
@@ -70,8 +66,6 @@ static auto run_finalizer_save_excepts(
     } else {
       std::ranges::for_each(finalizers, [](auto &finalizer) noexcept {
         try {
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-          assert(finalizer.use_count() == 1 && u8"Non-unique finalizer");
           finalizer.reset();
         } catch (...) {
           // NOOP
@@ -309,7 +303,8 @@ namespace f {
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 auto safe_main(
 #pragma clang diagnostic pop
-    std::function<int(Raw_arguments)> const &main_func, int argc,
+    util::Move_only_function<int(Raw_arguments) const &> const &main_func,
+    int argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     gsl::czstring const argv[]) -> int {
   return main_func([args{util::f::const_span(argv, argv + argc)}] {
@@ -323,7 +318,8 @@ auto safe_main(
 }
 #ifdef _WIN32
 auto safe_main(
-    std::function<int(Raw_arguments)> const &main_func, int argc,
+    util::Move_only_function<int(Raw_arguments) const &> const &main_func,
+    int argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     gsl::cwzstring const argv[]) -> int {
   auto const utf8_args_storage{[args{util::f::const_span(argv, argv + argc)}] {
@@ -356,16 +352,16 @@ Main_program::Main_program(
     std::weak_ptr<std::vector<std::exception_ptr>> destructor_excs_out,
     Raw_arguments arguments)
     : early_structor_{[&destructor_excs_out] {
-        std::vector<copyable_finalizer_type> finalizers{};
+        std::vector<unique_finalizer_type> finalizers{};
 
         auto const prev_stdio_sync{std::ios_base::sync_with_stdio(false)};
-        finalizers.emplace_back(make_copyable_finalizer([prev_stdio_sync] {
+        finalizers.emplace_back(make_unique_finalizer([prev_stdio_sync] {
           std::ios_base::sync_with_stdio(prev_stdio_sync);
         }));
 #ifdef _WIN32
         auto const prev_locale{std::locale::global(
             std::locale{/*u8*/ ".UTF-8"})}; // ACP functions -> UTF-8 functions
-        finalizers.emplace_back(make_copyable_finalizer(
+        finalizers.emplace_back(make_unique_finalizer(
             [prev_locale] { std::locale::global(prev_locale); }));
 
         if (auto const prev_console_output_cp{
@@ -373,7 +369,7 @@ Main_program::Main_program(
             prev_console_output_cp &&
             util::f::expect_nonzero(::SetConsoleOutputCP(CP_UTF8))) {
           finalizers.emplace_back(
-              make_copyable_finalizer([pcocp{*prev_console_output_cp}] {
+              make_unique_finalizer([pcocp{*prev_console_output_cp}] {
                 if (!util::f::expect_nonzero(::SetConsoleOutputCP(pcocp))) {
                   platform::windows::f::throw_last_error();
                 }
@@ -386,7 +382,7 @@ Main_program::Main_program(
             prev_console_cp &&
             util::f::expect_nonzero(::SetConsoleCP(CP_UTF8))) {
           finalizers.emplace_back(
-              make_copyable_finalizer([pccp{*prev_console_cp}] {
+              make_unique_finalizer([pccp{*prev_console_cp}] {
                 if (!util::f::expect_nonzero(::SetConsoleCP(pccp))) {
                   platform::windows::f::throw_last_error();
                 }
@@ -402,14 +398,13 @@ Main_program::Main_program(
                                     util::f::expect_nonzero(::GetConsoleMode(
                                         *std_handle, &console_mode))) {
             auto new_rdbuf{
-                std::make_shared<detail::Windows_console_input_buffer>(
-                    *std_handle)}; // TODO: C++23: std::make_unique
+                std::make_unique<detail::Windows_console_input_buffer>(
+                    *std_handle)};
             auto *const prev_rdbuf{std::cin.rdbuf(new_rdbuf.get())};
-            finalizers.emplace_back(make_copyable_finalizer(
+            finalizers.emplace_back(make_unique_finalizer(
                 [prev_rdbuf, new_rdbuf{std::move(new_rdbuf)}]() mutable {
                   std::cin.rdbuf(prev_rdbuf);
-                  assert(new_rdbuf.use_count() == 1); // TODO: C++23: remove
-                  new_rdbuf.reset();                  // make it explicit
+                  new_rdbuf.reset(); // make it explicit
                 }));
           }
         } else {
@@ -417,7 +412,7 @@ Main_program::Main_program(
         }
 #endif
 
-        return make_copyable_finalizer(detail::run_finalizer_save_excepts(
+        return make_unique_finalizer(detail::run_finalizer_save_excepts(
             std::move(finalizers), destructor_excs_out));
       }()},
       arguments_{[arguments] {
@@ -431,13 +426,13 @@ Main_program::Main_program(
         return init;
       }()},
       late_structor_{[&destructor_excs_out] {
-        std::vector<copyable_finalizer_type> finalizers{};
+        std::vector<unique_finalizer_type> finalizers{};
 
-        finalizers.emplace_back(make_copyable_finalizer([] {
+        finalizers.emplace_back(make_unique_finalizer([] {
           std::cout.flush();
           std::clog.flush();
         }));
-        return make_copyable_finalizer(detail::run_finalizer_save_excepts(
+        return make_unique_finalizer(detail::run_finalizer_save_excepts(
             std::move(finalizers), destructor_excs_out));
       }()} {
 }

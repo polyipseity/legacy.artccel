@@ -4,9 +4,19 @@
 
 #include <type_traits> // import std::is_enum_v, std::underlying_type_t
 
+#pragma warning(push)
+#pragma warning(disable : 4625 4626)
+#include <ofats/invocable.h> // import ofats::any_invocable
+#pragma warning(pop)
+
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 
-namespace artccel::core::util::f {
+namespace artccel::core::util {
+template <typename Signature>
+using Move_only_function =
+    ofats::any_invocable<Signature>; // TODO: C++23: std::move_only_function
+
+namespace f {
 constexpr auto to_underlying [[nodiscard]] (
     auto enum_) noexcept requires std::is_enum_v<decltype(enum_)> {
   // TODO: C++23: std::to_underlying
@@ -21,6 +31,7 @@ ARTCCEL_CORE_EXPORT inline void unreachable [[noreturn]] () noexcept {
 #endif
   // with [[noreturn]], an empty body also invokes undefined behavior
 }
-} // namespace artccel::core::util::f
+} // namespace f
+} // namespace artccel::core::util
 
 #endif

@@ -50,7 +50,7 @@ static void print_args(Main_program const &program) {
   std::cout.flush();
 }
 
-static auto echo_cin() {
+static void echo_cin() {
   std::cout << u8"echo in: "_as_utf8_compat << std::flush;
   auto const input{[] {
     std::u8string init{};
