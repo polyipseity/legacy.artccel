@@ -34,7 +34,7 @@ add_executable(artccel-core-exe "sources/exe/main.cpp")
 add_executable("${ARTCCEL_NAMESPACE}artccel-core-exe" ALIAS artccel-core-exe)
 get_target_property(artccel-core_PRECOMPILE_HEADERS artccel-core PRECOMPILE_HEADERS)
 
-if(artccel-core_PRECOMPILE_HEADERS STREQUAL "NOTFOUND")
+if(NOT artccel-core_PRECOMPILE_HEADERS)
 	set(artccel-core_PRECOMPILE_HEADERS "")
 endif()
 

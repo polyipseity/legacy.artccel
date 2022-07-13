@@ -43,7 +43,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	set(_target_compile_definitions "$<TARGET_PROPERTY:${target},COMPILE_DEFINITIONS>")
 	get_target_property(_target_compile_options "${target}" COMPILE_OPTIONS)
 
-	if(_target_compile_options STREQUAL "NOTFOUND")
+	if(NOT _target_compile_options)
 		set(_target_compile_options "")
 	endif()
 
@@ -59,21 +59,21 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	foreach(_source IN LISTS _target_sources)
 		get_source_file_property(_source_include_directories "${_source}" INCLUDE_DIRECTORIES)
 
-		if(_source_include_directories STREQUAL "NOTFOUND")
+		if(NOT _source_include_directories)
 			set(_source_include_directories "")
 		endif()
 
 		eval_incompatible_genexps(_source_include_directories "${_source_include_directories}")
 		get_source_file_property(_source_compile_definitions "${_source}" COMPILE_DEFINITIONS)
 
-		if(_source_compile_definitions STREQUAL "NOTFOUND")
+		if(NOT _source_compile_definitions)
 			set(_source_compile_definitions "")
 		endif()
 
 		eval_incompatible_genexps(_source_compile_definitions "${_source_compile_definitions}")
 		get_source_file_property(_source_compile_options "${_source}" COMPILE_OPTIONS)
 
-		if(_source_compile_options STREQUAL "NOTFOUND")
+		if(NOT _source_compile_options)
 			set(_source_compile_options "")
 		endif()
 
