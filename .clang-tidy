@@ -20,8 +20,12 @@ Checks: >
 # 'llvm-header-guard' dislikes Windows-style paths
 WarningsAsErrors: >
   *,
+  -clang-diagnostic-attributes,
+  -clang-diagnostic-nonportable-system-include-path,
   -clang-diagnostic-unknown-attributes,
+  -clang-diagnostic-unknown-argument,
   -clang-diagnostic-unknown-pragmas,
+  -clang-diagnostic-unknown-warning-option,
   -llvm-header-guard,
 HeaderFilterRegex: ^artccel/.+$
 FormatStyle: LLVM
