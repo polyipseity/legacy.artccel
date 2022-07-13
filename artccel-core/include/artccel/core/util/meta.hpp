@@ -6,7 +6,6 @@
 #include <concepts> // import std::same_as
 #include <cstddef>  // import std::size_t
 #include <span>     // import std::dynamic_extent, std::span
-#include <utility>  // import std::move
 
 #include "containers_extras.hpp" // import f::to_array_cv
 #include "semantics.hpp"         // import null_terminator_size
@@ -29,16 +28,13 @@ template <typename CharT, std::size_t Size> struct Template_string {
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   std::array<CharT const, Size> data_;
 
-  explicit consteval Template_string(std::array<CharT const, Size> str)
-      : data_{std::move(str)} {}
+  explicit consteval Template_string(std::array<CharT const, Size> const &str)
+      : data_{str} {}
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
   consteval Template_string(CharT const (&str)[Size])
       : Template_string{f::to_array_cv(str)} {
     // implicit for use in string literal operator template
   }
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  explicit consteval Template_string(CharT const (&&str)[Size])
-      : Template_string{f::to_array_cv(std::move(str))} {}
   explicit consteval Template_string(std::span<CharT const, Size> str) requires(
       Size != std::dynamic_extent)
       : Template_string{f::to_array_cv(str)} {}

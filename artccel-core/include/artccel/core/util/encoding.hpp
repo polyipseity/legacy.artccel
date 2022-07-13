@@ -12,7 +12,7 @@
 #include <string> // import std::basic_string, std::getline, std::string, std::u16string, std::u32string, std::u8string
 #include <string_view> // import std::basic_string_view, std::string_view, std::u16string_view, std::u32string_view, std::u8string_view
 #include <tuple>       // import std::ignore
-#include <utility>     // import std::as_const, std::move
+#include <utility>     // import std::as_const
 
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
@@ -45,7 +45,7 @@ constexpr auto reinterpretation_storage{[] {
   std::ranges::transform(
       std::as_const(Str.data_), std::begin(init),
       [](auto chr) noexcept { return f::int_modulo_cast<AsCharT>(chr); });
-  return f::const_array(std::move(init));
+  return f::const_array(init);
 }()};
 } // namespace detail
 
