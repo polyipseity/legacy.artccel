@@ -17,7 +17,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 		string(REPLACE "$<CXX_COMPILER_ID:Clang>" "1" _result "${_result}")
 		string(REGEX REPLACE "\\$<C_COMPILER_ID:[^>]*>" "0" _result "${_result}")
 		string(REGEX REPLACE "\\$<CXX_COMPILER_ID:[^>]*>" "0" _result "${_result}")
-		set("${out_var}" "${result}" PARENT_SCOPE)
+		set("${out_var}" "${_result}" PARENT_SCOPE)
 	endfunction()
 
 	# workaround: make up for a lack of a usable filter
