@@ -1,5 +1,9 @@
 # generation
 function(generate_preset_export_header target filename)
+	if(NOT TARGET "${target}")
+		message(FATAL_ERROR "Not a target: ${target}")
+	endif()
+
 	string(REPLACE "-" "_" _target_macro_lowercase "${target}")
 	string(TOUPPER "${_target_macro_lowercase}" _target_macro)
 	set(CUSTOM_EXPORT_HEADER "

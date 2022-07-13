@@ -10,6 +10,16 @@ add_custom_target(clang-tidy
 	VERBATIM)
 
 function(target_integrate_clang_tidy target language link_filter_excludes arguments)
+	if(NOT TARGET "${target}")
+		message(FATAL_ERROR "Not a target: ${target}")
+	endif()
+
+	set(_valid_languages "C" "CXX")
+
+	if(NOT language IN_LIST _valid_languages)
+		message(FATAL_ERROR "clang-tidy does not support language: ${language}")
+	endif()
+
 	# evaluate incompatible generator expressions
 	function(eval_incompatible_genexps out_var str)
 		set(_result "${str}")
