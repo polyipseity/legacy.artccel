@@ -11,8 +11,6 @@ add_custom_target(clang-tidy
 
 function(target_integrate_clang_tidy target language link_filter_excludes arguments)
 	# workaround: make up for a lack of a usable filter
-	set(_line_filters "")
-
 	foreach(_exclude IN LISTS link_filter_excludes)
 		string(APPEND _line_filters "{\"name\": \"${_exclude}\", \"lines\": [[2, 1]]},")
 	endforeach()
@@ -48,7 +46,6 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	eval_incompatible_genexps(_target_compile_options "${_target_compile_options}")
 	get_target_property(_target_compile_definitions "${target}" COMPILE_DEFINITIONS)
 	eval_incompatible_genexps(_target_compile_definitions "${_target_compile_definitions}")
-	set(_clang_tidy_outputs "")
 	get_target_property(_target_sources "${target}" SOURCES)
 
 	foreach(_source IN LISTS _target_sources)
