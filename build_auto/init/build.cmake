@@ -69,7 +69,7 @@ add_link_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/WX>"
 )
 
-function(enable_ipo_if_supported)
+if(ARTCCEL_INTERPROCEDURAL_OPTIMIZATION)
 	include(CheckIPOSupported)
 	check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_OUTPUT)
 
@@ -79,6 +79,4 @@ function(enable_ipo_if_supported)
 	else()
 		message(WARNING "Interprocedural optimization is not supported: ${IPO_OUTPUT}")
 	endif()
-endfunction()
-
-enable_ipo_if_supported()
+endif()

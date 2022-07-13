@@ -11,6 +11,7 @@ option(ARTCCEL_TEST "Build and perform tests" "${ARTCCEL_STANDALONE}")
 set(ARTCCEL_NAMESPACE "artccel::" CACHE STRING "Namespace of exported targets")
 
 # build
+option(ARTCCEL_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization if available" true)
 option(ARTCCEL_PROFILE_COMPILATION "Profile compilation time" false)
 option(ARTCCEL_SANITIZE_ADDRESS "Enable address sanitizer" false)
 option(ARTCCEL_SANITIZE_MEMORY "Enable memory sanitizer" false)
