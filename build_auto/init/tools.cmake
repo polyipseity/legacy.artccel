@@ -23,10 +23,16 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	# evaluate incompatible generator expressions
 	function(eval_incompatible_genexps out_var str)
 		set(_result "${str}")
+		string(REPLACE "$<C_COMPILER_ID>" "Clang" _result "${_result}")
 		string(REPLACE "$<C_COMPILER_ID:Clang>" "1" _result "${_result}")
-		string(REPLACE "$<CXX_COMPILER_ID:Clang>" "1" _result "${_result}")
 		string(REGEX REPLACE "\\$<C_COMPILER_ID:[^>]*>" "0" _result "${_result}")
-		string(REGEX REPLACE "\\$<CXX_COMPILER_ID:[^>]*>" "0" _result "${_result}")
+
+		if(language STREQUAL "CXX")
+			string(REPLACE "$<CXX_COMPILER_ID>" "Clang" _result "${_result}")
+			string(REPLACE "$<CXX_COMPILER_ID:Clang>" "1" _result "${_result}")
+			string(REGEX REPLACE "\\$<CXX_COMPILER_ID:[^>]*>" "0" _result "${_result}")
+		endif()
+
 		set("${out_var}" "${_result}" PARENT_SCOPE)
 	endfunction()
 
