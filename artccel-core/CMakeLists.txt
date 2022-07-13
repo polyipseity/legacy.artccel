@@ -28,7 +28,7 @@ target_include_directories(artccel-core PUBLIC
 target_precompile_headers(artccel-core PRIVATE "include/artccel/core/precompile.h")
 target_link_libraries(artccel-core PUBLIC artccel PRIVATE artccel-private)
 add_sanitizers(artccel-core)
-target_integrate_clang_tidy(artccel-core CXX "" "")
+target_integrate_clang_tidy(artccel-core CXX "" "-Dartccel_core_EXPORTS")
 
 add_executable(artccel-core-exe "sources/exe/main.cpp")
 add_executable("${ARTCCEL_NAMESPACE}artccel-core-exe" ALIAS artccel-core-exe)
