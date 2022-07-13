@@ -105,7 +105,7 @@ public:
   template <
       std::convertible_to<typename decltype(position_)::value_type>... Position>
   requires(sizeof...(Position) == Dim) explicit Point_impl(Position... position)
-      : position_{std::move(position)...} {}
+      : position_{{std::move(position)...}} {}
   ~Point_impl() noexcept override = default;
   auto clone [[nodiscard]] () const -> gsl::owner<Point *> {
     return clone_impl();
