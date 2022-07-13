@@ -44,7 +44,7 @@ add_compile_options(
 	"$<$<BOOL:${CXX_CLANG_LIKE_COMPILER}>:-Wno-error=unknown-warning-option>"
 	"$<$<AND:$<BOOL:${CX_CLANG_LIKE_COMPILER}>,$<BOOL:${WIN32}>>:-Wno-error=nonportable-system-include-path>"
 
-	# pragma warning seems to be broken for below warnings
+	# #pragma warning(disable : XXXX) seems to be broken for below warnings
 	"$<$<CXX_COMPILER_ID:MSVC>:/wd4868>" # compiler may not enforce left-to-right evaluation order in braced initializer list
 	"$<$<CXX_COMPILER_ID:MSVC>:/wd5045>" # Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
 
@@ -65,8 +65,8 @@ if(ARTCCEL_PROFILE_COMPILATION)
 endif()
 
 add_link_options(
-	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/WX>"
+	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>"
 )
 
 if(ARTCCEL_INTERPROCEDURAL_OPTIMIZATION)
