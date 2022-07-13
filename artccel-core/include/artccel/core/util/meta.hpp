@@ -63,6 +63,18 @@ Template_string(char16_t chr)
     ->Template_string<char16_t, 1 + null_terminator_size>;
 Template_string(char32_t chr)
     ->Template_string<char32_t, 1 + null_terminator_size>;
+static_assert(Template_string{""}.data_ == f::to_array_cv(""),
+              u8"Implementation error");
+static_assert(Template_string{char{}}.data_ == f::to_array_cv("\0"),
+              u8"Implementation error");
+static_assert(Template_string{wchar_t{}}.data_ == f::to_array_cv(L"\0"),
+              u8"Implementation error");
+static_assert(Template_string{char8_t{}}.data_ == f::to_array_cv(u8"\0"),
+              u8"Implementation error");
+static_assert(Template_string{char16_t{}}.data_ == f::to_array_cv(u"\0"),
+              u8"Implementation error");
+static_assert(Template_string{char32_t{}}.data_ == f::to_array_cv(U"\0"),
+              u8"Implementation error");
 
 template <typename Found, typename Replace>
 struct Replace_all<Found, Found, Replace> {
