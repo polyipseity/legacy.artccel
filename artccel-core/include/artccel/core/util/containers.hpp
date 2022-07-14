@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_CONTAINERS_EXTRAS_HPP
-#define ARTCCEL_CORE_UTIL_CONTAINERS_EXTRAS_HPP
+#ifndef ARTCCEL_CORE_UTIL_CONTAINERS_HPP
+#define ARTCCEL_CORE_UTIL_CONTAINERS_HPP
 #pragma once
 
 #include <array>            // import std::array, std::data, std::size
@@ -7,6 +7,8 @@
 #include <initializer_list> // import std::initializer_list
 #include <span>             // import std::dynamic_extent, std::span
 #include <utility> // import std::forward, std::index_sequence, std::in_place, std::in_place_t, std::make_index_sequence, std::move
+
+#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core::util {
 template <typename> struct Array_size;
