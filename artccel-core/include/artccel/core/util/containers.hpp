@@ -73,8 +73,8 @@ template <std::size_t Size = std::dynamic_extent, typename Type,
           std::size_t InSize>
 constexpr auto const_array
     [[nodiscard]] (std::array<Type, InSize> const &array) {
-  return [&array]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [&array]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                      [[maybe_unused]]) {
     return std::array < Type const,
            Size == std::dynamic_extent ? InSize : Size > {{array[Idx]...}};
   }
@@ -83,8 +83,8 @@ constexpr auto const_array
 template <std::size_t Size = std::dynamic_extent, typename Type,
           std::size_t InSize>
 constexpr auto const_array [[nodiscard]] (std::array<Type, InSize> &&array) {
-  return [&array]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [&array]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                      [[maybe_unused]]) {
     return std::array < Type const, Size == std::dynamic_extent
                                         ? InSize
                                         : Size > {{std::move(array[Idx])...}};
@@ -95,8 +95,8 @@ template <std::size_t Size = std::dynamic_extent, typename Type,
           std::size_t InSize>
 requires(InSize != std::dynamic_extent) constexpr auto const_array
     [[nodiscard]] (std::span<Type, InSize> span) {
-  return [span]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [span]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                    [[maybe_unused]]) {
     return std::array < Type const,
            Size == std::dynamic_extent ? InSize : Size > {{span[Idx]...}};
   }
@@ -107,8 +107,8 @@ template <std::size_t Size = std::dynamic_extent, typename Type,
 requires(InSize != std::dynamic_extent) constexpr auto const_array
     [[nodiscard]] (Move_span_t tag [[maybe_unused]],
                    std::span<Type, InSize> span) {
-  return [span]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [span]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                    [[maybe_unused]]) {
     return std::array < Type const, Size == std::dynamic_extent
                                         ? InSize
                                         : Size > {{std::move(span[Idx])...}};
@@ -127,8 +127,8 @@ template <typename Type, std::size_t Size>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 constexpr auto to_array_cv(Type (&array)[Size]) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  return [&array]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [&array]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                      [[maybe_unused]]) {
     return std::array<Type, Size>{{array[Idx]...}};
   }
   (std::make_index_sequence<Size>{});
@@ -137,8 +137,8 @@ template <typename Type, std::size_t Size>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 constexpr auto to_array_cv(Type (&&array)[Size]) {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  return [&array]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [&array]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                      [[maybe_unused]]) {
     return std::array<Type, Size>{{std::move(array[Idx])...}};
   }
   (std::make_index_sequence<Size>{});
@@ -146,8 +146,8 @@ constexpr auto to_array_cv(Type (&&array)[Size]) {
 template <typename Type, std::size_t Size>
 requires(Size != std::dynamic_extent) constexpr auto to_array_cv(
     std::span<Type, Size> span) {
-  return [span]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [span]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                    [[maybe_unused]]) {
     return std::array<Type, Size>{{span[Idx]...}};
   }
   (std::make_index_sequence<Size>{});
@@ -155,8 +155,8 @@ requires(Size != std::dynamic_extent) constexpr auto to_array_cv(
 template <typename Type, std::size_t Size>
 requires(Size != std::dynamic_extent) constexpr auto to_array_cv(
     Move_span_t tag [[maybe_unused]], std::span<Type, Size> span) {
-  return [span]<std::size_t... Idx>(
-      [[maybe_unused]] std::index_sequence<Idx...> /*unused*/) {
+  return [span]<std::size_t... Idx>(std::index_sequence<Idx...> idxs
+                                    [[maybe_unused]]) {
     return std::array<Type, Size>{{std::move(span[Idx])...}};
   }
   (std::make_index_sequence<Size>{});

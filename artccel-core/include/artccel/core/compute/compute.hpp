@@ -122,7 +122,7 @@ public:
                std::is_nothrow_move_constructible_v<Ret>) -> Ret override {
     return return_;
   }
-  auto operator()([[maybe_unused]] Extract_t /*unused*/) -> Ret {
+  auto operator()(Extract_t tag [[maybe_unused]]) -> Ret {
     if (auto const c_in{c_in_.lock()}) {
       return_ = *c_in();
     }
@@ -175,7 +175,7 @@ public:
   using return_type = typename Compute_constant::return_type;
   constexpr static auto value_{Val};
   template <typename... Args>
-  explicit constexpr Compute_constant([[maybe_unused]] Friend /*unused*/,
+  explicit constexpr Compute_constant(Friend tag [[maybe_unused]],
                                       Args &&...args)
       : Compute_constant{std::forward<Args>(args)...} {}
 
@@ -230,8 +230,8 @@ public:
   using return_type = typename Compute_function_constant::return_type;
   constexpr static auto function_{Func};
   template <typename... Args>
-  explicit constexpr Compute_function_constant(
-      [[maybe_unused]] Friend /*unused*/, Args &&...args)
+  explicit constexpr Compute_function_constant(Friend tag [[maybe_unused]],
+                                               Args &&...args)
       : Compute_function_constant{std::forward<Args>(args)...} {}
 
   template <typename... Args>
@@ -282,7 +282,7 @@ private:
 public:
   using return_type = typename Compute_value::return_type;
   template <typename... Args>
-  explicit Compute_value([[maybe_unused]] Friend /*unused*/, Args &&...args)
+  explicit Compute_value(Friend tag [[maybe_unused]], Args &&...args)
       : Compute_value{std::forward<Args>(args)...} {}
 
 private:
@@ -420,7 +420,7 @@ public:
   using return_type = typename Compute_function::return_type;
   using signature_type = Ret(TArgs...);
   template <typename... Args>
-  explicit Compute_function([[maybe_unused]] Friend /*unused*/, Args &&...args)
+  explicit Compute_function(Friend tag [[maybe_unused]], Args &&...args)
       : Compute_function{std::forward<Args>(args)...} {}
 
 protected:
@@ -572,12 +572,11 @@ public:
         },
         std::forward<Tuple<Args &&...>>(t_args));
   }
-  friend void operator<<(Compute_function &left,
-                         [[maybe_unused]] Reset_t /*unused*/) {
+  friend void operator<<(Compute_function &left, Reset_t tag [[maybe_unused]]) {
     left.reset(util::Enum_bitset{} | Compute_option::defer);
   }
-  friend auto operator<<=(Compute_function &left,
-                          [[maybe_unused]] Reset_t /*unused*/) -> Ret {
+  friend auto operator<<=(Compute_function &left, Reset_t tag [[maybe_unused]])
+      -> Ret {
     return *left.reset(util::Enum_bitset{} | Compute_option::empty);
   }
 
