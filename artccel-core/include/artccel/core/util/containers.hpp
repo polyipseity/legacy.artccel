@@ -6,6 +6,7 @@
 #include <cstddef>          // import std::size_t
 #include <initializer_list> // import std::initializer_list
 #include <span>             // import std::dynamic_extent, std::span
+#include <type_traits>      // import std::remove_cv_t
 #include <utility> // import std::forward, std::index_sequence, std::in_place, std::in_place_t, std::make_index_sequence, std::move
 
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
@@ -121,6 +122,25 @@ requires(sizeof...(Args) != 1) constexpr auto const_array
         noexcept(f::const_array(std::in_place, std::forward<Args>(args)...))) {
   // mandatory copy/move elision
   return f::const_array<Size>(std::in_place, std::forward<Args>(args)...);
+}
+
+template <typename Type, std::size_t Size>
+requires(Size != std::dynamic_extent) constexpr auto to_array(
+    std::span<Type, Size> span) {
+  return [span]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
+                                     [[maybe_unused]]) {
+    return std::array<std::remove_cv_t<Type>, Size>{{span[Idxs]...}};
+  }
+  (std::make_index_sequence<Size>{});
+}
+template <typename Type, std::size_t Size>
+requires(Size != std::dynamic_extent) constexpr auto to_array(
+    Move_span_t tag [[maybe_unused]], std::span<Type, Size> span) {
+  return [span]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
+                                     [[maybe_unused]]) {
+    return std::array<std::remove_cv_t<Type>, Size>{{std::move(span[Idxs])...}};
+  }
+  (std::make_index_sequence<Size>{});
 }
 
 template <typename Type, std::size_t Size>
