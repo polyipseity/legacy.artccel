@@ -12,7 +12,7 @@
 
 #pragma warning(push)
 #pragma warning(disable : 4626 4820)
-#include <gsl/gsl> // import gsl::not_null
+#include <gsl/gsl> // import gsl::strict_not_null
 #pragma warning(pop)
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
@@ -36,7 +36,7 @@ public:
 
 private:
 #pragma warning(suppress : 4251)
-  gsl::not_null<std::exception_ptr> exc_ptr_;
+  gsl::strict_not_null<std::exception_ptr> exc_ptr_;
   Error error_ [[no_unique_address, msvc::no_unique_address]];
 
 public:
@@ -57,12 +57,11 @@ public:
     return error_;
   }
 
-  // NOLINTNEXTLINE(performance-unnecessary-value-param)
-  explicit Error_with_exception(gsl::not_null<std::exception_ptr> exc_ptr,
-                                Error error)
+  explicit Error_with_exception(
+      gsl::strict_not_null<std::exception_ptr> exc_ptr, Error error)
       : exc_ptr_{std::move(exc_ptr)}, error_{std::move(error)} {}
   explicit Error_with_exception(
-      gsl::not_null<std::exception_ptr> exc_ptr) requires
+      gsl::strict_not_null<std::exception_ptr> exc_ptr) requires
       std::is_empty_v<Error> && std::default_initializable<Error>
       : Error_with_exception{std::move(exc_ptr), Error{}} {}
   template <typename Exception>
@@ -70,9 +69,9 @@ public:
            std::remove_cvref_t<Exception>,
            std::exception_ptr>) explicit Error_with_exception(Exception &&exc,
                                                               Error error)
-      : Error_with_exception{
-            std::make_exception_ptr(std::forward<Exception>(exc)),
-            std::move(error)} {}
+      : Error_with_exception{gsl::strict_not_null{std::make_exception_ptr(
+                                 std::forward<Exception>(exc))},
+                             std::move(error)} {}
   template <typename Exception>
   requires(!std::same_as<std::remove_cvref_t<Exception>, std::exception_ptr>) &&
       std::is_empty_v<Error> &&std::default_initializable<Error>

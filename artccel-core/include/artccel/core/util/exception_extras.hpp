@@ -7,6 +7,11 @@
 #include <type_traits> // import std::remove_cvref_t
 #include <utility>     // import std::forward
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
+#include <gsl/gsl> // import gsl::strict_not_null
+#pragma warning(pop)
+
 namespace artccel::core::util {
 namespace detail {
 template <bool Rethrow, typename Top, typename... Nested>
@@ -61,7 +66,7 @@ requires(
     throw_multiple_as_nested(std::forward<Top>(top),
                              std::forward<Nested>(nested)...);
   } catch (Top const &) {
-    return std::current_exception();
+    return gsl::strict_not_null{std::current_exception()};
   }
 }
 template <typename Top, typename... Nested>
@@ -75,7 +80,7 @@ requires(
     rethrow_multiple_as_nested(std::forward<Top>(top),
                                std::forward<Nested>(nested)...);
   } catch (Top const &) {
-    return std::current_exception();
+    return gsl::strict_not_null{std::current_exception()};
   }
 }
 } // namespace f
