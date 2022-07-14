@@ -16,7 +16,7 @@
 namespace artccel::core::util {
 template <typename Type> struct Semiregularize;
 template <typename Type, bool Explicit = true> struct Delegate;
-template <typename... Ts> struct Overload;
+template <typename... Types> struct Overload;
 struct ARTCCEL_CORE_EXPORT Consteval_t {
   explicit consteval Consteval_t() noexcept = default;
 };
@@ -57,18 +57,16 @@ constexpr auto forward_apply(Func &&func, Tuple<Args &&...> &&t_args) noexcept(
     -> decltype(auto) {
   using TArgs = Tuple<Args &&...>;
   return
-      [&func, &t_args ]<std::size_t... Idx>(
-          std::index_sequence<
-              Idx...> idxs [[maybe_unused]]) noexcept(std::
-                                               is_nothrow_invocable_v<
-                                                   Func, Args...> &&
-                                           std::is_nothrow_move_constructible_v<
-                                               std::invoke_result_t<Func,
-                                                                    Args...>>)
+      [&func, &t_args ]<std::size_t... Idxs>(
+          std::index_sequence<Idxs...> idxs
+          [[maybe_unused]]) noexcept(std::is_nothrow_invocable_v<Func,
+                                                                 Args...> &&
+                                     std::is_nothrow_move_constructible_v<
+                                         std::invoke_result_t<Func, Args...>>)
           ->decltype(auto) {
     return std::invoke(
         std::forward<Func>(func),
-        std::forward<Args>(std::get<Idx>(std::forward<TArgs>(t_args)))...);
+        std::forward<Args>(std::get<Idxs>(std::forward<TArgs>(t_args)))...);
   }
   (std::index_sequence_for<Args...>{});
 }
@@ -134,9 +132,11 @@ protected:
 };
 
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-template <typename... Ts> struct Overload : Ts... { using Ts::operator()...; };
-template <typename... Ts>
-Overload(Ts &&...args) -> Overload<std::remove_reference_t<Ts>...>;
+template <typename... Types> struct Overload : Types... {
+  using Types::operator()...;
+};
+template <typename... Types>
+Overload(Types &&...args) -> Overload<std::remove_reference_t<Types>...>;
 } // namespace artccel::core::util
 
 #endif

@@ -103,9 +103,9 @@ private:
 public:
   Point_impl() noexcept = default;
   template <
-      std::convertible_to<typename decltype(position_)::value_type>... Position>
-  requires(sizeof...(Position) == Dim) explicit Point_impl(Position... position)
-      : position_{{std::move(position)...}} {}
+      std::convertible_to<typename decltype(position_)::value_type>... Coords>
+  requires(sizeof...(Coords) == Dim) explicit Point_impl(Coords... coords)
+      : position_{{std::move(coords)...}} {}
   ~Point_impl() noexcept override = default;
   auto clone [[nodiscard]] () const -> gsl::owner<Point *> {
     return clone_impl();
