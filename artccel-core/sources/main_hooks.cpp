@@ -18,7 +18,7 @@
 
 #pragma warning(push)
 #pragma warning(disable : 4626 4820)
-#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null
+#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null, gsl::strict_not_null
 #pragma warning(pop)
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
@@ -40,6 +40,7 @@
 #include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_clamp_casts, util::f::int_exact_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
 #include <artccel/core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel/core/util/error_handling.hpp> // import util::Exception_error, util::f::expect_noninvalid, util::f::expect_nonzero
+#include <artccel/core/util/interval.hpp> // import util::Nonnegative_interval
 #include <artccel/core/util/polyfill.hpp> // import util::Move_only_function, util::f::unreachable
 #include <artccel/core/util/utility_extras.hpp> // import util::Semiregularize
 
@@ -304,35 +305,35 @@ namespace f {
 auto safe_main(
 #pragma clang diagnostic pop
     util::Move_only_function<int(Raw_arguments) const &> const &main_func,
-    int argc,
+    util::Nonnegative_interval<int> const &argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-    gsl::czstring const argv[]) -> int {
-  return main_func([args{util::f::const_span(argv, argv + argc)}] {
+    gsl::not_null<gsl::czstring const *> const &argv) -> int {
+  return main_func([args{util::f::const_span(argv.get(), argv.get() + argc)}] {
     std::vector<std::string_view> init(std::size(args));
-    std::ranges::transform(args, std::begin(init),
-                           [](gsl::not_null<gsl::czstring const> arg) {
-                             return std::string_view{arg};
-                           });
+    std::ranges::transform(args, std::begin(init), [](auto arg) {
+      return std::string_view{gsl::strict_not_null{arg}};
+    });
     return init;
   }());
 }
 #ifdef _WIN32
 auto safe_main(
     util::Move_only_function<int(Raw_arguments) const &> const &main_func,
-    int argc,
+    util::Nonnegative_interval<int> const &argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-    gsl::cwzstring const argv[]) -> int {
-  auto const utf8_args_storage{[args{util::f::const_span(argv, argv + argc)}] {
-    std::vector<std::u8string> init(std::size(args));
-    std::ranges::transform(
-        args, std::begin(init), [](gsl::not_null<gsl::cwzstring const> arg) {
+    gsl::not_null<gsl::cwzstring const *> const &argv) -> int {
+  auto const utf8_args_storage{
+      [args{util::f::const_span(argv.get(), argv.get() + argc)}] {
+        std::vector<std::u8string> init(std::size(args));
+        std::ranges::transform(args, std::begin(init), [](auto arg) {
+          gsl::strict_not_null const arg_s{arg};
           // copy arg as UTF-16 (no conversion) and then convert to UTF-8
           return success_or_throw(util::f::utf16_to_utf8(
               // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-              std::u16string{arg.get(), arg.get() + std::wcslen(arg)}));
+              std::u16string{arg_s.get(), arg_s.get() + std::wcslen(arg_s)}));
         });
-    return init;
-  }()};
+        return init;
+      }()};
   auto const argv_compatible_storage{[&utf8_args_storage] {
     std::vector<gsl::czstring> init(std::size(utf8_args_storage));
     std::ranges::transform(

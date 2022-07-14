@@ -14,7 +14,7 @@
 
 #pragma warning(push)
 #pragma warning(disable : 4626 4820)
-#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action
+#include <gsl/gsl> // import gsl::cwzstring, gsl::czstring, gsl::final_action, gsl::not_null
 #pragma warning(pop)
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
@@ -22,6 +22,7 @@
 #pragma warning(pop)
 
 #include "util/error_handling.hpp" // import util::Exception_error
+#include "util/interval.hpp"       // import util::Nonnegative_interval
 #include "util/polyfill.hpp"       // import util::Move_only_function
 #include <artccel/core/export.h>   // import ARTCCEL_CORE_EXPORT
 
@@ -42,9 +43,9 @@ using Argv_string_t = gsl::czstring;
 namespace f {
 ARTCCEL_CORE_EXPORT auto safe_main(
     util::Move_only_function<int(Raw_arguments) const &> const &main_func,
-    int argc,
+    util::Nonnegative_interval<int> const &argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-    detail::Argv_string_t const argv[]) -> int;
+    gsl::not_null<detail::Argv_string_t const *> const &argv) -> int;
 } // namespace f
 
 class Main_program {
