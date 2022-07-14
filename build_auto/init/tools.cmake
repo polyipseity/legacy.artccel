@@ -116,7 +116,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 
 			"-std=${_lang_std}" "${arguments}"
 			COMMAND "${CMAKE_COMMAND}" ARGS -E touch "${PROJECT_BINARY_DIR}/clang-tidy/${_source_hash}.timestamp"
-			DEPENDS "${_source_real}" # MAIN_DEPENDENCY silently overwrites compilation
+			DEPENDS "${_source_real}" "${ROOT_SOURCE_DIR}/.clang-tidy" # MAIN_DEPENDENCY silently overwrites compilation
 			IMPLICIT_DEPENDS "${language}" "${_source_real}"
 			COMMENT "Running clang-tidy on '${_source}' of '${target}'"
 			VERBATIM COMMAND_EXPAND_LISTS # dumb generator expression with spaces is a time waster
