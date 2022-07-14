@@ -34,7 +34,7 @@ static void print_args(Main_program const &program) {
     } else {
       std::cout << u8" |- UTF-8: (exception)\n"_as_utf8_compat;
       try {
-        std::rethrow_exception(u8arg.error().exc_ptr_);
+        std::rethrow_exception(u8arg.error().exc_ptr());
       } catch (std::exception const &exc) {
         constexpr static auto exception_type_name{
             util::f::utf8_as_utf8_compat<util::Template_string{

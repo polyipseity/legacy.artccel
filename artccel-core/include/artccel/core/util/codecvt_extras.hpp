@@ -103,6 +103,7 @@ auto codecvt_convert(std::basic_string_view<InCharT, Traits> input) {
 #pragma clang diagnostic pop
     f::unreachable();
   }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
   assert(input_next == f::atad(input) && u8"Incomplete conversion");
 
   output.resize(assert_success(

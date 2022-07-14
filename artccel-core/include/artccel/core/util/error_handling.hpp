@@ -22,21 +22,42 @@
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
-template <typename Error = std::monostate> struct Error_with_exception;
+template <typename Error = std::monostate> class Error_with_exception;
 using Exception_error = Error_with_exception<>;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
-template <typename Error> struct Error_with_exception {
+template <typename Error> class Error_with_exception {
 #pragma clang diagnostic pop
+public:
   using error_type = Error;
   using empty_error_type = std::monostate;
   constexpr static auto empty_v{std::same_as<error_type, empty_error_type>};
 
+private:
 #pragma warning(suppress : 4251)
   gsl::not_null<std::exception_ptr> exc_ptr_;
   Error error_ [[no_unique_address, msvc::no_unique_address]];
 
+public:
+  auto exc_ptr [[nodiscard]] () &noexcept -> auto & { return exc_ptr_; }
+  auto exc_ptr [[nodiscard]] () const &noexcept -> auto const & {
+    return exc_ptr_;
+  }
+  auto exc_ptr [[nodiscard]] () &&noexcept { return std::move(exc_ptr_); }
+  auto exc_ptr [[nodiscard]] () const &&noexcept { return exc_ptr_; }
+  auto error [[nodiscard]] () &noexcept -> auto & { return error_; }
+  auto error [[nodiscard]] () const &noexcept -> auto const & { return error_; }
+  auto error [[nodiscard]] () &&noexcept(
+      std::is_nothrow_move_constructible_v<decltype(error_)>) {
+    return std::move(error_);
+  }
+  auto error [[nodiscard]] () const &&noexcept(
+      std::is_nothrow_copy_constructible_v<decltype(error_)>) {
+    return error_;
+  }
+
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   explicit Error_with_exception(gsl::not_null<std::exception_ptr> exc_ptr,
                                 Error error)
       : exc_ptr_{std::move(exc_ptr)}, error_{std::move(error)} {}
@@ -54,9 +75,9 @@ template <typename Error> struct Error_with_exception {
             std::move(error)} {}
   template <typename Exception>
   requires(!std::same_as<std::remove_cvref_t<Exception>, std::exception_ptr>) &&
-      std::is_empty_v<Error>
-          &&std::default_initializable<Error> explicit Error_with_exception(
-              Exception &&exc)
+      std::is_empty_v<Error> &&std::default_initializable<Error>
+      // NOLINTNEXTLINE(bugprone-forwarding-reference-overload): constrained
+      explicit Error_with_exception(Exception &&exc)
       : Error_with_exception{std::forward<Exception>(exc), Error{}} {}
 
   template <typename Ret>
@@ -138,6 +159,7 @@ template <typename Error> struct Error_with_exception {
   friend auto
   assert_success(tl::expected<Ret, Error_with_exception> &&result) noexcept(
       std::is_nothrow_move_constructible_v<Ret>) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     assert(result && u8"Unexpected failure");
     return *std::move(result);
   }
@@ -147,7 +169,7 @@ template <typename Error> struct Error_with_exception {
     if (result) {
       return *result;
     }
-    std::rethrow_exception(result.error().exc_ptr_);
+    std::rethrow_exception(result.error().exc_ptr());
   }
   template <typename Ret>
   friend auto
@@ -155,11 +177,11 @@ template <typename Error> struct Error_with_exception {
     if (result) {
       return *std::move(result);
     }
-    std::rethrow_exception(std::move(result).error().exc_ptr_);
+    std::rethrow_exception(std::move(result).error().exc_ptr());
   }
 #pragma warning(suppress : 4820)
 };
-extern template struct ARTCCEL_CORE_EXPORT_DECLARATION Error_with_exception<>;
+extern template class ARTCCEL_CORE_EXPORT_DECLARATION Error_with_exception<>;
 static_assert(Exception_error::empty_v, u8"Implementation error");
 
 namespace f {
