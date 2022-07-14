@@ -12,9 +12,8 @@
 
 #include <artccel/core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
 #include <artccel/core/util/encoding.hpp> // import util::f::getline_utf8, util::f::utf8_as_utf8_compat, util::literals::encoding::operator""_as_utf8_compat, util::operators::utf8_compat::ostream::operator<<
-#include <artccel/core/util/interval.hpp> // import artccel::core::util::Dynamic_interval_t
-#include <artccel/core/util/meta.hpp>      // import util::Template_string
-#include <artccel/core/util/reflect.hpp>   // import util::f::type_name_array
+#include <artccel/core/util/meta.hpp>     // import util::Template_string
+#include <artccel/core/util/reflect.hpp>  // import util::f::type_name_array
 #include <artccel/core/util/semantics.hpp> // import util::null_terminator_size
 
 namespace artccel::core::detail {
@@ -85,7 +84,5 @@ auto wmain(int argc, gsl::wzstring argv[]) -> int {
 #else
 auto main(int argc, gsl::zstring argv[]) -> int {
 #endif
-  return artccel::core::f::safe_main(
-      artccel::core::detail::main_0,
-      {artccel::core::util::Dynamic_interval_t{}, argc}, argv);
+  return artccel::core::f::safe_main(artccel::core::detail::main_0, argc, argv);
 }

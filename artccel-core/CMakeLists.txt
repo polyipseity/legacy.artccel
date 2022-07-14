@@ -13,10 +13,10 @@ add_library(artccel-core SHARED
 	"sources/enum_bitset.cpp"
 	"sources/error_handling.cpp"
 	"sources/geometry.cpp"
-	"sources/interval.cpp"
 	"sources/main_hooks.cpp"
 	"sources/polyfill.cpp"
 	"sources/reflect.cpp"
+	"sources/utility_extras.cpp"
 	"sources/windows_error.cpp")
 add_library("${ARTCCEL_NAMESPACE}artccel-core" ALIAS artccel-core)
 configure_file("in/config.h" "include/artccel/core/config.h" @ONLY)

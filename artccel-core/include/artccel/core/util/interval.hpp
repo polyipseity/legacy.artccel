@@ -8,9 +8,8 @@
 #include <type_traits> // import std::decay_t, std::is_nothrow_constructible_v, std::is_nothrow_destructible_v, std::is_nothrow_move_constructible_v
 #include <utility>     // import std::move
 
-#include "concepts_extras.hpp"   // import Derived_from_but_not
-#include "utility_extras.hpp"    // import Delegate
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
+#include "concepts_extras.hpp" // import Derived_from_but_not
+#include "utility_extras.hpp"  // import Consteval_t, Delegate
 
 namespace artccel::core::util {
 template <std::totally_ordered Type> struct Bound;
@@ -20,9 +19,6 @@ template <std::totally_ordered Type> struct Unbounded;
 template <typename Left, Derived_from_but_not<Bound<typename Left::type>> Right>
 requires Derived_from_but_not<Left, Bound<typename Left::type>>
 class Interval;
-struct ARTCCEL_CORE_EXPORT Dynamic_interval_t {
-  explicit consteval Dynamic_interval_t() noexcept = default;
-};
 
 // mathematical classifications
 
@@ -310,33 +306,30 @@ public:
   using type = typename Interval::type;
   /*
   usage
-  `(constant expression)`
+  `{Consteval_t{}, (constant expression)}`
   checking (debug ONLY)
   - compile-time checking, causes (complicated) compile error @ assert
   */
-  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  consteval Interval(type value) noexcept(noexcept(Interval{
-      Dynamic_interval_t{}, std::move(value)}))
-      : Interval{Dynamic_interval_t{}, std::move(value)} {
+  consteval Interval(Consteval_t tag [[maybe_unused]],
+                     type value) noexcept(noexcept(Interval{std::move(value)}))
+      : Interval{std::move(value)} {
     /* the parameter is passed-by-value to not bound to a temporary for using
      * this type as non-type template parameters */
   }
   /*
   usage
-  `{Dynamic_interval_t{}, (expression)}`
+  `(expression)`
   checking (debug ONLY)
   - compile-time checking requires constexpr/consteval context, causes
   (complicated) compile error @ assert
   - runtime checking
   */
-  constexpr Interval(
-      Dynamic_interval_t tag [[maybe_unused]],
-      type value) noexcept(std::
-                               is_nothrow_constructible_v<
-                                   typename Interval::Delegate,
-                                   decltype(std::move(value))>
-                                   &&noexcept(check(this->value_)) &&
-                           std::is_nothrow_destructible_v<type>)
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
+  constexpr Interval(type value) noexcept(
+      std::is_nothrow_constructible_v<typename Interval::Delegate,
+                                      decltype(std::move(value))>
+          &&noexcept(check(this->value_)) &&
+      std::is_nothrow_destructible_v<type>)
       : Interval::Delegate{std::move(value)} {
     check(this->value_);
   }
