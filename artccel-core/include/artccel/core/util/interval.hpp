@@ -316,24 +316,27 @@ public:
   */
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   consteval Interval(type value) noexcept(noexcept(Interval{
-      std::move(value), Dynamic_interval_t{}}))
-      : Interval{std::move(value), Dynamic_interval_t{}} {
+      Dynamic_interval_t{}, std::move(value)}))
+      : Interval{Dynamic_interval_t{}, std::move(value)} {
     /* the parameter is passed-by-value to not bound to a temporary for using
      * this type as non-type template parameters */
   }
   /*
   usage
-  `{(expression), Dynamic_interval_t{}}`
+  `{Dynamic_interval_t{}, (expression)}`
   checking (debug ONLY)
   - compile-time checking requires constexpr/consteval context, causes
   (complicated) compile error @ assert
   - runtime checking
   */
-  constexpr Interval(type value, [[maybe_unused]] Dynamic_interval_t /*unused*/) noexcept(
-      std::is_nothrow_constructible_v<typename Interval::Delegate,
-                                      decltype(std::move(value))>
-          &&noexcept(check(this->value_)) &&
-      std::is_nothrow_destructible_v<type>)
+  constexpr Interval(
+      Dynamic_interval_t tag [[maybe_unused]],
+      type value) noexcept(std::
+                               is_nothrow_constructible_v<
+                                   typename Interval::Delegate,
+                                   decltype(std::move(value))>
+                                   &&noexcept(check(this->value_)) &&
+                           std::is_nothrow_destructible_v<type>)
       : Interval::Delegate{std::move(value)} {
     check(this->value_);
   }
