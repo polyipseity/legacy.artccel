@@ -11,7 +11,7 @@
 #include <shared_mutex> // import std::shared_lock, std::shared_mutex
 #include <string>       // import std::literals::string_literals
 #include <string_view>  // import std::u8string_view
-#include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
+#include <type_traits>  // import std::remove_cv_t
 #include <utility> // import std::exchange, std::forward, std::move, std::swap
 
 #pragma warning(push)
@@ -117,9 +117,8 @@ public:
   explicit Compute_out(Compute_in_c<Ret> auto const &c_in)
       : c_in_{c_in.weak_from_this()}, return_{c_in()} {}
 
-  auto operator() [[nodiscard]] () const
-      noexcept(noexcept(Ret{return_}) &&
-               std::is_nothrow_move_constructible_v<Ret>) -> Ret override {
+  auto operator() [[nodiscard]] () const noexcept(noexcept(Ret{return_}))
+      -> Ret override {
     return return_;
   }
   auto operator()(Extract_t tag [[maybe_unused]]) -> Ret {
@@ -128,9 +127,9 @@ public:
     }
     return return_;
   }
-  friend auto operator>>(Compute_out const &left, Ret &right) noexcept(
-      noexcept(Ret{right = left()}) &&
-      std::is_nothrow_move_constructible_v<Ret>) -> Ret {
+  friend auto operator>>(Compute_out const &left,
+                         Ret &right) noexcept(noexcept(Ret{right = left()}))
+      -> Ret {
     return right = left();
   }
   friend auto operator>>=(Compute_out &left, Ret &right) -> Ret {
@@ -190,8 +189,7 @@ public:
         Friend{}, std::forward<Args>(args)...);
   }
   constexpr auto operator() [[nodiscard]] () const
-      noexcept(noexcept(Ret{value_}) &&
-               std::is_nothrow_move_constructible_v<Ret>) -> Ret override {
+      noexcept(noexcept(Ret{value_})) -> Ret override {
     return value_;
   }
 
@@ -245,8 +243,7 @@ public:
         Friend{}, std::forward<Args>(args)...);
   }
   constexpr auto operator() [[nodiscard]] () const
-      noexcept(noexcept(Ret{std::invoke(Func)}) &&
-               std::is_nothrow_move_constructible_v<Ret>) -> Ret override {
+      noexcept(noexcept(Ret{std::invoke(Func)})) -> Ret override {
     return std::invoke(Func);
   }
 

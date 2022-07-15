@@ -8,7 +8,7 @@
 #include <stdexcept>   // import std::overflow_error
 #include <string>      // import std::to_string
 #include <tuple>       // import std::tuple
-#include <type_traits> // import std::conditional_t, std::is_nothrow_move_constructible_v, std::make_signed_t, std::make_unsigned_t, std::remove_cvref_t
+#include <type_traits> // import std::conditional_t, std::make_signed_t, std::make_unsigned_t, std::remove_cvref_t
 
 #include "concepts_extras.hpp" // import Regular_invocable_r
 #include "error_handling.hpp"  // import Error_with_exception
@@ -31,8 +31,7 @@ requires Regular_invocable_r<decltype(ExactFunc), Ret,
 constexpr auto int_cast(InInt value) noexcept(
     noexcept(Ret{std::invoke(ExactFunc, value)}, void(),
              Ret{std::invoke(PosOverflowFunc, value)}, void(),
-             Ret{std::invoke(NegOverflowFunc, value)}) &&
-    std::is_nothrow_move_constructible_v<Ret>) -> Ret {
+             Ret{std::invoke(NegOverflowFunc, value)})) -> Ret {
   using in_limits = std::numeric_limits<InInt>;
   using out_limits = std::numeric_limits<Int>;
   if constexpr (in_limits::max() > out_limits::max()) {

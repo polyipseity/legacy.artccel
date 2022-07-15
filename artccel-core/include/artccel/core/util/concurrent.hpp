@@ -7,7 +7,6 @@
 #include <memory>   // import std::make_unique, std::unique_ptr
 #include <mutex> // import std::call_once, std::mutex, std::once_flag, std::recursive_mutex, std::recursive_timed_mutex, std::timed_mutex
 #include <shared_mutex> // import std::shared_mutex, std::shared_timed_mutex
-#include <type_traits>  // import std::is_nothrow_move_constructible_v
 #include <utility> // import std::declval, std::forward, std::move, std::swap
 
 #include "utility_extras.hpp" // import Delegate
@@ -194,8 +193,7 @@ public:
   }
   constexpr auto try_lock [[nodiscard]] () const
       noexcept(noexcept(static_cast<void>(bool{this->value_->try_lock()}),
-                        bool{null_lockable_.try_lock()}) &&
-               std::is_nothrow_move_constructible_v<bool>) -> bool {
+                        bool{null_lockable_.try_lock()})) -> bool {
     if (this->value_) {
       return this->value_->try_lock();
     }
@@ -219,8 +217,7 @@ public:
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
       noexcept(noexcept(static_cast<void>(bool{
                             this->value_->try_lock_for(rel_time)}),
-                        bool{null_lockable_.try_lock_for(rel_time)}) &&
-               std::is_nothrow_move_constructible_v<bool>) -> bool {
+                        bool{null_lockable_.try_lock_for(rel_time)})) -> bool {
     if (this->value_) {
       return this->value_->try_lock_for(rel_time);
     }
@@ -241,8 +238,8 @@ public:
       std::chrono::time_point<Clock, Duration> const &abs_time) const
       noexcept(noexcept(static_cast<void>(bool{
                             this->value_->try_lock_until(abs_time)}),
-                        bool{null_lockable_.try_lock_until(abs_time)}) &&
-               std::is_nothrow_move_constructible_v<bool>) -> bool {
+                        bool{null_lockable_.try_lock_until(abs_time)}))
+          -> bool {
     if (this->value_) {
       return this->value_->try_lock_until(abs_time);
     }
@@ -272,8 +269,7 @@ public:
   }
   constexpr auto try_lock_shared [[nodiscard]] () const noexcept(
       noexcept(static_cast<void>(bool{this->value_->try_lock_shared()}),
-               bool{null_lockable_.try_lock_shared()}) &&
-      std::is_nothrow_move_constructible_v<bool>) -> bool {
+               bool{null_lockable_.try_lock_shared()})) -> bool {
     if (this->value_) {
       return this->value_->try_lock_shared();
     }
@@ -311,8 +307,8 @@ public:
       [[nodiscard]] (std::chrono::duration<Rep, Period> const &rel_time) const
       noexcept(noexcept(static_cast<void>(bool{
                             this->value_->try_lock_shared_for(rel_time)}),
-                        bool{null_lockable_.try_lock_shared_for(rel_time)}) &&
-               std::is_nothrow_move_constructible_v<bool>) -> bool {
+                        bool{null_lockable_.try_lock_shared_for(rel_time)}))
+          -> bool {
     if (this->value_) {
       return this->value_->try_lock_shared_for(rel_time);
     }
@@ -333,8 +329,8 @@ public:
       std::chrono::time_point<Clock, Duration> const &abs_time) const
       noexcept(noexcept(static_cast<void>(bool{
                             this->value_->try_lock_shared_until(abs_time)}),
-                        bool{null_lockable_.try_lock_shared_until(abs_time)}) &&
-               std::is_nothrow_move_constructible_v<bool>) -> bool {
+                        bool{null_lockable_.try_lock_shared_until(abs_time)}))
+          -> bool {
     if (this->value_) {
       return this->value_->try_lock_shared_until(abs_time);
     }

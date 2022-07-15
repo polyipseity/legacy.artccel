@@ -8,7 +8,7 @@
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
-#include <type_traits> // import std::invoke_result_t, std::is_nothrow_destructible_v, std::is_nothrow_invocable_v, std::is_nothrow_move_constructible_v, std::is_pointer_v, std::is_reference_v, std::remove_cvref_t, std::remove_reference_t
+#include <type_traits> // import std::is_pointer_v, std::is_reference_v, std::remove_cvref_t, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
@@ -22,6 +22,25 @@ struct ARTCCEL_CORE_EXPORT Consteval_t {
 };
 
 template <typename> constexpr auto dependent_false_v{false};
+
+namespace detail {
+template <template <typename...> typename Tuple, typename... Args,
+          std::invocable<Args...> Func, std::size_t... Idxs>
+constexpr auto forward_apply_0(
+    Func &&func, Tuple<Args &&...> &&t_args,
+    std::index_sequence<Idxs...> idxs
+    [[maybe_unused]]) noexcept(noexcept(std::invoke(std::forward<Func>(func),
+                                                    std::forward<
+                                                        Args>(std::get<Idxs>(
+                                                        std::forward<
+                                                            Tuple<Args &&...>>(
+                                                            t_args)))...)))
+    -> decltype(auto) {
+  return std::invoke(std::forward<Func>(func),
+                     std::forward<Args>(std::get<Idxs>(
+                         std::forward<Tuple<Args &&...>>(t_args)))...);
+}
+} // namespace detail
 
 namespace f {
 template <typename Type>
@@ -52,23 +71,13 @@ constexpr auto unify_ptr_to_ref(Type &&value) noexcept -> decltype(auto) {
 template <template <typename...> typename Tuple, typename... Args,
           std::invocable<Args...> Func>
 constexpr auto forward_apply(Func &&func, Tuple<Args &&...> &&t_args) noexcept(
-    std::is_nothrow_invocable_v<Func, Args...> &&std::
-        is_nothrow_move_constructible_v<std::invoke_result_t<Func, Args...>>)
+    noexcept(detail::forward_apply_0(std::forward<Func>(func),
+                                     std::forward<Tuple<Args &&...>>(t_args),
+                                     std::index_sequence_for<Args...>{})))
     -> decltype(auto) {
-  using TArgs = Tuple<Args &&...>;
-  return
-      [&func, &t_args ]<std::size_t... Idxs>(
-          std::index_sequence<Idxs...> idxs
-          [[maybe_unused]]) noexcept(std::is_nothrow_invocable_v<Func,
-                                                                 Args...> &&
-                                     std::is_nothrow_move_constructible_v<
-                                         std::invoke_result_t<Func, Args...>>)
-          ->decltype(auto) {
-    return std::invoke(
-        std::forward<Func>(func),
-        std::forward<Args>(std::get<Idxs>(std::forward<TArgs>(t_args)))...);
-  }
-  (std::index_sequence_for<Args...>{});
+  return detail::forward_apply_0(std::forward<Func>(func),
+                                 std::forward<Tuple<Args &&...>>(t_args),
+                                 std::index_sequence_for<Args...>{});
 }
 } // namespace f
 
@@ -98,35 +107,32 @@ template <typename Type, bool Explicit> struct Delegate {
 
   [[nodiscard]] explicit(Explicit) constexpr
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  operator auto &() &noexcept(noexcept(value_)) {
+  operator auto &() &noexcept {
     return value_;
   }
   [[nodiscard]] explicit(Explicit) constexpr
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  operator auto const &() const &noexcept(noexcept(value_)) {
+  operator auto const &() const &noexcept {
     return value_;
   }
   template <typename = void>
   requires std::move_constructible<Type>
   [[nodiscard]] explicit(Explicit) constexpr
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  operator Type() &&noexcept(noexcept(std::move(value_)) &&
-                             std::is_nothrow_move_constructible_v<Type>) {
+  operator Type() &&noexcept(noexcept(Type{std::move(value_)})) {
     return std::move(value_);
   }
   template <typename = void>
   requires std::copy_constructible<Type>
   [[nodiscard]] explicit(Explicit) constexpr
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  operator Type() const &&noexcept(noexcept(value_) &&
-                                   std::is_nothrow_move_constructible_v<Type>) {
+  operator Type() const &&noexcept(noexcept(Type{value_})) {
     return value_;
   }
 
 protected:
-  explicit constexpr Delegate(Type value) noexcept(
-      noexcept(decltype(value_){std::move(value)}) &&
-      std::is_nothrow_destructible_v<type>)
+  explicit constexpr Delegate(Type value) noexcept(noexcept(decltype(value_){
+      std::move(value)}))
       : value_{std::move(value)} {}
 #pragma warning(suppress : 4625 4626)
 };

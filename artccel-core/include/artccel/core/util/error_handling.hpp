@@ -6,7 +6,7 @@
 #include <concepts> // import std::default_initializable, std::equality_comparable_with, std::invocable, std::same_as
 #include <exception> // import std::exception_ptr, std::make_exception_ptr, std::rethrow_exception
 #include <functional>  // import std::invoke
-#include <type_traits> // import std::invoke_result_t, std::is_empty_v, std::is_nothrow_copy_constructible_v, std::is_nothrow_move_constructible_v, std::remove_cvref_t
+#include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_empty_v, std::remove_cvref_t
 #include <utility>     // import std::forward, std::move
 #include <variant>     // import std::monostate
 
@@ -48,12 +48,14 @@ public:
   auto exc_ptr [[nodiscard]] () const &&noexcept { return exc_ptr_; }
   auto error [[nodiscard]] () &noexcept -> auto & { return error_; }
   auto error [[nodiscard]] () const &noexcept -> auto const & { return error_; }
-  auto error [[nodiscard]] () &&noexcept(
-      std::is_nothrow_move_constructible_v<decltype(error_)>) {
+  auto error
+      [[nodiscard]] () &&noexcept(noexcept(std::decay_t<decltype(error_)>{
+          std::move(error_)})) {
     return std::move(error_);
   }
-  auto error [[nodiscard]] () const &&noexcept(
-      std::is_nothrow_copy_constructible_v<decltype(error_)>) {
+  auto error
+      [[nodiscard]] () const &&noexcept(noexcept(std::decay_t<decltype(error_)>{
+          error_})) {
     return error_;
   }
 
@@ -149,15 +151,16 @@ public:
 
   template <typename Ret>
   friend auto assert_success(
-      tl::expected<Ret, Error_with_exception> const
-          &result) noexcept(std::is_nothrow_copy_constructible_v<Ret>) {
+      tl::expected<Ret, Error_with_exception> const &
+          result) noexcept(noexcept(std::decay_t<decltype(*result)>{*result})) {
     assert(result && u8"Unexpected failure");
     return *result;
   }
   template <typename Ret>
   friend auto
   assert_success(tl::expected<Ret, Error_with_exception> &&result) noexcept(
-      std::is_nothrow_move_constructible_v<Ret>) {
+      noexcept(std::decay_t<decltype(*std::move(result))>{
+          *std::move(result)})) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     assert(result && u8"Unexpected failure");
     return *std::move(result);

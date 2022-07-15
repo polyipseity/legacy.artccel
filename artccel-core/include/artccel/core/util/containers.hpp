@@ -7,7 +7,7 @@
 #include <cstddef>          // import std::size_t
 #include <initializer_list> // import std::initializer_list
 #include <span>             // import std::dynamic_extent, std::span
-#include <type_traits> // import std::is_convertible_v, std::is_lvalue_reference_v, std::is_nothrow_constructible_v, std::is_nothrow_copy_constructible_v, std::remove_cv_t, std::remove_cvref_t
+#include <type_traits> // import std::is_convertible_v, std::is_lvalue_reference_v, std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t
 #include <utility> // import std::forward, std::index_sequence, std::in_place, std::in_place_t, std::make_index_sequence, std::move
 
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
@@ -84,8 +84,8 @@ public:
       : Value_span::span{std::forward<Args>(args)...} {}
 
   constexpr auto forward [[nodiscard]] (reference element) const
-      noexcept(std::is_nothrow_copy_constructible_v<element_type>)
-          -> element_type {
+      noexcept(noexcept(element_type{std::move(element)},
+                        element_type{element})) -> element_type {
     // no discard, does actual moving unlike std::move
     if (move_) {
       return std::move(element);
