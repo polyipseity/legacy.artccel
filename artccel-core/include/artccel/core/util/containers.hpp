@@ -92,6 +92,7 @@ public:
     }
     return element;
   }
+#pragma warning(suppress : 4623 4820)
 };
 
 namespace f {
