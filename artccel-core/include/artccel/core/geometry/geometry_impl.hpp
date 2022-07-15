@@ -3,7 +3,6 @@
 #pragma once
 
 #include <array>       // import std::array
-#include <concepts>    // import std::convertible_to
 #include <cstdint>     // import std::int_fast8_t
 #include <type_traits> // import std::is_nothrow_copy_constructible_v
 #include <typeinfo>    // import std::type_info
@@ -16,8 +15,9 @@
 
 #include "geometry.hpp" // interface
 
-#include "../util/interval.hpp"  // import util::Nonnegative_interval
-#include "../util/semantics.hpp" // import util::Observer_ptr
+#include "../util/containers.hpp" // import util::Value_span, util::f::to_array
+#include "../util/interval.hpp"   // import util::Nonnegative_interval
+#include "../util/semantics.hpp"  // import util::Observer_ptr
 
 namespace artccel::core::geometry::impl {
 template <util::Nonnegative_interval<std::int_fast8_t> Dim>
@@ -101,11 +101,9 @@ private:
   std::array<compute::Compute_out<double>, Dim> position_{};
 
 public:
-  Point_impl() noexcept = default;
-  template <
-      std::convertible_to<typename decltype(position_)::value_type>... Coords>
-  requires(sizeof...(Coords) == Dim) explicit Point_impl(Coords... coords)
-      : position_{{std::move(coords)...}} {}
+  explicit Point_impl(
+      util::Value_span<compute::Compute_out<double>, Dim> const &position)
+      : position_{util::f::to_array(position)} {}
   ~Point_impl() noexcept override = default;
   auto clone [[nodiscard]] () const -> gsl::owner<Point *> {
     return clone_impl();
