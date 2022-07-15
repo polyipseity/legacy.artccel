@@ -8,7 +8,7 @@
 #include <cstddef>     // import std::size_t
 #include <functional>  // import std::invoke
 #include <memory>      // import std::addressof
-#include <type_traits> // import std::is_pointer_v, std::is_reference_v, std::remove_cvref_t, std::remove_reference_t
+#include <type_traits> // import std::is_lvalue_reference_v, std::is_pointer_v, std::remove_cvref_t, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
@@ -46,7 +46,7 @@ namespace f {
 template <typename Type>
 constexpr auto unify_ref_to_ptr(Type &&value) noexcept {
   // (callsite) -> (return)
-  if constexpr (std::is_reference_v<Type>) {
+  if constexpr (std::is_lvalue_reference_v<Type>) {
     // t& -> t*, t*& -> t**
     return std::addressof(value);
   } else {
