@@ -54,11 +54,10 @@ constexpr auto clone_raw [[nodiscard]] (Ptr const &ptr, Func &&func) {
     // T/smart_pointer<T> -> T/smart_pointer<T>, T* -> T*, T& -> T*; T&& -> T
     return f::unify_ref_to_ptr(std::forward<decltype(init)>(init));
   }()};
-
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
   assert(ret && u8"ret == nullptr");
+
   using ret_type = decltype(ret);
-  static_assert(!std::is_reference_v<ret_type>, u8"Unexpected");
   if constexpr (std::is_pointer_v<ret_type>) {
     return std::unique_ptr<std::remove_pointer_t<ret_type>>{ret};
   } else if constexpr (!std::same_as<decltype(ret.release()), void>) {
