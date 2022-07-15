@@ -48,14 +48,12 @@ public:
   auto exc_ptr [[nodiscard]] () const &&noexcept { return exc_ptr_; }
   auto error [[nodiscard]] () &noexcept -> auto & { return error_; }
   auto error [[nodiscard]] () const &noexcept -> auto const & { return error_; }
-  auto error
-      [[nodiscard]] () &&noexcept(noexcept(std::decay_t<decltype(error_)>{
-          std::move(error_)})) {
+  auto error [[nodiscard]] () &&noexcept(noexcept(Error{std::move(error_)}))
+      -> Error {
     return std::move(error_);
   }
-  auto error
-      [[nodiscard]] () const &&noexcept(noexcept(std::decay_t<decltype(error_)>{
-          error_})) {
+  auto error [[nodiscard]] () const &&noexcept(noexcept(Error{error_}))
+      -> Error {
     return error_;
   }
 
