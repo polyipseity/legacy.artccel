@@ -12,7 +12,7 @@
 #include <string>       // import std::literals::string_literals
 #include <string_view>  // import std::u8string_view
 #include <type_traits> // import std::is_invocable_r_v, std::is_nothrow_move_constructible_v, std::remove_cv_t
-#include <utility> // import std::declval, std::exchange, std::forward, std::move, std::swap
+#include <utility> // import std::exchange, std::forward, std::move, std::swap
 
 #pragma warning(push)
 #pragma warning(disable : 4626 4820)
@@ -636,12 +636,12 @@ protected:
         bound_{other.bound_} {}
 };
 template <typename Func>
-Compute_function(Func &&, auto &&...) -> Compute_function<
-    decltype(decltype(std::function{std::declval<Func>()})::operator())>;
+Compute_function(Func &&func, auto &&...) -> Compute_function<
+    decltype(decltype(std::function{std::forward<Func>(func)})::operator())>;
 template <typename Func>
-Compute_function(Compute_options const &, Func &&, auto &&...)
+Compute_function(Compute_options const &, Func &&func, auto &&...)
     -> Compute_function<decltype(decltype(std::function{
-        std::declval<Func>()})::operator())>;
+        std::forward<Func>(func)})::operator())>;
 
 struct Out_t {
   explicit consteval Out_t() noexcept = default;
