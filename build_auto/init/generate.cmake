@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+
 # generation
 function(generate_preset_export_header target filename)
 	if(NOT TARGET "${target}")

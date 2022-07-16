@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+
 # languages
 # finding threads must happen before setting language standards
 set(THREADS_PREFER_PTHREAD_FLAG true)

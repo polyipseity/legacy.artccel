@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+
 include_guard(DIRECTORY)
 include("${CMAKE_CURRENT_LIST_DIR}/init/options.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/init/modules.cmake")

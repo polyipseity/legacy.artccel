@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+
 # preconditions
 if(NOT DEFINED ROOT_SOURCE_DIR)
 	message(FATAL_ERROR "'ROOT_SOURCE_DIR' is undefined")
