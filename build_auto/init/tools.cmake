@@ -131,7 +131,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	)
 	add_dependencies(clang-tidy "${target}-clang-tidy")
 
-	if(ARTCCEL_RUN_CLANG_TIDY)
+	if(ARTCCEL_CLANG_TIDY)
 		add_dependencies("${target}" "${target}-clang-tidy")
 	endif()
 endfunction()
