@@ -2,8 +2,9 @@
 #define ARTCCEL_CORE_UTIL_EXCEPTION_EXTRAS_HPP
 #pragma once
 
-#include <concepts> // import std::derived_from
+#include <concepts> // import std::derived_from, std::invocable
 #include <exception> // import std::current_exception, std::exception, std::throw_with_nested
+#include <functional>  // import std::invoke
 #include <type_traits> // import std::remove_cvref_t
 #include <utility>     // import std::forward
 
@@ -39,6 +40,14 @@ requires(std::derived_from<std::remove_cvref_t<Top>, std::exception> &&...
 } // namespace detail
 
 namespace f {
+void ignore_all_exceptions(std::invocable<> auto &&func) noexcept {
+  try {
+    std::invoke(func);
+  } catch (...) {
+    // NOOP
+  }
+}
+
 template <typename Top, typename... Nested>
 requires(std::derived_from<std::remove_cvref_t<Top>, std::exception> &&...
              &&std::derived_from<std::remove_cvref_t<Nested>,
