@@ -6,6 +6,34 @@ if(NOT DEFINED ROOT_SOURCE_DIR)
 endif()
 
 # tools
+
+# ccache
+# https://crascit.com/2016/04/09/using-ccache-with-cmake/
+if(ARTCCEL_CCACHE)
+	find_program(CCACHE_PROGRAM ccache)
+
+	if(CCACHE_PROGRAM)
+		set(CCACHE_LAUNCHER "${CMAKE_COMMAND}" -E env
+			${ARTCCEL_CCACHE_OPTIONS}
+			"${CCACHE_PROGRAM}")
+
+		if(CMAKE_GENERATOR STREQUAL "Xcode")
+			list(JOIN CCACHE_LAUNCHER " " CCACHE_LAUNCHER_CLI)
+			set(CMAKE_XCODE_ATTRIBUTE_CC "${CCACHE_LAUNCHER_CLI} ${CMAKE_C_COMPILER}")
+			set(CMAKE_XCODE_ATTRIBUTE_LD "${CCACHE_LAUNCHER_CLI} ${CMAKE_C_COMPILER}")
+			set(CMAKE_XCODE_ATTRIBUTE_CXX "${CCACHE_LAUNCHER_CLI} ${CMAKE_CXX_COMPILER}")
+			set(CMAKE_XCODE_ATTRIBUTE_LDPLUSPLUS "${CCACHE_LAUNCHER_CLI} ${CMAKE_CXX_COMPILER}")
+		else()
+			set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_LAUNCHER})
+			set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_LAUNCHER})
+		endif()
+
+		message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+	else()
+		message(WARNING "Cannot find ccache")
+	endif()
+endif()
+
 # clang-tidy
 add_custom_target(clang-tidy
 	COMMENT "Running clang-tidy on all clang-tidy-integrated targets"
