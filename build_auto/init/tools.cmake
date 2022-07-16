@@ -55,8 +55,8 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	endif()
 
 	# actual work
-	set(_target_include_directories "$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>")
 	set(_target_compile_definitions "$<TARGET_PROPERTY:${target},COMPILE_DEFINITIONS>")
+	set(_target_include_directories "$<TARGET_PROPERTY:${target},INCLUDE_DIRECTORIES>")
 	get_target_property(_target_compile_options "${target}" COMPILE_OPTIONS)
 
 	if(NOT _target_compile_options)
@@ -73,26 +73,24 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	get_target_property(_target_sources "${target}" SOURCES)
 
 	foreach(_source IN LISTS _target_sources)
-		get_source_file_property(_source_include_directories "${_source}" INCLUDE_DIRECTORIES)
-
-		if(NOT _source_include_directories)
-			set(_source_include_directories "")
-		endif()
-
-		eval_incompatible_genexps(_source_include_directories "${_source_include_directories}")
 		get_source_file_property(_source_compile_definitions "${_source}" COMPILE_DEFINITIONS)
+		get_source_file_property(_source_include_directories "${_source}" INCLUDE_DIRECTORIES)
+		get_source_file_property(_source_compile_options "${_source}" COMPILE_OPTIONS)
 
 		if(NOT _source_compile_definitions)
 			set(_source_compile_definitions "")
 		endif()
 
-		eval_incompatible_genexps(_source_compile_definitions "${_source_compile_definitions}")
-		get_source_file_property(_source_compile_options "${_source}" COMPILE_OPTIONS)
+		if(NOT _source_include_directories)
+			set(_source_include_directories "")
+		endif()
 
 		if(NOT _source_compile_options)
 			set(_source_compile_options "")
 		endif()
 
+		eval_incompatible_genexps(_source_compile_definitions "${_source_compile_definitions}")
+		eval_incompatible_genexps(_source_include_directories "${_source_include_directories}")
 		eval_incompatible_genexps(_source_compile_options "${_source_compile_options}")
 
 		get_filename_component(_source_real "${_source}" REALPATH BASE_DIR "${PROJECT_SOURCE_DIR}")
@@ -104,11 +102,11 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 			"--line-filter=[${_line_filters}]"
 			"${_source_real}"
 			--
-			"$<$<BOOL:${_target_include_directories}>:-I$<JOIN:${_target_include_directories},;-I>>"
 			"$<$<BOOL:${_target_compile_definitions}>:-D$<JOIN:${_target_compile_definitions},;-D>>"
+			"$<$<BOOL:${_target_include_directories}>:-I$<JOIN:${_target_include_directories},;-I>>"
 			"${_target_compile_options}"
-			"$<$<BOOL:${_source_include_directories}>:-I$<JOIN:${_source_include_directories},;-I>>"
 			"$<$<BOOL:${_source_compile_definitions}>:-D$<JOIN:${_source_compile_definitions},;-D>>"
+			"$<$<BOOL:${_source_include_directories}>:-I$<JOIN:${_source_include_directories},;-I>>"
 			"${_source_compile_options}"
 
 			# workaround: make clang-tidy include non-default system headers
