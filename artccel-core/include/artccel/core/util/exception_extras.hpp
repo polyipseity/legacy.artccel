@@ -2,8 +2,8 @@
 #define ARTCCEL_CORE_UTIL_EXCEPTION_EXTRAS_HPP
 #pragma once
 
-#include <concepts> // import std::derived_from, std::invocable
-#include <exception> // import std::current_exception, std::exception, std::throw_with_nested
+#include <concepts>    // import std::invocable
+#include <exception>   // import std::current_exception, std::throw_with_nested
 #include <functional>  // import std::invoke
 #include <type_traits> // import std::remove_cvref_t
 #include <utility>     // import std::forward
@@ -16,10 +16,8 @@
 namespace artccel::core::util {
 namespace detail {
 template <bool Rethrow, typename Top, typename... Nested>
-requires(std::derived_from<std::remove_cvref_t<Top>, std::exception> &&...
-             &&std::derived_from<std::remove_cvref_t<Nested>,
-                                 std::exception>) auto throw_multiple_as_nested
-    [[noreturn]] (Top &&top, Nested &&...nested) -> std::remove_cvref_t<Top> {
+auto throw_multiple_as_nested [[noreturn]] (Top &&top, Nested &&...nested)
+-> std::remove_cvref_t<Top> {
   if constexpr (sizeof...(Nested) == 0) {
     if constexpr (Rethrow) {
       if (std::current_exception()) {
@@ -49,28 +47,17 @@ void ignore_all_exceptions(std::invocable<> auto &&func) noexcept {
 }
 
 template <typename Top, typename... Nested>
-requires(std::derived_from<std::remove_cvref_t<Top>, std::exception> &&...
-             &&std::derived_from<std::remove_cvref_t<Nested>,
-                                 std::exception>) void throw_multiple_as_nested
-    [[noreturn]] (Top &&top, Nested &&...nested) {
+void throw_multiple_as_nested [[noreturn]] (Top &&top, Nested &&...nested) {
   detail::throw_multiple_as_nested<false>(std::forward<Top>(top),
                                           std::forward<Nested>(nested)...);
 }
 template <typename Top, typename... Nested>
-requires(std::derived_from<std::remove_cvref_t<Top>, std::exception> &&... &&
-             std::derived_from<std::remove_cvref_t<Nested>,
-                               std::exception>) void rethrow_multiple_as_nested
-    [[noreturn]] (Top &&top, Nested &&...nested) {
+void rethrow_multiple_as_nested [[noreturn]] (Top &&top, Nested &&...nested) {
   detail::throw_multiple_as_nested<true>(std::forward<Top>(top),
                                          std::forward<Nested>(nested)...);
 }
 template <typename Top, typename... Nested>
-requires(
-    std::derived_from<std::remove_cvref_t<Top>, std::exception> &&...
-        &&std::derived_from<
-            std::remove_cvref_t<Nested>,
-            std::exception>) auto make_nested_exception(Top &&top,
-                                                        Nested &&...nested) {
+auto make_nested_exception(Top &&top, Nested &&...nested) {
   try {
     throw_multiple_as_nested(std::forward<Top>(top),
                              std::forward<Nested>(nested)...);
@@ -79,12 +66,7 @@ requires(
   }
 }
 template <typename Top, typename... Nested>
-requires(
-    std::derived_from<std::remove_cvref_t<Top>, std::exception> &&...
-        &&std::derived_from<
-            std::remove_cvref_t<Nested>,
-            std::exception>) auto remake_nested_exception(Top &&top,
-                                                          Nested &&...nested) {
+auto remake_nested_exception(Top &&top, Nested &&...nested) {
   try {
     rethrow_multiple_as_nested(std::forward<Top>(top),
                                std::forward<Nested>(nested)...);
