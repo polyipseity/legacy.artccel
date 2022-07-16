@@ -1,4 +1,5 @@
 #include <algorithm>   // import std::ranges::for_each
+#include <cstdlib>     // import EXIT_SUCCESS
 #include <exception>   // import std::exception, std::rethrow_exception
 #include <iostream>    // import std::cin, std::cout, std::flush
 #include <memory>      // import std::make_shared
@@ -71,7 +72,7 @@ static auto main_0(Raw_arguments arguments) -> int {
   Main_program const program{program_dtor_excs, arguments};
   detail::print_args(program);
   detail::echo_cin();
-  return 0;
+  return EXIT_SUCCESS;
 }
 } // namespace artccel::core::detail
 
