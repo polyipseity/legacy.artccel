@@ -17,6 +17,7 @@ function(prepend_env_to_compiler_launchers)
 	endforeach()
 endfunction()
 
+# https://crascit.com/2016/04/09/using-ccache-with-cmake/
 function(port_compiler_launchers_to_xcode)
 	if(CMAKE_GENERATOR STREQUAL "Xcode")
 		get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
@@ -40,7 +41,6 @@ function(port_compiler_launchers_to_xcode)
 endfunction()
 
 # ccache
-# https://crascit.com/2016/04/09/using-ccache-with-cmake/
 if(ARTCCEL_CCACHE)
 	find_program(CCACHE_PROGRAM ccache)
 
