@@ -9,8 +9,6 @@
 #include <mutex>  // import std::lock_guard, std::scoped_lock
 #include <optional>     // import std::nullopt, std::optional
 #include <shared_mutex> // import std::shared_lock, std::shared_mutex
-#include <string>       // import std::literals::string_literals
-#include <string_view>  // import std::u8string_view
 #include <type_traits>  // import std::remove_cv_t
 #include <utility> // import std::exchange, std::forward, std::move, std::swap
 
@@ -19,15 +17,15 @@
 #include <gsl/gsl> // import gsl::owner
 #pragma warning(pop)
 
+#include "../util/bitset_extras.hpp"   // import util::Check_bitset
 #include "../util/concepts_extras.hpp" // import util::Invocable_r
 #include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
-#include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::check_bitset, util::f::next_bitmask, util::operators::enum_bitset
+#include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::next_bitmask, util::operators::enum_bitset
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
+#include <artccel/core/export.h>      // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core::compute {
-using namespace std::literals::string_literals;
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace util::operators::enum_bitset;
 
@@ -55,15 +53,6 @@ concept Compute_in_c =
     std::derived_from<Type, Compute_in<Type, Ret>> && std::copyable<Ret>;
 template <typename Type>
 concept Compute_in_any_c = Compute_in_c<Type, typename Type::return_type>;
-
-namespace detail {
-template <typename Type> struct Odr_type_name {
-#pragma warning(suppress : 4251)
-  constinit static std::u8string_view const value;
-};
-extern template struct ARTCCEL_CORE_EXPORT_DECLARATION
-    Odr_type_name<Compute_option>;
-} // namespace detail
 
 enum struct Compute_option : std::uint_fast8_t {
   empty = util::empty_bitmask,
@@ -93,8 +82,8 @@ public:
   using return_type = typename Compute_in::return_type;
   virtual auto clone_unmodified [[nodiscard]] () const
       -> gsl::owner<Compute_in *> = 0;
-  constexpr static auto clone_valid_options{Compute_option::concurrent |
-                                            Compute_option::defer};
+  constexpr static util::Check_bitset clone_valid_options{
+      Compute_option::concurrent | Compute_option::defer};
   virtual auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_in *> = 0;
 
@@ -199,10 +188,7 @@ public:
   }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_constant *> override {
-    util::f::check_bitset(
-        Compute_constant::clone_valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    Compute_constant::clone_valid_options(options);
     return new Compute_constant{/* *this */};
   }
   constexpr ~Compute_constant() noexcept override = default;
@@ -253,10 +239,7 @@ public:
   }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function_constant *> override {
-    util::f::check_bitset(
-        Compute_function_constant::clone_valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    Compute_function_constant::clone_valid_options(options);
     return new Compute_function_constant{/* *this */};
   }
   constexpr ~Compute_function_constant() noexcept override = default;
@@ -295,23 +278,18 @@ protected:
                    ? std::make_unique<std::shared_mutex>()
                    : nullptr},
         value_{std::move(value)} {
-    constexpr static auto valid_options{util::Enum_bitset{} |
-                                        Compute_option::concurrent};
-    util::f::check_bitset(
-        valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    constexpr static util::Check_bitset valid_options{
+        Compute_option::concurrent};
+    valid_options(options);
   }
 
 private:
   template <typename... Args>
   static auto create_const_0
       [[nodiscard]] (Compute_options const &options, Args &&...args) {
-    constexpr static auto valid_options{~Compute_option::concurrent};
-    util::f::check_bitset(
-        valid_options,
-        u8"Unnecessary "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    constexpr static util::Check_bitset valid_options{
+        ~Compute_option::concurrent};
+    valid_options(options);
     return create_const_1(options, std::forward<Args>(args)...);
   }
   template <typename... Args>
@@ -361,10 +339,7 @@ public:
   }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_value *> override {
-    util::f::check_bitset(
-        Compute_value::clone_valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    Compute_value::clone_valid_options(options);
     return new Compute_value{*this, (options | Compute_option::concurrent).any()
                                         ? std::make_unique<std::shared_mutex>()
                                         : nullptr};
@@ -446,12 +421,9 @@ protected:
         function_{std::forward<Func>(function)},
         bound_{bind((options & Compute_option::defer).none(), function_,
                     std::forward<Args>(args)...)} {
-    constexpr static auto valid_options{Compute_option::concurrent |
-                                        Compute_option::defer};
-    util::f::check_bitset(
-        valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    constexpr static util::Check_bitset valid_options{
+        Compute_option::concurrent | Compute_option::defer};
+    valid_options(options);
   }
   template <typename... Args>
   requires util::Invocable_r<decltype(function_), Ret, Args...>
@@ -487,11 +459,9 @@ private:
   template <typename... Args>
   static auto create_const_0
       [[nodiscard]] (Compute_options const &options, Args &&...args) {
-    constexpr static auto valid_options{~Compute_option::concurrent};
-    util::f::check_bitset(
-        valid_options,
-        u8"Unnecessary "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    constexpr static util::Check_bitset valid_options{
+        ~Compute_option::concurrent};
+    valid_options(options);
     return create_const_1(options, std::forward<Args>(args)...);
   }
   template <typename... Args>
@@ -520,24 +490,16 @@ public:
   requires util::Invocable_r<decltype(function_), Ret, Args...>
   auto bind(Compute_options const &options, Args &&...args)
       -> std::optional<Ret> {
-    constexpr static auto valid_options{util::Enum_bitset{} |
-                                        Compute_option::defer};
-    util::f::check_bitset(
-        valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    constexpr static util::Check_bitset valid_options{Compute_option::defer};
+    valid_options(options);
     auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
     bound_ = bind(invoke, function_, std::forward<Args>(args)...);
     return invoke ? bound_(Bound_action::compute) : std::nullopt;
   }
   auto reset(Compute_options const &options) -> std::optional<Ret> {
-    constexpr static auto valid_options{util::Enum_bitset{} |
-                                        Compute_option::defer};
-    util::f::check_bitset(
-        valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    constexpr static util::Check_bitset valid_options{Compute_option::defer};
+    valid_options(options);
     auto const invoke{(options & Compute_option::defer).none()};
     std::lock_guard const guard{mutex_};
     bound_(Bound_action::reset);
@@ -583,10 +545,7 @@ public:
   }
   auto clone [[nodiscard]] (Compute_options const &options) const
       -> gsl::owner<Compute_function *> override {
-    util::f::check_bitset(
-        Compute_function::clone_valid_options,
-        u8"Ignored "s.append(detail::Odr_type_name<Compute_option>::value),
-        options);
+    Compute_function::clone_valid_options(options);
     return new Compute_function{*this,
                                 (options | Compute_option::concurrent).any()
                                     ? std::make_unique<std::shared_mutex>()
