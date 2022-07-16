@@ -22,7 +22,8 @@ template <std::size_t Size> struct Check_bitset {
   explicit consteval Check_bitset(
       auto value) noexcept requires std::is_enum_v<decltype(value)>
       : value_{Enum_bitset{} | value} {}
-  constexpr void operator()(std::bitset<Size> const &value) const noexcept {
+  constexpr void operator()(std::bitset<Size> const &value
+                            [[maybe_unused]]) const noexcept {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     assert((value_ & value) == value && u8"value has invalid bits set to 1");
   }
