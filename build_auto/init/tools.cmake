@@ -6,6 +6,38 @@ if(NOT DEFINED ROOT_SOURCE_DIR)
 endif()
 
 # tools
+function(prepend_env_to_compiler_launchers)
+	get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+
+	foreach(_language IN LISTS _languages)
+		list(PREPEND "CMAKE_${_language}_COMPILER_LAUNCHER"
+			"${CMAKE_COMMAND}" -E env
+			${${_language}_COMPILER_LAUNCHER_ENV})
+		set("CMAKE_${_language}_COMPILER_LAUNCHER" ${CMAKE_${_language}_COMPILER_LAUNCHER} PARENT_SCOPE)
+	endforeach()
+endfunction()
+
+function(port_compiler_launchers_to_xcode)
+	if(CMAKE_GENERATOR STREQUAL "Xcode")
+		get_property(_languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+
+		foreach(_language IN LISTS _languages)
+			list(JOIN _command_line " " "CMAKE_${_language}_COMPILER_LAUNCHER")
+
+			if(_language STREQUAL "C")
+				set(CMAKE_XCODE_ATTRIBUTE_CC "${_command_line} ${CMAKE_C_COMPILER}" PARENT_SCOPE)
+				set(CMAKE_XCODE_ATTRIBUTE_LD "${_command_line} ${CMAKE_C_COMPILER}" PARENT_SCOPE)
+			elseif(_language STREQUAL "CXX")
+				set(CMAKE_XCODE_ATTRIBUTE_CXX "${_command_line} ${CMAKE_CXX_COMPILER}" PARENT_SCOPE)
+				set(CMAKE_XCODE_ATTRIBUTE_LDPLUSPLUS "${_command_line} ${CMAKE_CXX_COMPILER}" PARENT_SCOPE)
+			else()
+				set("CMAKE_XCODE_ATTRIBUTE_${_language}" "${_command_line} ${CMAKE_${_language}_COMPILER}" PARENT_SCOPE)
+			endif()
+		endforeach()
+
+		message(STATUS "Ported compiler launchers to Xcode, they may not work; check Xcode attributes")
+	endif()
+endfunction()
 
 # ccache
 # https://crascit.com/2016/04/09/using-ccache-with-cmake/
@@ -13,21 +45,10 @@ if(ARTCCEL_CCACHE)
 	find_program(CCACHE_PROGRAM ccache)
 
 	if(CCACHE_PROGRAM)
-		set(CCACHE_LAUNCHER "${CMAKE_COMMAND}" -E env
-			${ARTCCEL_CCACHE_OPTIONS}
-			"${CCACHE_PROGRAM}")
-
-		if(CMAKE_GENERATOR STREQUAL "Xcode")
-			list(JOIN CCACHE_LAUNCHER " " CCACHE_LAUNCHER_CLI)
-			set(CMAKE_XCODE_ATTRIBUTE_CC "${CCACHE_LAUNCHER_CLI} ${CMAKE_C_COMPILER}")
-			set(CMAKE_XCODE_ATTRIBUTE_LD "${CCACHE_LAUNCHER_CLI} ${CMAKE_C_COMPILER}")
-			set(CMAKE_XCODE_ATTRIBUTE_CXX "${CCACHE_LAUNCHER_CLI} ${CMAKE_CXX_COMPILER}")
-			set(CMAKE_XCODE_ATTRIBUTE_LDPLUSPLUS "${CCACHE_LAUNCHER_CLI} ${CMAKE_CXX_COMPILER}")
-		else()
-			set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_LAUNCHER})
-			set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_LAUNCHER})
-		endif()
-
+		set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+		set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+		list(APPEND C_COMPILER_LAUNCHER_ENV ${ARTCCEL_CCACHE_OPTIONS})
+		list(APPEND CXX_COMPILER_LAUNCHER_ENV ${ARTCCEL_CCACHE_OPTIONS})
 		message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
 	else()
 		message(WARNING "Cannot find ccache")
@@ -163,3 +184,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 		add_dependencies("${target}" "${target}-clang-tidy")
 	endif()
 endfunction()
+
+# deferred
+prepend_env_to_compiler_launchers()
+port_compiler_launchers_to_xcode()
