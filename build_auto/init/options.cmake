@@ -25,4 +25,4 @@ option(ARTCCEL_CCACHE "Use ccache" true)
 set(ARTCCEL_CCACHE_OPTIONS
 	CCACHE_SLOPPINESS=include_file_ctime,include_file_mtime,pch_defines,time_macros
 	CACHE STRING "Environment variables passed to ccache")
-option(ARTCCEL_RUN_CLANG_TIDY "Run clang-tidy" false)
+option(ARTCCEL_CLANG_TIDY "Run clang-tidy" false)
