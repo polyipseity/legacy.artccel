@@ -40,6 +40,7 @@
 #include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_clamp_casts, util::f::int_exact_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
 #include <artccel/core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel/core/util/error_handling.hpp> // import util::Exception_error, util::f::expect_noninvalid, util::f::expect_nonzero
+#include <artccel/core/util/exception_extras.hpp> // import util::f::ignore_all_exceptions
 #include <artccel/core/util/interval.hpp> // import util::Nonnegative_interval
 #include <artccel/core/util/polyfill.hpp> // import util::Move_only_function, util::f::unreachable
 #include <artccel/core/util/utility_extras.hpp> // import util::Semiregularize
@@ -52,27 +53,30 @@ static auto run_finalizer_save_excepts(
         dtor_excs_out) noexcept {
   return [finalizers{std::move(finalizers)},
           dtor_excs_out{std::move(dtor_excs_out)}]() mutable noexcept {
-    if (auto const dtor_excs{dtor_excs_out.lock()}) {
-      std::ranges::for_each(finalizers, [&dtor_excs](auto &finalizer) noexcept {
+    util::f::ignore_all_exceptions([&finalizers, &dtor_excs_out] {
+      if (auto const dtor_excs{dtor_excs_out.lock()}) {
         try {
-          finalizer.reset();
+          std::ranges::for_each(
+              finalizers, [&dtor_excs](auto &finalizer) noexcept {
+                try {
+                  finalizer.reset();
+                } catch (...) {
+                  util::f::ignore_all_exceptions([&dtor_excs] {
+                    dtor_excs->emplace_back(std::current_exception());
+                  });
+                }
+              });
         } catch (...) {
-          try {
+          util::f::ignore_all_exceptions([&dtor_excs] {
             dtor_excs->emplace_back(std::current_exception());
-          } catch (...) {
-            // NOOP
-          }
+          });
         }
-      });
-    } else {
-      std::ranges::for_each(finalizers, [](auto &finalizer) noexcept {
-        try {
-          finalizer.reset();
-        } catch (...) {
-          // NOOP
-        }
-      });
-    }
+      } else {
+        std::ranges::for_each(finalizers, [](auto &finalizer) noexcept {
+          util::f::ignore_all_exceptions([&finalizer] { finalizer.reset(); });
+        });
+      }
+    });
   };
 }
 
