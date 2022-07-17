@@ -116,10 +116,10 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 
 	eval_incompatible_genexps(_target_compile_options "${_target_compile_options}")
 
-	set(_lang_std "${language}")
-	string(REPLACE "X" "+" _lang_std "${_lang_std}")
+	string(REPLACE "X" "+" _lang_std "${language}")
+	get_target_property(_target_lang_std "${target}" "${language}_STANDARD")
+	string(APPEND _lang_std "${_target_lang_std}")
 	string(TOLOWER "${_lang_std}" _lang_std)
-	string(APPEND _lang_std "${CMAKE_${language}_STANDARD}")
 	eval_incompatible_genexps(arguments "${arguments}")
 	get_target_property(_target_sources "${target}" SOURCES)
 
