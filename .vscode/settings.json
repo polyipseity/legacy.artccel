@@ -115,5 +115,12 @@
 		"unordered_set": "cpp",
 		"cerrno": "cpp",
 		"expected": "cpp"
-	}
+	},
+	"formatFiles.excludedFolders": [
+		".git",
+		".vscode",
+		"archives",
+		"build",
+		"externals"
+	]
 }
