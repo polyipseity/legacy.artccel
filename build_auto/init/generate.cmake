@@ -7,8 +7,8 @@ function(generate_preset_export_header target filename namespace)
 	endif()
 
 	string(UUID _include_guard_name NAMESPACE "${namespace}" NAME "${target}" TYPE SHA1 UPPER)
-	string(MAKE_C_IDENTIFIER "${_include_guard_name}" _include_guard_name)
 	string(PREPEND _include_guard_name "GUARD_")
+	string(MAKE_C_IDENTIFIER "${_include_guard_name}" _include_guard_name)
 
 	string(MAKE_C_IDENTIFIER "${target}" _target_macro_lowercase)
 	string(TOUPPER "${_target_macro_lowercase}" _target_macro)
