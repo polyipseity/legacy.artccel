@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_CONCEPTS_EXTRAS_HPP
-#define ARTCCEL_CORE_UTIL_CONCEPTS_EXTRAS_HPP
+#ifndef GUARD_7E8E1598_4DA2_472F_908C_B6F29BE0389F
+#define GUARD_7E8E1598_4DA2_472F_908C_B6F29BE0389F
 #pragma once
 
 #include <concepts>    // import std::derived_from, std::same_as

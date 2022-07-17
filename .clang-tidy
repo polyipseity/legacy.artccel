@@ -16,8 +16,8 @@ Checks: >
   -fuchsia-trailing-return,
   -fuchsia-virtual-inheritance,
   -google-readability-todo,
+  -llvm-header-guard,
   -llvmlibc-*,
-# 'llvm-header-guard' dislikes Windows-style paths
 WarningsAsErrors: >
   *,
   -clang-diagnostic-attributes,
@@ -26,6 +26,5 @@ WarningsAsErrors: >
   -clang-diagnostic-unknown-argument,
   -clang-diagnostic-unknown-pragmas,
   -clang-diagnostic-unknown-warning-option,
-  -llvm-header-guard,
 HeaderFilterRegex: /include/artccel/
 FormatStyle: LLVM

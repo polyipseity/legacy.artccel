@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_CONTAINERS_HPP
-#define ARTCCEL_CORE_UTIL_CONTAINERS_HPP
+#ifndef GUARD_F6ADCB05_F660_466C_A14C_7757725976FD
+#define GUARD_F6ADCB05_F660_466C_A14C_7757725976FD
 #pragma once
 
 #include <array>            // import std::array, std::data, std::size

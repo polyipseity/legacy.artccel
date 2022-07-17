@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_MAIN_HOOKS_HPP
-#define ARTCCEL_CORE_MAIN_HOOKS_HPP
+#ifndef GUARD_F61BAAB6_DD03_41E0_9F18_41B3CD5B5E9C
+#define GUARD_F61BAAB6_DD03_41E0_9F18_41B3CD5B5E9C
 #pragma once
 
 #include <concepts>  // import std::invocable

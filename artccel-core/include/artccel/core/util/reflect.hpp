@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_REFLECT_HPP
-#define ARTCCEL_CORE_UTIL_REFLECT_HPP
+#ifndef GUARD_DF82087C_C553_4C40_AFF6_0D9AE2D0D59F
+#define GUARD_DF82087C_C553_4C40_AFF6_0D9AE2D0D59F
 #pragma once
 
 #include <cstddef> // import std::size_t, std::span

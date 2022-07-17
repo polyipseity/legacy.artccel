@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_ENCODING_HPP
-#define ARTCCEL_CORE_UTIL_ENCODING_HPP
+#ifndef GUARD_098CF151_8892_484F_B978_7F377A994280
+#define GUARD_098CF151_8892_484F_B978_7F377A994280
 #pragma once
 
 #include <algorithm> // import std::ranges::transform

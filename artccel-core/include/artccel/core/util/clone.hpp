@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_CLONE_HPP
-#define ARTCCEL_CORE_UTIL_CLONE_HPP
+#ifndef GUARD_A112443D_3FC2_4920_B2D9_8EE0D25C37C1
+#define GUARD_A112443D_3FC2_4920_B2D9_8EE0D25C37C1
 #pragma once
 
 #include <cassert>  // import assert

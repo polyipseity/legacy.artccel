@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_META_HPP
-#define ARTCCEL_CORE_UTIL_META_HPP
+#ifndef GUARD_7B51F7E5_D339_44D7_85C1_7DE334308D98
+#define GUARD_7B51F7E5_D339_44D7_85C1_7DE334308D98
 #pragma once
 
 #include <array>    // import std::array

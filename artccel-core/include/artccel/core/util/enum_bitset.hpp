@@ -1,5 +1,5 @@
-#ifndef ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
-#define ARTCCEL_CORE_UTIL_ENUM_BITSET_HPP
+#ifndef GUARD_AAE270C5_7224_46AA_BB9A_DCAF891BA740
+#define GUARD_AAE270C5_7224_46AA_BB9A_DCAF891BA740
 #pragma once
 
 #include <bitset>      // import std::bitset
