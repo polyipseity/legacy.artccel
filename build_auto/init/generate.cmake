@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 3.16)
 
 # generation
-function(generate_preset_export_header target filename)
+function(generate_preset_export_header target filename namespace)
 	if(NOT TARGET "${target}")
 		message(FATAL_ERROR "Not a target: ${target}")
 	endif()
 
-	string(REPLACE "-" "_" _target_macro_lowercase "${target}")
+	string(UUID _include_guard_name NAMESPACE "${namespace}" NAME "${target}" TYPE SHA1 UPPER)
+	string(MAKE_C_IDENTIFIER "${_include_guard_name}" _include_guard_name)
+	string(PREPEND _include_guard_name "GUARD_")
+
+	string(MAKE_C_IDENTIFIER "${target}" _target_macro_lowercase)
 	string(TOUPPER "${_target_macro_lowercase}" _target_macro)
 	set(CUSTOM_EXPORT_HEADER "
 #ifdef ${_target_macro}_STATIC_DEFINE
@@ -37,8 +41,10 @@ function(generate_preset_export_header target filename)
 #	endif
 #endif
 ")
+
 	include(GenerateExportHeader)
 	generate_export_header("${target}"
 		EXPORT_FILE_NAME "${filename}"
+		INCLUDE_GUARD_NAME "${_include_guard_name}"
 		CUSTOM_CONTENT_FROM_VARIABLE CUSTOM_EXPORT_HEADER)
 endfunction()

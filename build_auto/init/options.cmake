@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 # options
+set(ARTCCEL_UUID "9c25968d-480e-431f-b7a8-a8826dbfeb34")
+
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	set(ARTCCEL_STANDALONE true)
 else()

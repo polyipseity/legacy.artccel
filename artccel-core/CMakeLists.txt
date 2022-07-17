@@ -20,7 +20,7 @@ add_library(artccel-core SHARED
 	"sources/windows_error.cpp")
 add_library("${ARTCCEL_NAMESPACE}artccel-core" ALIAS artccel-core)
 configure_file("in/config.h" "include/artccel/core/config.h" @ONLY)
-generate_preset_export_header(artccel-core "include/artccel/core/export.h")
+generate_preset_export_header(artccel-core "include/artccel/core/export.h" "${ARTCCEL_UUID}")
 target_include_directories(artccel-core PUBLIC
 	"$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 	"$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>"
