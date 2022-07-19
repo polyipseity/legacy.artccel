@@ -11,7 +11,6 @@
 #include "semantics.hpp"  // import null_terminator_size
 
 namespace artccel::core::util {
-template <typename CharT, std::size_t Size> struct Template_string;
 template <typename Type, typename Find, typename Replace> struct Replace_all;
 enum struct Replace_target : bool { self = false, container = true };
 template <typename Type, typename Find, typename Replace>
@@ -21,6 +20,45 @@ template <typename Type, template <Replace_target> typename Find,
 using Replace_all_t_t =
     Replace_all_t<Replace_all_t<Type, Find<Replace_target::container>, Replace>,
                   Find<Replace_target::self>, Replace>;
+template <typename CharT, std::size_t Size> struct Template_string;
+
+template <typename Found, typename Replace>
+struct Replace_all<Found, Found, Replace> {
+  using type = Replace;
+};
+template <template <Replace_target> typename Found, typename Replace>
+struct Replace_all<Found<Replace_target::self>, Found<Replace_target::self>,
+                   Replace> {
+  using type = Replace;
+};
+template <template <typename> typename Container,
+          template <Replace_target> typename Found, typename Replace>
+struct Replace_all<Container<Found<Replace_target::container>>,
+                   Found<Replace_target::container>, Replace> {
+  using type = Replace;
+};
+template <template <typename...> typename Type, typename Find, typename Replace,
+          typename... TArgs>
+struct Replace_all<Type<TArgs...>, Find, Replace> {
+  using type = Type<Replace_all_t<TArgs, Find, Replace>...>;
+};
+template <typename Type, typename Find, typename Replace>
+struct Replace_all<Type *, Find, Replace> {
+  using type = Replace_all_t<Type, Find, Replace> *;
+};
+template <typename Type, typename Find, typename Replace>
+struct Replace_all<Type &, Find, Replace> {
+  using type = Replace_all_t<Type, Find, Replace> &;
+};
+template <typename Type, typename Find, typename Replace>
+struct Replace_all<Type &&, Find, Replace> {
+  using type = Replace_all_t<Type, Find, Replace> &&;
+};
+template <typename NotFound, typename Find, typename Replace>
+requires(
+    !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {
+  using type = NotFound;
+};
 
 template <typename CharT, std::size_t Size> struct Template_string {
   using char_type = CharT;
@@ -71,44 +109,6 @@ static_assert(Template_string{char16_t{}}.data_ == f::to_array_cv(u"\0"),
               u8"Implementation error");
 static_assert(Template_string{char32_t{}}.data_ == f::to_array_cv(U"\0"),
               u8"Implementation error");
-
-template <typename Found, typename Replace>
-struct Replace_all<Found, Found, Replace> {
-  using type = Replace;
-};
-template <template <Replace_target> typename Found, typename Replace>
-struct Replace_all<Found<Replace_target::self>, Found<Replace_target::self>,
-                   Replace> {
-  using type = Replace;
-};
-template <template <typename> typename Container,
-          template <Replace_target> typename Found, typename Replace>
-struct Replace_all<Container<Found<Replace_target::container>>,
-                   Found<Replace_target::container>, Replace> {
-  using type = Replace;
-};
-template <template <typename...> typename Type, typename Find, typename Replace,
-          typename... TArgs>
-struct Replace_all<Type<TArgs...>, Find, Replace> {
-  using type = Type<Replace_all_t<TArgs, Find, Replace>...>;
-};
-template <typename Type, typename Find, typename Replace>
-struct Replace_all<Type *, Find, Replace> {
-  using type = Replace_all_t<Type, Find, Replace> *;
-};
-template <typename Type, typename Find, typename Replace>
-struct Replace_all<Type &, Find, Replace> {
-  using type = Replace_all_t<Type, Find, Replace> &;
-};
-template <typename Type, typename Find, typename Replace>
-struct Replace_all<Type &&, Find, Replace> {
-  using type = Replace_all_t<Type, Find, Replace> &&;
-};
-template <typename NotFound, typename Find, typename Replace>
-requires(
-    !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {
-  using type = NotFound;
-};
 } // namespace artccel::core::util
 
 #endif
