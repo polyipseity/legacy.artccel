@@ -387,10 +387,7 @@ public:
       : Compute_function{std::forward<Args>(args)...} {}
 
 protected:
-  enum struct Bound_action : bool {
-    compute = false,
-    reset = true,
-  };
+  enum struct Bound_action : bool { compute, reset };
 
 private:
   util::Nullable_lockable</* mutable */ std::shared_mutex> const mutex_;

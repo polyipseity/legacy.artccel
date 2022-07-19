@@ -12,7 +12,7 @@
 
 namespace artccel::core::util {
 template <typename Type, typename Find, typename Replace> struct Replace_all;
-enum struct Replace_target : bool { self = false, container = true };
+enum struct Replace_target : bool { self, container };
 template <typename Type, typename Find, typename Replace>
 using Replace_all_t = typename Replace_all<Type, Find, Replace>::type;
 template <typename Type, template <Replace_target> typename Find,
