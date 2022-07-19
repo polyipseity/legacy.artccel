@@ -20,7 +20,7 @@
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
-template <typename Type> class Cloneable_bases;
+template <typename Type> struct Cloneable_bases;
 template <typename Type, typename... Bases> class Cloneable_0;
 template <typename Type>
 using Cloneable = Transform_list_identity_t<
@@ -240,8 +240,9 @@ private:
       -> gsl::owner<void *> = 0;
 };
 template <typename Type, typename... Bases>
-requires(sizeof...(Bases) >= 1) class Cloneable_0<Type, Bases...>
-    : public virtual Cloneable<Bases>... {
+requires(sizeof...(Bases) >= 1)
+    // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+    class Cloneable_0<Type, Bases...> : public virtual Cloneable<Bases>... {
 public:
   constexpr auto clone [[nodiscard]] () const {
     return std::unique_ptr<Type>{static_cast<gsl::owner<Type *>>(clone_impl())};
@@ -251,11 +252,12 @@ protected:
   using Cloneable<Bases>::Cloneable...;
 
 private:
-  constexpr virtual auto clone_impl [[nodiscard]] () const
-      -> gsl::owner<void *> = 0;
+  constexpr auto clone_impl [[nodiscard]] () const
+      -> gsl::owner<void *> override = 0;
 #pragma warning(suppress : 4626 5027)
 };
 template <typename Type, typename... Bases>
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Cloneable_impl_0 : public virtual Cloneable<Type>,
                          public virtual Cloneable_impl<Bases>... {
 protected:
@@ -263,7 +265,7 @@ protected:
   using Cloneable_impl<Bases>::Cloneable_impl...;
 
 private:
-  constexpr virtual auto clone_impl [[nodiscard]] () const
+  auto clone_impl [[nodiscard]] () const
 #pragma warning(suppress : 4437)
       -> gsl::owner<void *> override {
     return new Type{dynamic_cast<Type const &>(*this)};

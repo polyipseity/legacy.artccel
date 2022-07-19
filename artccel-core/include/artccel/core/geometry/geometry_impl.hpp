@@ -25,7 +25,9 @@ template <util::Nonnegative_interval<std::int_fast8_t> Dim> class Point_impl;
 } // namespace geometry::impl
 
 namespace util {
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace geometry;
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace geometry::impl;
 
 template <util::Nonnegative_interval<std::int_fast8_t> Dim>
@@ -45,6 +47,7 @@ struct Cloneable_bases<Point_impl<Dim>> {
 
 namespace geometry::impl {
 template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Geometry_impl : public virtual Geometry,
                       public virtual util::Cloneable<Geometry_impl<Dim>> {
 public:
@@ -66,7 +69,7 @@ protected:
     Geometry_impl{right}.swap(*this);
     return *this;
   }
-  Geometry_impl(Geometry_impl &&other [[maybe_unused]]) noexcept {};
+  Geometry_impl(Geometry_impl &&other [[maybe_unused]]) noexcept {}
   auto operator=(Geometry_impl &&right [[maybe_unused]]) noexcept
       -> Geometry_impl & {
     Geometry_impl{std::move(right)}.swap(*this);
@@ -103,7 +106,7 @@ protected:
   Primitive_impl(Primitive_impl &&other) noexcept {
     using std::swap;
     Primitive_impl::Geometry_impl::swap(std::move(other));
-  };
+  }
   auto operator=(Primitive_impl &&right) noexcept -> Primitive_impl & {
     Primitive_impl{std::move(right)}.swap(*this);
     return *this;

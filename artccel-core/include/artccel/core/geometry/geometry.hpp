@@ -22,6 +22,7 @@ class ARTCCEL_CORE_EXPORT Quality;
 } // namespace geometry
 
 namespace util {
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace geometry;
 
 template <> struct Cloneable_bases<Geometry> { using type = std::tuple<>; };
@@ -60,7 +61,7 @@ public:
     return dynamic_cast<util::Observer_ptr<Qly const>>(
         try_get_quality(typeid(Qly)));
   }
-  virtual ~Geometry() noexcept;
+  ~Geometry() noexcept override;
   Geometry(Geometry const &) = delete;
   auto operator=(Geometry const &) = delete;
   Geometry(Geometry &&) = delete;
@@ -76,7 +77,7 @@ protected:
       -> util::Observer_ptr<Quality const> = 0;
 };
 
-#pragma warning(suppress : 4435)
+#pragma warning(suppress : 4435) // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Primitive : public virtual Geometry,
 #pragma warning(suppress : 4435)
                   public virtual util::Cloneable<Primitive> {
