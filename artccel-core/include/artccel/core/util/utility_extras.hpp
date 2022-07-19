@@ -64,7 +64,7 @@ constexpr auto unify_ptr_to_ref(Type &&value) noexcept -> decltype(auto) {
     return *value; // *v is t&
   } else {
     // t -> t, t& -> t&, t&& -> t
-    return Type{std::forward<Type>(value)};
+    return static_cast<Type>(value);
   }
 }
 

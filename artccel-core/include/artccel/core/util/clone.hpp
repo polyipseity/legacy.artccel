@@ -97,7 +97,7 @@ constexpr auto clone_raw [[nodiscard]] (Ptr const &ptr, Func &&func) {
         return std::unique_ptr<raw_type, deleter_type>{
             f::unify_ref_to_ptr(ret.release()), deleter};
       } else {
-        auto const released{f::unify_ref_to_ptr(
+        auto *const released{f::unify_ref_to_ptr(
             ret.release())}; // happens before stealing the deleter
         return std::unique_ptr<raw_type, deleter_type>{released,
                                                        std::move(deleter)};
