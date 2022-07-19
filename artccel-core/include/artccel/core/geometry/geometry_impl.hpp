@@ -4,24 +4,49 @@
 
 #include <array>       // import std::array
 #include <cstdint>     // import std::int_fast8_t
+#include <tuple>       // import std::tuple
 #include <type_traits> // import std::is_nothrow_copy_constructible_v
 #include <typeinfo>    // import std::type_info
 #include <utility>     // import std::swap
 
-#pragma warning(push)
-#pragma warning(disable : 4626 4820)
-#include <gsl/gsl> // import gsl::owner
-#pragma warning(pop)
-
 #include "geometry.hpp" // interface
 
+#include "../util/clone.hpp" // import util::Cloneable, util::Cloneable_bases, util::Cloneable_impl
 #include "../util/containers.hpp" // import util::Value_span, util::f::to_array
 #include "../util/interval.hpp"   // import util::Nonnegative_interval
 #include "../util/semantics.hpp"  // import util::Observer_ptr
 
-namespace artccel::core::geometry::impl {
+namespace artccel::core {
+namespace geometry::impl {
+template <util::Nonnegative_interval<std::int_fast8_t> Dim> class Geometry_impl;
 template <util::Nonnegative_interval<std::int_fast8_t> Dim>
-class Geometry_impl : public virtual Geometry {
+class Primitive_impl;
+template <util::Nonnegative_interval<std::int_fast8_t> Dim> class Point_impl;
+} // namespace geometry::impl
+
+namespace util {
+using namespace geometry;
+using namespace geometry::impl;
+
+template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+struct Cloneable_bases<Geometry_impl<Dim>> {
+  using type = std::tuple<Geometry>;
+};
+template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+struct Cloneable_bases<Primitive_impl<Dim>> {
+  using type = std::tuple<Primitive, Geometry_impl<Dim>>;
+};
+template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+struct Cloneable_bases<Point_impl<Dim>> {
+  using type = std::tuple<Point, Primitive_impl<Dim>>;
+  using impl_type = std::tuple<>;
+};
+} // namespace util
+
+namespace geometry::impl {
+template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+class Geometry_impl : public virtual Geometry,
+                      public virtual util::Cloneable<Geometry_impl<Dim>> {
 public:
   // NOLINTNEXTLINE(fuchsia-statically-constructed-objects): constexpr ctor
   constexpr static auto dimension_{Dim};
@@ -30,11 +55,6 @@ public:
     return Dim;
   }
   ~Geometry_impl() noexcept override = default;
-  auto clone [[nodiscard]] () const -> gsl::owner<Geometry *> {
-    return clone_impl();
-  }
-  virtual auto clone_impl [[nodiscard]] () const
-      -> gsl::owner<Geometry_impl *> = 0;
 
 protected:
 #pragma warning(suppress : 4589)
@@ -46,26 +66,23 @@ protected:
     Geometry_impl{right}.swap(*this);
     return *this;
   }
-  Geometry_impl(Geometry_impl &&) noexcept = default;
+  Geometry_impl(Geometry_impl &&other [[maybe_unused]]) noexcept {};
   auto operator=(Geometry_impl &&right [[maybe_unused]]) noexcept
       -> Geometry_impl & {
     Geometry_impl{std::move(right)}.swap(*this);
     return *this;
   }
-#pragma warning(suppress : 4820)
+#pragma warning(suppress : 4250 4820)
 };
 
 template <util::Nonnegative_interval<std::int_fast8_t> Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-class Primitive_impl : public virtual Primitive, public Geometry_impl<Dim> {
+class Primitive_impl : public virtual Primitive,
+                       public virtual util::Cloneable<Primitive_impl<Dim>>,
+                       public Geometry_impl<Dim> {
 public:
   using Primitive_impl::Geometry_impl::dimension_;
   ~Primitive_impl() noexcept override = default;
-  auto clone [[nodiscard]] () const -> gsl::owner<Primitive *> {
-    return clone_impl();
-  }
-  auto clone_impl [[nodiscard]] () const
-      -> gsl::owner<Primitive_impl *> override = 0;
 
 protected:
 #pragma warning(suppress : 4589)
@@ -83,7 +100,10 @@ protected:
     Primitive_impl{right}.swap(*this);
     return *this;
   }
-  Primitive_impl(Primitive_impl &&) noexcept = default;
+  Primitive_impl(Primitive_impl &&other) noexcept {
+    using std::swap;
+    Primitive_impl::Geometry_impl::swap(std::move(other));
+  };
   auto operator=(Primitive_impl &&right) noexcept -> Primitive_impl & {
     Primitive_impl{std::move(right)}.swap(*this);
     return *this;
@@ -93,7 +113,11 @@ protected:
 
 template <util::Nonnegative_interval<std::int_fast8_t> Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-class Point_impl : public virtual Point, public Primitive_impl<Dim> {
+class Point_impl : public virtual Point,
+                   public virtual util::Cloneable_impl<Point_impl<Dim>>,
+                   public Primitive_impl<Dim> {
+  friend typename Point_impl::Cloneable_impl_0;
+
 public:
   using Point_impl::Primitive_impl::dimension_;
 
@@ -105,12 +129,6 @@ public:
       util::Value_span<compute::Compute_out<double>, Dim> const &position)
       : position_{util::f::to_array(position)} {}
   ~Point_impl() noexcept override = default;
-  auto clone [[nodiscard]] () const -> gsl::owner<Point *> {
-    return clone_impl();
-  }
-  auto clone_impl [[nodiscard]] () const -> gsl::owner<Point_impl *> override {
-    return new Point_impl{*this};
-  }
 
 protected:
   auto try_get_quality [[nodiscard]] (std::type_info const &quality_type
@@ -147,6 +165,7 @@ protected:
   }
 #pragma warning(suppress : 4250 4820)
 };
-} // namespace artccel::core::geometry::impl
+} // namespace geometry::impl
+} // namespace artccel::core
 
 #endif

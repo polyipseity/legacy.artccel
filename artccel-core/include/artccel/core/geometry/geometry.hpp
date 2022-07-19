@@ -4,24 +4,36 @@
 
 #include <concepts> // import std::derived_from
 #include <cstdint>  // import std::int_fast8_t
+#include <tuple>    // import std::tuple
 #include <typeinfo> // import typeid, std::type_info
 
-#pragma warning(push)
-#pragma warning(disable : 4626 4820)
-#include <gsl/gsl> // import gsl::owner
-#pragma warning(pop)
-
-#include "../util/interval.hpp"  // import util::Nonnegative_interval
+#include "../util/clone.hpp"    // import util::Cloneable, util::Cloneable_bases
+#include "../util/interval.hpp" // import util::Nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 
-namespace artccel::core::geometry {
+namespace artccel::core {
+namespace geometry {
 class ARTCCEL_CORE_EXPORT Geometry;
 class ARTCCEL_CORE_EXPORT Primitive;
 class ARTCCEL_CORE_EXPORT Point;
 
 class ARTCCEL_CORE_EXPORT Quality;
+} // namespace geometry
 
+namespace util {
+using namespace geometry;
+
+template <> struct Cloneable_bases<Geometry> { using type = std::tuple<>; };
+template <> struct Cloneable_bases<Primitive> {
+  using type = std::tuple<Geometry>;
+};
+template <> struct Cloneable_bases<Point> {
+  using type = std::tuple<Primitive>;
+};
+} // namespace util
+
+namespace geometry {
 class Quality {
 public:
   virtual ~Quality() noexcept;
@@ -34,7 +46,8 @@ protected:
   Quality() noexcept;
 };
 
-class Geometry {
+#pragma warning(suppress : 4435)
+class Geometry : public virtual util::Cloneable<Geometry> {
 public:
   virtual auto dimension [[nodiscard]] () const
       -> util::Nonnegative_interval<std::int_fast8_t> = 0;
@@ -47,7 +60,6 @@ public:
     return dynamic_cast<util::Observer_ptr<Qly const>>(
         try_get_quality(typeid(Qly)));
   }
-  auto clone [[nodiscard]] () const -> gsl::owner<Geometry *>;
   virtual ~Geometry() noexcept;
   Geometry(Geometry const &) = delete;
   auto operator=(Geometry const &) = delete;
@@ -65,9 +77,10 @@ protected:
 };
 
 #pragma warning(suppress : 4435)
-class Primitive : public virtual Geometry {
+class Primitive : public virtual Geometry,
+#pragma warning(suppress : 4435)
+                  public virtual util::Cloneable<Primitive> {
 public:
-  auto clone [[nodiscard]] () const -> gsl::owner<Primitive *>;
   ~Primitive() noexcept override;
   Primitive(Primitive const &) = delete;
   auto operator=(Primitive const &) = delete;
@@ -77,12 +90,12 @@ public:
 protected:
 #pragma warning(suppress : 4589)
   using Geometry::Geometry;
+#pragma warning(suppress : 4250)
 };
 
 #pragma warning(suppress : 4435) // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-class Point : public virtual Primitive {
+class Point : public virtual Primitive, public virtual util::Cloneable<Point> {
 public:
-  auto clone [[nodiscard]] () const -> gsl::owner<Point *>;
   ~Point() noexcept override;
   Point(Point const &) = delete;
   auto operator=(Point const &) = delete;
@@ -92,7 +105,9 @@ public:
 protected:
 #pragma warning(suppress : 4589)
   using Primitive::Primitive;
+#pragma warning(suppress : 4250)
 };
-} // namespace artccel::core::geometry
+} // namespace geometry
+} // namespace artccel::core
 
 #endif

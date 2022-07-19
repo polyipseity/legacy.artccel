@@ -7,7 +7,7 @@
 #include <string_view> // import std::u8string_view
 
 #pragma warning(push)
-#pragma warning(disable : 4820)
+#pragma warning(disable : 4626 4820)
 #include <gsl/gsl> // import gsl::final_action, gsl::index, gsl::wzstring, gsl::zstring
 #pragma warning(pop)
 

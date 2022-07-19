@@ -5,15 +5,37 @@
 #include <cassert>  // import assert
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as
 #include <functional> // import std::invoke
-#include <memory> // import std::enable_shared_from_this, std::pointer_traits, std::shared_ptr, std::to_address, std::unique_pto_addresstr
+#include <memory> // import std::enable_shared_from_this, std::pointer_traits, std::shared_ptr, std::to_address, std::unique_ptr
+#include <tuple>  // import std::tuple_cat
 #include <type_traits> // import std::invoke_result_t, std::is_lvalue_reference_v, std::is_rvalue_reference_v, std::is_pointer_v, std::is_reference_v, std::remove_cv_t, std::remove_pointer_t
-#include <utility>     // import std::forward, std::move
+#include <utility>     // import std::declval, std::forward, std::move
 
-#include "meta.hpp" // import Replace_all_t, Replace_all_t_t, Replace_target
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
+#include <gsl/gsl> // import gsl::owner
+#pragma warning(pop)
+
+#include "meta.hpp" // import Replace_all_t, Replace_all_t_t, Replace_target, Transform_list_identity_t
 #include "utility_extras.hpp" // import dependent_false_v, f::unify_ptr_to_ref, f::unify_ref_to_ptr
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
+template <typename Type> class Cloneable_bases;
+template <typename Type, typename... Bases> class Cloneable_0;
+template <typename Type>
+using Cloneable = Transform_list_identity_t<
+    decltype(std::tuple_cat(
+        std::declval<std::tuple<Type>>(),
+        std::declval<typename Cloneable_bases<Type>::type>())),
+    Cloneable_0>;
+template <typename Type, typename... Bases> class Cloneable_impl_0;
+template <typename Type>
+using Cloneable_impl = Transform_list_identity_t<
+    decltype(std::tuple_cat(
+        std::declval<std::tuple<Type>>(),
+        std::declval<typename Cloneable_bases<Type>::impl_type>())),
+    Cloneable_impl_0>;
+
 template <typename Ptr, typename Func>
 concept Cloneable_by = requires(Ptr const &ptr, Func &&func) {
   requires std::convertible_to <
@@ -198,6 +220,56 @@ constexpr auto clone_shared [[nodiscard]] (Ptr const &ptr) -> decltype(auto) {
   return clone_shared<RElement>(ptr, default_clone_function<Ptr>);
 }
 } // namespace f
+
+template <typename Type> class Cloneable_0<Type> {
+public:
+  constexpr auto clone [[nodiscard]] () const {
+    return std::unique_ptr<Type>{static_cast<gsl::owner<Type *>>(clone_impl())};
+  }
+  constexpr virtual ~Cloneable_0() noexcept = default;
+  Cloneable_0(Cloneable_0 const &) = delete;
+  auto operator=(Cloneable_0 const &) = delete;
+  Cloneable_0(Cloneable_0 &&) = delete;
+  auto operator=(Cloneable_0 &&) = delete;
+
+protected:
+  constexpr Cloneable_0() noexcept = default;
+
+private:
+  constexpr virtual auto clone_impl [[nodiscard]] () const
+      -> gsl::owner<void *> = 0;
+};
+template <typename Type, typename... Bases>
+requires(sizeof...(Bases) >= 1) class Cloneable_0<Type, Bases...>
+    : public virtual Cloneable<Bases>... {
+public:
+  constexpr auto clone [[nodiscard]] () const {
+    return std::unique_ptr<Type>{static_cast<gsl::owner<Type *>>(clone_impl())};
+  }
+
+protected:
+  using Cloneable<Bases>::Cloneable...;
+
+private:
+  constexpr virtual auto clone_impl [[nodiscard]] () const
+      -> gsl::owner<void *> = 0;
+#pragma warning(suppress : 4626 5027)
+};
+template <typename Type, typename... Bases>
+class Cloneable_impl_0 : public virtual Cloneable<Type>,
+                         public virtual Cloneable_impl<Bases>... {
+protected:
+  using Cloneable<Type>::Cloneable;
+  using Cloneable_impl<Bases>::Cloneable_impl...;
+
+private:
+  constexpr virtual auto clone_impl [[nodiscard]] () const
+#pragma warning(suppress : 4437)
+      -> gsl::owner<void *> override {
+    return new Type{dynamic_cast<Type const &>(*this)};
+  }
+#pragma warning(suppress : 4625 4626 5026 5027)
+};
 } // namespace artccel::core::util
 
 #endif

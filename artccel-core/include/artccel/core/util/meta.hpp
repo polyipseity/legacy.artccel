@@ -21,6 +21,14 @@ using Replace_all_t_t =
     Replace_all_t<Replace_all_t<Type, Find<Replace_target::container>, Replace>,
                   Find<Replace_target::self>, Replace>;
 template <typename CharT, std::size_t Size> struct Template_string;
+template <typename Transform, typename From, template <typename...> typename To>
+struct Transform_list;
+enum struct Transform_list_placeholder : bool {};
+template <typename Transform, typename From, template <typename...> typename To>
+using Transform_list_t = typename Transform_list<Transform, From, To>::type;
+template <typename From, template <typename...> typename To>
+using Transform_list_identity_t =
+    Transform_list_t<Transform_list_placeholder, From, To>;
 
 template <typename Found, typename Replace>
 struct Replace_all<Found, Found, Replace> {
@@ -109,6 +117,13 @@ static_assert(Template_string{char16_t{}}.data_ == f::to_array_cv(u"\0"),
               u8"Implementation error");
 static_assert(Template_string{char32_t{}}.data_ == f::to_array_cv(U"\0"),
               u8"Implementation error");
+
+template <typename Transform, template <typename...> typename From,
+          typename... FromList, template <typename...> typename To>
+struct Transform_list<Transform, From<FromList...>, To> {
+  using type =
+      To<Replace_all_t<Transform, Transform_list_placeholder, FromList>...>;
+};
 } // namespace artccel::core::util
 
 #endif
