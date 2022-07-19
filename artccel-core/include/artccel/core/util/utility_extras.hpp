@@ -11,15 +11,11 @@
 #include <type_traits> // import std::is_lvalue_reference_v, std::is_pointer_v, std::remove_cvref_t, std::remove_reference_t
 #include <utility> // import std::forward, std::index_sequence, std::index_sequence_for, std::move
 
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-
 namespace artccel::core::util {
 template <typename Type> struct Semiregularize;
 template <typename Type, bool Explicit = true> struct Delegate;
 template <typename... Types> struct Overload;
-struct ARTCCEL_CORE_EXPORT Consteval_t {
-  explicit consteval Consteval_t() noexcept = default;
-};
+enum struct Consteval_t : bool {};
 
 template <typename> constexpr auto dependent_false_v{false};
 

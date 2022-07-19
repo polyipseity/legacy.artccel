@@ -12,7 +12,7 @@
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core::util {
-struct ARTCCEL_CORE_EXPORT Enum_bitset;
+enum struct Enum_bitset : bool {};
 
 constexpr inline std::uintmax_t empty_bitmask{0};
 template <typename Enum>
@@ -26,14 +26,11 @@ ARTCCEL_CORE_EXPORT consteval auto next_bitmask
 }
 } // namespace f
 
-struct Enum_bitset {
-  explicit consteval Enum_bitset() noexcept = default;
-  friend constexpr auto operator| [[nodiscard]] (
-      Enum_bitset const &left [[maybe_unused]],
-      auto right) noexcept requires std::is_enum_v<decltype(right)> {
-    return Bitset_of<decltype(right)>{f::to_underlying(right)};
-  }
-};
+constexpr auto operator| [[nodiscard]] (
+    Enum_bitset tag [[maybe_unused]],
+    auto right) noexcept requires std::is_enum_v<decltype(right)> {
+  return Bitset_of<decltype(right)>{f::to_underlying(right)};
+}
 
 namespace operators::enum_bitset {
 template <typename Enum>

@@ -23,7 +23,6 @@
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::next_bitmask, util::operators::enum_bitset
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
-#include <artccel/core/export.h>      // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core::compute {
 // NOLINTNEXTLINE(google-build-using-namespace)
@@ -40,13 +39,9 @@ requires util::Invocable_r<decltype(Func), Ret>
 class Compute_function_constant;
 template <std::copyable Ret> class Compute_value;
 template <typename Signature> class Compute_function;
-struct ARTCCEL_CORE_EXPORT Reset_t {
-  explicit consteval Reset_t() noexcept = default;
-};
-struct ARTCCEL_CORE_EXPORT Extract_t {
-  explicit consteval Extract_t() noexcept = default;
-};
-struct ARTCCEL_CORE_EXPORT Out_t;
+enum struct Reset_t : bool {};
+enum struct Extract_t : bool {};
+enum struct Out_t : bool {};
 
 template <typename Type, typename Ret>
 concept Compute_in_c =
@@ -151,13 +146,15 @@ public:
 };
 template <std::copyable Ret>
 Compute_out(Compute_io<Ret> const &) -> Compute_out<Ret>;
+auto operator<<(Out_t tag [[maybe_unused]],
+                Compute_in_any_c auto const &right) {
+  return Compute_out{right};
+}
 
 template <std::copyable Ret, Ret Val>
 class Compute_constant : public Compute_in<Compute_constant<Ret, Val>, Ret> {
 private:
-  struct Friend {
-    explicit consteval Friend() noexcept = default;
-  };
+  enum struct Friend : bool {};
 
 public:
   using return_type = typename Compute_constant::return_type;
@@ -206,9 +203,7 @@ requires util::Invocable_r<decltype(Func), Ret>
 class Compute_function_constant
     : public Compute_in<Compute_function_constant<Ret, Func>, Ret> {
 private:
-  struct Friend {
-    explicit consteval Friend() noexcept = default;
-  };
+  enum struct Friend : bool {};
 
 public:
   using return_type = typename Compute_function_constant::return_type;
@@ -255,9 +250,7 @@ protected:
 template <std::copyable Ret>
 class Compute_value : public Compute_in<Compute_value<Ret>, Ret> {
 private:
-  struct Friend {
-    explicit consteval Friend() noexcept = default;
-  };
+  enum struct Friend : bool {};
 
 public:
   using return_type = typename Compute_value::return_type;
@@ -384,9 +377,7 @@ template <std::copyable Ret, std::copyable... TArgs>
 class Compute_function<Ret(TArgs...)>
     : public Compute_in<Compute_function<Ret(TArgs...)>, Ret> {
 private:
-  struct Friend {
-    explicit consteval Friend() noexcept = default;
-  };
+  enum struct Friend : bool {};
 
 public:
   using return_type = typename Compute_function::return_type;
@@ -598,14 +589,6 @@ template <typename Func>
 Compute_function(Compute_options const &, Func &&func, auto &&...)
     -> Compute_function<decltype(decltype(std::function{
         std::forward<Func>(func)})::operator())>;
-
-struct Out_t {
-  explicit consteval Out_t() noexcept = default;
-  friend auto operator<<(Out_t const &left [[maybe_unused]],
-                         Compute_in_any_c auto const &right) {
-    return Compute_out{right};
-  }
-};
 } // namespace artccel::core::compute
 
 #endif

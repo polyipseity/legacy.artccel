@@ -10,16 +10,12 @@
 #include <type_traits> // import std::is_convertible_v, std::is_lvalue_reference_v, std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t
 #include <utility> // import std::forward, std::index_sequence, std::in_place, std::in_place_t, std::make_index_sequence, std::move
 
-#include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
-
 namespace artccel::core::util {
 template <typename> struct Array_size;
 template <typename Type> constexpr auto Array_size_v{Array_size<Type>::value};
 template <typename Type, std::size_t Extent = std::dynamic_extent>
 class Value_span;
-struct ARTCCEL_CORE_EXPORT Move_span_t {
-  explicit consteval Move_span_t() noexcept = default;
-};
+enum struct Move_span_t : bool {};
 
 template <typename Type, std::size_t Extent>
 class Value_span : public std::span<Type, Extent> {

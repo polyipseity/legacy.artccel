@@ -7,7 +7,6 @@ include("${ROOT_SOURCE_DIR}/build_auto/init.cmake")
 add_library(artccel-core SHARED
 	"sources/cerrno_extras.cpp"
 	"sources/clone.cpp"
-	"sources/compute.cpp"
 	"sources/concurrent.cpp"
 	"sources/encoding.cpp"
 	"sources/enum_bitset.cpp"
@@ -16,7 +15,6 @@ add_library(artccel-core SHARED
 	"sources/main_hooks.cpp"
 	"sources/polyfill.cpp"
 	"sources/reflect.cpp"
-	"sources/utility_extras.cpp"
 	"sources/windows_error.cpp")
 add_library("${ARTCCEL_NAMESPACE}artccel-core" ALIAS artccel-core)
 configure_file("in/config.h" "include/artccel/core/config.h" @ONLY)
