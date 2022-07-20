@@ -3,59 +3,62 @@
 #pragma once
 
 #include <cassert>     // import assert
-#include <concepts>    // import std::totally_ordered
-#include <type_traits> // import std::is_nothrow_constructible_v
+#include <concepts>    // import std::same_as, std::totally_ordered
+#include <type_traits> // import std::is_nothrow_constructible_v, std::remove_cv_t
 #include <utility>     // import std::move
 
 #include "concepts_extras.hpp" // import Derived_from_but_not
 #include "utility_extras.hpp"  // import Consteval_t, Delegate
 
 namespace artccel::core::util {
-template <std::totally_ordered Type> struct Bound;
-template <std::totally_ordered Type, Type Val> struct Open_bound;
-template <std::totally_ordered Type, Type Val> struct Closed_bound;
+template <std::totally_ordered Type, typename Derived> struct Bound;
+template <typename Type>
+concept Bound_c = requires(std::remove_cv_t<Type> type_norm) {
+  Derived_from_but_not<
+      decltype(type_norm),
+      Bound<typename decltype(type_norm)::type, decltype(type_norm)>>;
+};
+template <std::totally_ordered Type> struct Open_bound;
+template <std::totally_ordered Type> struct Closed_bound;
 template <std::totally_ordered Type> struct Unbounded;
-template <typename Left, Derived_from_but_not<Bound<typename Left::type>> Right>
-requires Derived_from_but_not<Left, Bound<typename Left::type>>
-class Interval;
+template <Bound_c auto Left, Bound_c auto Right>
+requires std::same_as < typename std::remove_cv_t<decltype(Left)>::type,
+typename std::remove_cv_t<decltype(Right)>::type > class Interval;
 
 // mathematical classifications
-
 template <std::totally_ordered Type, Type Left, Type Right>
 using Open_interval =
-    Interval<Open_bound<Type, Left>, Open_bound<Type, Right>>; // (Left,Right)
+    Interval<Open_bound{Left}, Open_bound{Right}>; // (Left,Right)
 template <std::totally_ordered Type, Type Left, Type Right>
-using Closed_interval = Interval<Closed_bound<Type, Left>,
-                                 Closed_bound<Type, Right>>; // [Left,Right]
+using Closed_interval =
+    Interval<Closed_bound{Left}, Closed_bound{Right}>; // [Left,Right]
 template <std::totally_ordered Type, Type Left, Type Right>
 using LC_RO_interval =
-    Interval<Closed_bound<Type, Left>, Open_bound<Type, Right>>; // [Left,Right)
+    Interval<Closed_bound{Left}, Open_bound{Right}>; // [Left,Right)
 template <std::totally_ordered Type, Type Left, Type Right>
 using LO_RC_interval =
-    Interval<Open_bound<Type, Left>, Closed_bound<Type, Right>>; // (Left,Right]
+    Interval<Open_bound{Left}, Closed_bound{Right}>; // (Left,Right]
 template <std::totally_ordered Type, Type Left>
 using LC_RU_interval =
-    Interval<Closed_bound<Type, Left>, Unbounded<Type>>; // [Left,+∞)
+    Interval<Closed_bound{Left}, Unbounded<Type>{}>; // [Left,+∞)
 template <std::totally_ordered Type, Type Left>
 using LO_RU_interval =
-    Interval<Open_bound<Type, Left>, Unbounded<Type>>; // (Left,+∞)
+    Interval<Open_bound{Left}, Unbounded<Type>{}>; // (Left,+∞)
 template <std::totally_ordered Type, Type Right>
 using LU_RC_interval =
-    Interval<Unbounded<Type>, Closed_bound<Type, Right>>; // (-∞,Right]
+    Interval<Unbounded<Type>{}, Closed_bound{Right}>; // (-∞,Right]
 template <std::totally_ordered Type, Type Right>
 using LU_RO_interval =
-    Interval<Unbounded<Type>, Open_bound<Type, Right>>; // (-∞,Right)
+    Interval<Unbounded<Type>{}, Open_bound{Right}>; // (-∞,Right)
 template <std::totally_ordered Type>
 using Unbounded_interval =
-    Interval<Unbounded<Type>, Unbounded<Type>>; // (-∞,+∞)
+    Interval<Unbounded<Type>{}, Unbounded<Type>{}>; // (-∞,+∞)
 template <std::totally_ordered Type, Type Val = Type{}>
 using Empty_interval = Open_interval<Type, Val, Val>; // (Val,Val) = {}
 template <std::totally_ordered Type, Type Val>
 using Degenerate_interval =
     Closed_interval<Type, Val, Val>; // [Val,Val] = {Val}
-
 // common uses
-
 template <std::totally_ordered Type, Type Zero = Type{0}>
 using Nonnegative_interval = LC_RU_interval<Type, Zero>; // [0,+∞)
 template <std::totally_ordered Type, Type Zero = Type{0}>
@@ -65,7 +68,7 @@ using Positive_interval = LO_RU_interval<Type, Zero>; // (0,+∞)
 template <std::totally_ordered Type, Type Zero = Type{0}>
 using Negative_interval = LU_RO_interval<Type, Zero>; // (-∞,0)
 
-template <std::totally_ordered Type> struct Bound {
+template <std::totally_ordered Type, typename Derived> struct Bound {
   using type = Type;
   constexpr Bound() noexcept = default;
   constexpr Bound(Bound const &) noexcept = default;
@@ -73,73 +76,98 @@ template <std::totally_ordered Type> struct Bound {
   constexpr Bound(Bound &&) noexcept = default;
   constexpr auto operator=(Bound &&) noexcept -> Bound & = default;
 
+  friend constexpr auto
+  operator<(Bound const &left, Type const &right) noexcept(
+      noexcept(static_cast<Derived const &>(left) < right)) -> decltype(auto) {
+    return static_cast<Derived const &>(left) < right;
+  }
+  friend constexpr auto
+  operator<(Type const &left, Bound const &right) noexcept(
+      noexcept(left < static_cast<Derived const &>(right))) -> decltype(auto) {
+    return left < static_cast<Derived const &>(right);
+  }
+  friend constexpr auto
+  operator>(Bound const &left, Type const &right) noexcept(
+      noexcept(static_cast<Derived const &>(left) > left)) -> decltype(auto) {
+    return static_cast<Derived const &>(left) > right;
+  }
+  friend constexpr auto
+  operator>(Type const &left, Bound const &right) noexcept(
+      noexcept(left > static_cast<Derived const &>(right))) -> decltype(auto) {
+    return left > static_cast<Derived const &>(right);
+  }
+
 protected:
   constexpr ~Bound() noexcept = default;
 };
 
-template <std::totally_ordered Type, Type Val>
-struct Open_bound : public Bound<Type> {
-  using type = typename Open_bound::type;
-  constexpr static auto value_{Val};
-  consteval Open_bound() noexcept = default;
+template <std::totally_ordered Type>
+struct Open_bound : public Bound<Type, Open_bound<Type>> {
+  Type value_;
+  explicit constexpr Open_bound(Type value) noexcept(noexcept(decltype(value_){
+      std::move(value)}))
+      : value_{std::move(value)} {};
   friend constexpr auto
-  operator<(Open_bound const &left [[maybe_unused]],
-            Type const &right) noexcept(noexcept(Val < right))
+  operator<(Open_bound const &left,
+            Type const &right) noexcept(noexcept(left.value_ < right))
       -> decltype(auto) {
-    return Val < right;
+    return left.value_ < right;
   }
   friend constexpr auto
-  operator<(Type const &left, Open_bound const &right
-            [[maybe_unused]]) noexcept(noexcept(left < Val)) -> decltype(auto) {
-    return left < Val;
-  }
-  friend constexpr auto
-  operator>(Open_bound const &left [[maybe_unused]],
-            Type const &right) noexcept(noexcept(Val > left))
+  operator<(Type const &left,
+            Open_bound const &right) noexcept(noexcept(left < right.value_))
       -> decltype(auto) {
-    return Val > right;
+    return left < right.value_;
   }
   friend constexpr auto
-  operator>(Type const &left, Open_bound const &right
-            [[maybe_unused]]) noexcept(noexcept(left > Val)) -> decltype(auto) {
-    return left > Val;
+  operator>(Open_bound const &left,
+            Type const &right) noexcept(noexcept(left.value_ > left))
+      -> decltype(auto) {
+    return left.value_ > right;
+  }
+  friend constexpr auto
+  operator>(Type const &left,
+            Open_bound const &right) noexcept(noexcept(left > right.value_))
+      -> decltype(auto) {
+    return left > right.value_;
   }
 };
 
-template <std::totally_ordered Type, Type Val>
-struct Closed_bound : public Bound<Type> {
-  using type = typename Closed_bound::type;
-  constexpr static auto value_{Val};
-  consteval Closed_bound() noexcept = default;
+template <std::totally_ordered Type>
+struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
+  Type value_;
+  explicit constexpr Closed_bound(Type value) noexcept(
+      noexcept(decltype(value_){std::move(value)}))
+      : value_{std::move(value)} {};
   friend constexpr auto
-  operator<(Closed_bound const &left [[maybe_unused]],
-            Type const &right) noexcept(noexcept(Val <= right))
+  operator<(Closed_bound const &left,
+            Type const &right) noexcept(noexcept(left.value_ <= right))
       -> decltype(auto) {
-    return Val <= right;
+    return left.value_ <= right;
   }
   friend constexpr auto
-  operator<(Type const &left, Closed_bound const &right
-            [[maybe_unused]]) noexcept(noexcept(left <= Val))
+  operator<(Type const &left,
+            Closed_bound const &right) noexcept(noexcept(left <= right.value_))
       -> decltype(auto) {
-    return left <= Val;
+    return left <= right.value_;
   }
   friend constexpr auto
-  operator>(Closed_bound const &left [[maybe_unused]],
-            Type const &right) noexcept(noexcept(Val >= right))
+  operator>(Closed_bound const &left,
+            Type const &right) noexcept(noexcept(left.value_ >= right))
       -> decltype(auto) {
-    return Val >= right;
+    return left.value_ >= right;
   }
   friend constexpr auto
-  operator>(Type const &left, Closed_bound const &right
-            [[maybe_unused]]) noexcept(noexcept(left >= Val))
+  operator>(Type const &left,
+            Closed_bound const &right) noexcept(noexcept(left >= right.value_))
       -> decltype(auto) {
-    return left >= Val;
+    return left >= right.value_;
   }
 };
 
-template <std::totally_ordered Type> struct Unbounded : public Bound<Type> {
-  using type = typename Unbounded::type;
-  consteval Unbounded() noexcept = default;
+template <std::totally_ordered Type>
+struct Unbounded : public Bound<Type, Unbounded<Type>> {
+  explicit consteval Unbounded() noexcept = default;
   friend constexpr auto operator<(Unbounded const &left [[maybe_unused]],
                                   Type const &right [[maybe_unused]]) noexcept {
     return true;
@@ -160,13 +188,14 @@ template <std::totally_ordered Type> struct Unbounded : public Bound<Type> {
   }
 };
 
-template <typename Left, Derived_from_but_not<Bound<typename Left::type>> Right>
-requires Derived_from_but_not<Left, Bound<typename Left::type>>
-class Interval : public Delegate<typename Left::type, false> {
+template <Bound_c auto Left, Bound_c auto Right>
+requires std::same_as < typename std::remove_cv_t<decltype(Left)>::type,
+typename std::remove_cv_t<decltype(Right)>::type > class Interval
+    : public Delegate<typename decltype(Left)::type, false> {
 public:
-  using left = Left;
-  using right = Right;
   using type = typename Interval::type;
+  constexpr static auto left_{Left};
+  constexpr static auto right_{Right};
   /*
   usage
   `{Consteval_t{}, (constant expression)}`
@@ -198,12 +227,12 @@ public:
 
 private:
   constexpr static void check(type const &value) noexcept(
-      noexcept(Left{} < value && u8"value is outside the lower bound",
-               value < Right{} && u8"value is outside the upper bound")) {
+      noexcept(Left < value && u8"value is outside the lower bound",
+               value < Right && u8"value is outside the upper bound")) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(Left{} < value && u8"value is outside the lower bound");
+    assert(Left < value && u8"value is outside the lower bound");
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(value < Right{} && u8"value is outside the upper bound");
+    assert(value < Right && u8"value is outside the upper bound");
   }
 };
 } // namespace artccel::core::util
