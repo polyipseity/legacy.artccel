@@ -13,15 +13,13 @@
 
 #include "../util/clone.hpp" // import util::Cloneable, util::Cloneable_bases, util::Cloneable_impl
 #include "../util/containers.hpp" // import util::Value_span, util::f::to_array
-#include "../util/interval.hpp"   // import util::Nonnegative_interval
 #include "../util/semantics.hpp"  // import util::Observer_ptr
 
 namespace artccel::core {
 namespace geometry::impl {
-template <util::Nonnegative_interval<std::int_fast8_t> Dim> class Geometry_impl;
-template <util::Nonnegative_interval<std::int_fast8_t> Dim>
-class Primitive_impl;
-template <util::Nonnegative_interval<std::int_fast8_t> Dim> class Point_impl;
+template <Dimension_t Dim> class Geometry_impl;
+template <Dimension_t Dim> class Primitive_impl;
+template <Dimension_t Dim> class Point_impl;
 } // namespace geometry::impl
 
 namespace util {
@@ -30,33 +28,27 @@ using namespace geometry;
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace geometry::impl;
 
-template <util::Nonnegative_interval<std::int_fast8_t> Dim>
-struct Cloneable_bases<Geometry_impl<Dim>> {
+template <Dimension_t Dim> struct Cloneable_bases<Geometry_impl<Dim>> {
   using type = std::tuple<Geometry>;
 };
-template <util::Nonnegative_interval<std::int_fast8_t> Dim>
-struct Cloneable_bases<Primitive_impl<Dim>> {
+template <Dimension_t Dim> struct Cloneable_bases<Primitive_impl<Dim>> {
   using type = std::tuple<Primitive, Geometry_impl<Dim>>;
 };
-template <util::Nonnegative_interval<std::int_fast8_t> Dim>
-struct Cloneable_bases<Point_impl<Dim>> {
+template <Dimension_t Dim> struct Cloneable_bases<Point_impl<Dim>> {
   using type = std::tuple<Point, Primitive_impl<Dim>>;
   using impl_type = std::tuple<>;
 };
 } // namespace util
 
 namespace geometry::impl {
-template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+template <Dimension_t Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Geometry_impl : public virtual Geometry,
                       public virtual util::Cloneable<Geometry_impl<Dim>> {
 public:
   // NOLINTNEXTLINE(fuchsia-statically-constructed-objects): constexpr ctor
   constexpr static auto dimension_{Dim};
-  auto dimension [[nodiscard]] () const
-      -> util::Nonnegative_interval<std::int_fast8_t> final {
-    return Dim;
-  }
+  auto dimension [[nodiscard]] () const -> Dimension_t final { return Dim; }
   ~Geometry_impl() noexcept override = default;
 
 protected:
@@ -78,7 +70,7 @@ protected:
 #pragma warning(suppress : 4250 4820)
 };
 
-template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+template <Dimension_t Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Primitive_impl : public virtual Primitive,
                        public virtual util::Cloneable<Primitive_impl<Dim>>,
@@ -114,7 +106,7 @@ protected:
 #pragma warning(suppress : 4250 4820)
 };
 
-template <util::Nonnegative_interval<std::int_fast8_t> Dim>
+template <Dimension_t Dim>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Point_impl : public virtual Point,
                    public virtual util::Cloneable_impl<Point_impl<Dim>>,

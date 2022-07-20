@@ -14,6 +14,8 @@
 
 namespace artccel::core {
 namespace geometry {
+using Dimension_t = util::Nonnegative_interval<std::int_fast8_t>;
+
 class ARTCCEL_CORE_EXPORT Geometry;
 class ARTCCEL_CORE_EXPORT Primitive;
 class ARTCCEL_CORE_EXPORT Point;
@@ -50,8 +52,7 @@ protected:
 #pragma warning(suppress : 4435)
 class Geometry : public virtual util::Cloneable<Geometry> {
 public:
-  virtual auto dimension [[nodiscard]] () const
-      -> util::Nonnegative_interval<std::int_fast8_t> = 0;
+  virtual auto dimension [[nodiscard]] () const -> Dimension_t = 0;
   template <std::derived_from<Quality> Qly>
   auto try_get_quality [[nodiscard]] () {
     return dynamic_cast<util::Observer_ptr<Qly>>(try_get_quality(typeid(Qly)));
