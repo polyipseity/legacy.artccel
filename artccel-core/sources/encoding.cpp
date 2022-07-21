@@ -26,7 +26,7 @@
 #include <artccel/core/util/exception_extras.hpp> // import f::make_nested_exception
 #include <artccel/core/util/polyfill.hpp>         // import f::unreachable
 #include <artccel/core/util/semantics.hpp>        // import null_terminator_size
-#include <artccel/core/util/utility_extras.hpp> // import Semiregularize, dependent_false_v
+#include <artccel/core/util/utility_extras.hpp> // import Semiregularize
 
 namespace artccel::core::util {
 namespace detail {
@@ -51,11 +51,10 @@ static auto mbrtoc(UTFCharT &utf_out, std::string_view loc_enc,
   if constexpr (std::same_as<UTFCharT, char16_t>) {
     return std::mbrtoc16(&utf_out, std::data(loc_enc), std::size(loc_enc),
                          &state);
-  } else if constexpr (std::same_as<UTFCharT, char32_t>) {
+  } else {
+    static_assert(std::same_as<UTFCharT, char32_t>, u8"Unimplemented");
     return std::mbrtoc32(&utf_out, std::data(loc_enc), std::size(loc_enc),
                          &state);
-  } else {
-    static_assert(dependent_false_v<UTFCharT>, u8"Unimplemented");
   }
 }
 template <typename UTFCharT>
@@ -63,10 +62,9 @@ static auto crtomb(std::span<char, MB_LEN_MAX> loc_enc_out, UTFCharT utf,
                    std::mbstate_t &state) noexcept {
   if constexpr (std::same_as<UTFCharT, char16_t>) {
     return std::c16rtomb(std::data(loc_enc_out), utf, &state);
-  } else if constexpr (std::same_as<UTFCharT, char32_t>) {
-    return std::c32rtomb(std::data(loc_enc_out), utf, &state);
   } else {
-    static_assert(dependent_false_v<UTFCharT>, u8"Unimplemented");
+    static_assert(std::same_as<UTFCharT, char32_t>, u8"Unimplemented");
+    return std::c32rtomb(std::data(loc_enc_out), utf, &state);
   }
 }
 

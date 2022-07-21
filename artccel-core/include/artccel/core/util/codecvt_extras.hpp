@@ -23,7 +23,6 @@
 #include "error_handling.hpp" // import Error_with_exception
 #include "polyfill.hpp"       // import f::unreachable
 #include "string_extras.hpp"  // import Char_traits_c, Rebind_char_traits_t
-#include "utility_extras.hpp" // import dependent_false_v
 
 namespace artccel::core::util {
 using Codecvt_char_char = std::codecvt<char, char, std::mbstate_t>;
@@ -49,11 +48,10 @@ auto codecvt_convert(std::basic_string_view<InCharT, Traits> input) {
   constexpr auto int_to_ext{[]() noexcept {
     if constexpr (std::same_as<intern_type, InCharT>) {
       return true;
-    } else if constexpr (std::same_as<extern_type, InCharT>) {
-      return false;
     } else {
-      static_assert(dependent_false_v<InCharT>,
+      static_assert(std::same_as<extern_type, InCharT>,
                     u8"Input type is neither intern type nor extern type");
+      return false;
     }
   }()};
   using in_char = std::conditional_t<int_to_ext, intern_type, extern_type>;

@@ -3,14 +3,12 @@
 #pragma once
 
 #include <cassert>  // import assert
-#include <compare>  // import tegory, std::is_eq
-#include <concepts> // import std::compare_three_way_result_t, std::same_as, std::three_way_comparable, std::three_way_comparable_with
+#include <compare>  // import std::compare_three_way_result_t, std::is_eq
+#include <concepts> // import std::same_as, std::three_way_comparable, std::three_way_comparable_with
 #include <type_traits> // import std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t
 #include <utility> // import std::declval, std::forward, std::move
 
-#include "concepts_extras.hpp" // import Brace_convertible_to, Derived_from_but_not, Differ_from
-#include "contracts.hpp"      // import Validator_c
-#include "utility_extras.hpp" // import Consteval_t, Delegate, dependent_false_v
+#include "concepts_extras.hpp" // import Brace_convertible_to, Derived_from_but_not
 
 namespace artccel::core::util {
 template <std::three_way_comparable Type, typename Derived> struct Bound;

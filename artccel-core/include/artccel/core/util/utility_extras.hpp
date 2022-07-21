@@ -17,8 +17,6 @@ template <typename Type, bool Explicit = true> struct Delegate;
 template <typename... Types> struct Overload;
 enum struct Consteval_t : bool {};
 
-template <typename> constexpr auto dependent_false_v{false};
-
 namespace detail {
 template <template <typename...> typename Tuple, typename... Args,
           std::invocable<Args...> Func, std::size_t... Idxs>

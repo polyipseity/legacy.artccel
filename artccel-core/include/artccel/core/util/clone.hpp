@@ -16,7 +16,7 @@
 #pragma warning(pop)
 
 #include "meta.hpp" // import Replace_all_t, Replace_all_t_t, Replace_target, Transform_list_identity_t
-#include "utility_extras.hpp" // import dependent_false_v, f::unify_ptr_to_ref, f::unify_ref_to_ptr
+#include "utility_extras.hpp" // import f::unify_ptr_to_ref, f::unify_ref_to_ptr
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
@@ -169,12 +169,11 @@ requires(!std::derived_from<
     } else if constexpr (std::constructible_from<return_type,
                                                  decltype(ret.release())>) {
       return return_type{ret.release()};
-    } else if constexpr (std::constructible_from<return_type,
-                                                 decltype(*ret.release())>) {
-      return return_type{*ret.release()};
     } else {
-      static_assert(dependent_false_v<return_type>,
-                    u8"Cannot convert ret to return_type");
+      static_assert(
+          std::constructible_from<return_type, decltype(*ret.release())>,
+          u8"Cannot convert ret to return_type");
+      return return_type{*ret.release()};
     }
   }
 }
