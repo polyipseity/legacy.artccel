@@ -158,7 +158,7 @@ public:
 
   template <typename = void>
   requires requires {
-    { std::declval<type>()->lock() } -> std::same_as<void>;
+    { std::declval<type const &>()->lock() } -> std::same_as<void>;
     { null_lockable_.lock() } -> std::same_as<void>;
   }
   constexpr void lock() const
@@ -171,7 +171,7 @@ public:
   }
   template <typename = void>
   requires requires {
-    { std::declval<type>()->unlock() } -> std::same_as<void>;
+    { std::declval<type const &>()->unlock() } -> std::same_as<void>;
     { null_lockable_.unlock() } -> std::same_as<void>;
   }
   constexpr void unlock() const
@@ -188,7 +188,7 @@ public:
 
   template <typename = void>
   requires requires {
-    { std::declval<type>()->try_lock() } -> std::same_as<bool>;
+    { std::declval<type const &>()->try_lock() } -> std::same_as<bool>;
     { null_lockable_.try_lock() } -> std::same_as<bool>;
   }
   constexpr auto try_lock [[nodiscard]] () const
@@ -205,12 +205,12 @@ public:
   template <typename Rep, typename Period>
   requires requires {
     {
-      std::declval<type>()->try_lock_for(
-          std::declval<std::chrono::duration<Rep, Period>>())
+      std::declval<type const &>()->try_lock_for(
+          std::declval<std::chrono::duration<Rep, Period> const &>())
       } -> std::same_as<bool>;
     {
       null_lockable_.try_lock_for(
-          std::declval<std::chrono::duration<Rep, Period>>())
+          std::declval<std::chrono::duration<Rep, Period> const &>())
       } -> std::same_as<bool>;
   }
   constexpr auto try_lock_for
@@ -226,12 +226,12 @@ public:
   template <typename Clock, typename Duration>
   requires requires {
     {
-      std::declval<type>()->try_lock_until(
-          std::declval<std::chrono::time_point<Clock, Duration>>())
+      std::declval<type const &>()->try_lock_until(
+          std::declval<std::chrono::time_point<Clock, Duration> const &>())
       } -> std::same_as<bool>;
     {
       null_lockable_.try_lock_until(
-          std::declval<std::chrono::time_point<Clock, Duration>>())
+          std::declval<std::chrono::time_point<Clock, Duration> const &>())
       } -> std::same_as<bool>;
   }
   constexpr auto try_lock_until [[nodiscard]] (
@@ -250,7 +250,7 @@ public:
 
   template <typename = void>
   requires requires {
-    { std::declval<type>()->lock_shared() } -> std::same_as<void>;
+    { std::declval<type const &>()->lock_shared() } -> std::same_as<void>;
     { null_lockable_.lock_shared() } -> std::same_as<void>;
   }
   constexpr void lock_shared() const
@@ -264,7 +264,7 @@ public:
   }
   template <typename = void>
   requires requires {
-    { std::declval<type>()->try_lock_shared() } -> std::same_as<bool>;
+    { std::declval<type const &>()->try_lock_shared() } -> std::same_as<bool>;
     { null_lockable_.try_lock_shared() } -> std::same_as<bool>;
   }
   constexpr auto try_lock_shared [[nodiscard]] () const noexcept(
@@ -277,7 +277,7 @@ public:
   }
   template <typename = void>
   requires requires {
-    { std::declval<type>()->unlock_shared() } -> std::same_as<void>;
+    { std::declval<type const &>()->unlock_shared() } -> std::same_as<void>;
     { null_lockable_.unlock_shared() } -> std::same_as<void>;
   }
   constexpr void unlock_shared() const
@@ -295,12 +295,12 @@ public:
   template <typename Rep, typename Period>
   requires requires {
     {
-      std::declval<type>()->try_lock_shared_for(
-          std::declval<std::chrono::duration<Rep, Period>>())
+      std::declval<type const &>()->try_lock_shared_for(
+          std::declval<std::chrono::duration<Rep, Period> const &>())
       } -> std::same_as<bool>;
     {
       null_lockable_.try_lock_shared_for(
-          std::declval<std::chrono::duration<Rep, Period>>())
+          std::declval<std::chrono::duration<Rep, Period> const &>())
       } -> std::same_as<bool>;
   }
   constexpr auto try_lock_shared_for
@@ -317,12 +317,12 @@ public:
   template <typename Clock, typename Duration>
   requires requires {
     {
-      std::declval<type>()->try_lock_shared_until(
-          std::declval<std::chrono::time_point<Clock, Duration>>())
+      std::declval<type const &>()->try_lock_shared_until(
+          std::declval<std::chrono::time_point<Clock, Duration> const &>())
       } -> std::same_as<bool>;
     {
       null_lockable_.try_lock_shared_until(
-          std::declval<std::chrono::time_point<Clock, Duration>>())
+          std::declval<std::chrono::time_point<Clock, Duration> const &>())
       } -> std::same_as<bool>;
   }
   constexpr auto try_lock_shared_until [[nodiscard]] (
