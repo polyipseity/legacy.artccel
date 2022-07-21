@@ -56,7 +56,7 @@ if(ARTCCEL_CCACHE)
 endif()
 
 # clang-tidy
-add_custom_target(clang-tidy
+add_custom_target("${ARTCCEL_TARGET_NAMESPACE}-clang-tidy"
 	COMMENT "Running clang-tidy on all clang-tidy-integrated targets"
 	VERBATIM)
 
@@ -178,7 +178,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 		COMMENT "Running clang-tidy on '${target}'"
 		VERBATIM
 	)
-	add_dependencies(clang-tidy "${target}-clang-tidy")
+	add_dependencies("${ARTCCEL_TARGET_NAMESPACE}-clang-tidy" "${target}-clang-tidy")
 
 	if(ARTCCEL_CLANG_TIDY)
 		add_dependencies("${target}" "${target}-clang-tidy")
