@@ -14,7 +14,8 @@ FetchContent_Declare(Microsoft.GSL
 )
 find_package_or_fetch_content(Microsoft.GSL GSL
 	"GSL_INSTALL;${ARTCCEL_INSTALL};GSL_TEST;${ARTCCEL_TEST}"
-	"4.0.0;EXACT;REQUIRED;CONFIG")
+	"4.0.0;EXACT;REQUIRED;CONFIG"
+	EXCLUDE_FROM_ALL)
 
 # ofats-any_invocable
 FetchContent_Declare(ofats-any_invocable
@@ -24,7 +25,9 @@ FetchContent_Declare(ofats-any_invocable
 	GIT_PROGRESS true
 	FIND_PACKAGE_ARGS
 )
+FetchContent_GetProperties(ofats-any_invocable)
 FetchContent_MakeAvailable(ofats-any_invocable)
+set_property(DIRECTORY "${ofats-any_invocable_SOURCE_DIR}" PROPERTY EXCLUDE_FROM_ALL true)
 add_library(ofats::any_invocable INTERFACE IMPORTED)
 target_include_directories(ofats::any_invocable INTERFACE "${ofats-any_invocable_SOURCE_DIR}/include")
 
@@ -38,4 +41,5 @@ FetchContent_Declare(tl-expected
 )
 find_package_or_fetch_content(tl-expected expected
 	"EXPECTED_BUILD_TESTS;${ARTCCEL_TEST}"
-	"1.0.0;EXACT;REQUIRED;CONFIG")
+	"1.0.0;EXACT;REQUIRED;CONFIG"
+	EXCLUDE_FROM_ALL)
