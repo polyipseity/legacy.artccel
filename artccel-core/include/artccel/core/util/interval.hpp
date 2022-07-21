@@ -93,27 +93,6 @@ template <std::totally_ordered Type, typename Derived> struct Bound {
   constexpr Bound(Bound &&) noexcept = default;
   constexpr auto operator=(Bound &&) noexcept -> Bound & = default;
 
-  friend constexpr auto operator<(Bound const &left,
-                                  Type const &right) noexcept(noexcept(bool{
-      static_cast<Derived const &>(left) < right})) -> bool {
-    return static_cast<Derived const &>(left) < right;
-  }
-  friend constexpr auto operator<(Type const &left,
-                                  Bound const &right) noexcept(noexcept(bool{
-      left < static_cast<Derived const &>(right)})) -> bool {
-    return left < static_cast<Derived const &>(right);
-  }
-  friend constexpr auto operator>(Bound const &left,
-                                  Type const &right) noexcept(noexcept(bool{
-      static_cast<Derived const &>(left) > right})) -> bool {
-    return static_cast<Derived const &>(left) > right;
-  }
-  friend constexpr auto operator>(Type const &left,
-                                  Bound const &right) noexcept(noexcept(bool{
-      left > static_cast<Derived const &>(right)})) -> bool {
-    return left > static_cast<Derived const &>(right);
-  }
-
 protected:
   constexpr ~Bound() noexcept = default;
 };
@@ -240,27 +219,6 @@ template <Bound_c BoundT, typename Derived> struct Directional_bound {
   constexpr Directional_bound(Directional_bound &&) noexcept = default;
   constexpr auto operator=(Directional_bound &&) noexcept
       -> Directional_bound & = default;
-
-  friend constexpr auto operator<(Directional_bound const &left,
-                                  type const &right) noexcept(noexcept(bool{
-      static_cast<Derived const &>(left) < right})) -> bool {
-    return static_cast<Derived const &>(left) < right;
-  }
-  friend constexpr auto
-  operator<(type const &left, Directional_bound const &right) noexcept(
-      noexcept(bool{left < static_cast<Derived const &>(right)})) -> bool {
-    return left < static_cast<Derived const &>(right);
-  }
-  friend constexpr auto operator>(Directional_bound const &left,
-                                  type const &right) noexcept(noexcept(bool{
-      static_cast<Derived const &>(left) > left})) -> bool {
-    return static_cast<Derived const &>(left) > right;
-  }
-  friend constexpr auto
-  operator>(type const &left, Directional_bound const &right) noexcept(
-      noexcept(bool{left > static_cast<Derived const &>(right)})) -> bool {
-    return left > static_cast<Derived const &>(right);
-  }
 
 protected:
   constexpr ~Directional_bound() noexcept = default;
