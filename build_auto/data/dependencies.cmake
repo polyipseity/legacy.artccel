@@ -25,9 +25,8 @@ FetchContent_Declare(ofats-any_invocable
 	GIT_PROGRESS true
 	FIND_PACKAGE_ARGS
 )
+make_excludable_available(EXCLUDE_FROM_ALL ofats-any_invocable)
 FetchContent_GetProperties(ofats-any_invocable)
-FetchContent_MakeAvailable(ofats-any_invocable)
-set_property(DIRECTORY "${ofats-any_invocable_SOURCE_DIR}" PROPERTY EXCLUDE_FROM_ALL true)
 add_library(ofats::any_invocable INTERFACE IMPORTED)
 target_include_directories(ofats::any_invocable INTERFACE "${ofats-any_invocable_SOURCE_DIR}/include")
 
