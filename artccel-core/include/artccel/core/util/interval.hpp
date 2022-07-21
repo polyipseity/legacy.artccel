@@ -3,25 +3,26 @@
 #pragma once
 
 #include <cassert>  // import assert
-#include <compare>  // import std::is_eq, std::strong_ordering
-#include <concepts> // import std::same_as, std::totally_ordered
+#include <compare>  // import tegory, std::is_eq
+#include <concepts> // import std::same_as, std::three_way_comparable, std::three_way_comparable_with
 #include <type_traits> // import std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t
 #include <utility> // import std::forward, std::move
 
 #include "concepts_extras.hpp" // import Brace_convertible_to, Derived_from_but_not, Differ_from
+#include "meta.hpp"           // import Comparison_category
 #include "utility_extras.hpp" // import Consteval_t, Delegate, dependent_false_v
 
 namespace artccel::core::util {
-template <std::totally_ordered Type, typename Derived> struct Bound;
+template <std::three_way_comparable Type, typename Derived> struct Bound;
 template <typename Type>
 concept Bound_c = requires(std::remove_cv_t<Type> type_norm) {
   Derived_from_but_not<
       decltype(type_norm),
       Bound<typename decltype(type_norm)::type, decltype(type_norm)>>;
 };
-template <std::totally_ordered Type> struct Open_bound;
-template <std::totally_ordered Type> struct Closed_bound;
-template <std::totally_ordered Type> struct Unbounded;
+template <std::three_way_comparable Type> struct Open_bound;
+template <std::three_way_comparable Type> struct Closed_bound;
+template <std::three_way_comparable Type> struct Unbounded;
 template <Bound_c BoundT, typename Derived> struct Directional_bound;
 template <typename Type>
 concept Directional_bound_c = requires(std::remove_cv_t<Type> type_norm) {
@@ -42,49 +43,49 @@ concept Interval_c = requires(std::remove_cv_t<Type> type_norm) {
 };
 
 // mathematical classifications
-template <std::totally_ordered Type, Type Left, Type Right>
+template <std::three_way_comparable Type, Type Left, Type Right>
 using Open_interval =
     Interval<Open_bound{Left}, Open_bound{Right}>; // (Left,Right)
-template <std::totally_ordered Type, Type Left, Type Right>
+template <std::three_way_comparable Type, Type Left, Type Right>
 using Closed_interval =
     Interval<Closed_bound{Left}, Closed_bound{Right}>; // [Left,Right]
-template <std::totally_ordered Type, Type Left, Type Right>
+template <std::three_way_comparable Type, Type Left, Type Right>
 using LC_RO_interval =
     Interval<Closed_bound{Left}, Open_bound{Right}>; // [Left,Right)
-template <std::totally_ordered Type, Type Left, Type Right>
+template <std::three_way_comparable Type, Type Left, Type Right>
 using LO_RC_interval =
     Interval<Open_bound{Left}, Closed_bound{Right}>; // (Left,Right]
-template <std::totally_ordered Type, Type Left>
+template <std::three_way_comparable Type, Type Left>
 using LC_RU_interval =
     Interval<Closed_bound{Left}, Unbounded<Type>{}>; // [Left,+∞)
-template <std::totally_ordered Type, Type Left>
+template <std::three_way_comparable Type, Type Left>
 using LO_RU_interval =
     Interval<Open_bound{Left}, Unbounded<Type>{}>; // (Left,+∞)
-template <std::totally_ordered Type, Type Right>
+template <std::three_way_comparable Type, Type Right>
 using LU_RC_interval =
     Interval<Unbounded<Type>{}, Closed_bound{Right}>; // (-∞,Right]
-template <std::totally_ordered Type, Type Right>
+template <std::three_way_comparable Type, Type Right>
 using LU_RO_interval =
     Interval<Unbounded<Type>{}, Open_bound{Right}>; // (-∞,Right)
-template <std::totally_ordered Type>
+template <std::three_way_comparable Type>
 using Unbounded_interval =
     Interval<Unbounded<Type>{}, Unbounded<Type>{}>; // (-∞,+∞)
-template <std::totally_ordered Type, Type Val = Type{}>
+template <std::three_way_comparable Type, Type Val = Type{}>
 using Empty_interval = Open_interval<Type, Val, Val>; // (Val,Val) = {}
-template <std::totally_ordered Type, Type Val>
+template <std::three_way_comparable Type, Type Val>
 using Degenerate_interval =
     Closed_interval<Type, Val, Val>; // [Val,Val] = {Val}
 // common uses
-template <std::totally_ordered Type, Type Zero = Type{0}>
+template <std::three_way_comparable Type, Type Zero = Type{0}>
 using Nonnegative_interval = LC_RU_interval<Type, Zero>; // [0,+∞)
-template <std::totally_ordered Type, Type Zero = Type{0}>
+template <std::three_way_comparable Type, Type Zero = Type{0}>
 using Nonpositive_interval = LU_RC_interval<Type, Zero>; // (-∞,0]
-template <std::totally_ordered Type, Type Zero = Type{0}>
+template <std::three_way_comparable Type, Type Zero = Type{0}>
 using Positive_interval = LO_RU_interval<Type, Zero>; // (0,+∞)
-template <std::totally_ordered Type, Type Zero = Type{0}>
+template <std::three_way_comparable Type, Type Zero = Type{0}>
 using Negative_interval = LU_RO_interval<Type, Zero>; // (-∞,0)
 
-template <std::totally_ordered Type, typename Derived> struct Bound {
+template <std::three_way_comparable Type, typename Derived> struct Bound {
   using type = Type;
 
   constexpr Bound() noexcept = default;
@@ -97,7 +98,7 @@ protected:
   constexpr ~Bound() noexcept = default;
 };
 
-template <std::totally_ordered Type>
+template <std::three_way_comparable Type>
 struct Open_bound : public Bound<Type, Open_bound<Type>> {
   Type value_;
   explicit constexpr Open_bound(Type value) noexcept(noexcept(decltype(value_){
@@ -113,6 +114,9 @@ struct Open_bound : public Bound<Type, Open_bound<Type>> {
                                                    other) noexcept(noexcept(Open_bound{
       Type{std::forward<Bound>(other).value_}}))
       : Open_bound{Type{std::forward<Bound>(other).value_}} {}
+  friend constexpr auto operator<=>(Open_bound const &left,
+                                    Open_bound const &right)
+      -> Comparison_category<Type> = default;
 
   friend constexpr auto operator<(Open_bound const &left,
                                   Type const &right) noexcept(noexcept(bool{
@@ -136,7 +140,7 @@ struct Open_bound : public Bound<Type, Open_bound<Type>> {
   }
 };
 
-template <std::totally_ordered Type>
+template <std::three_way_comparable Type>
 struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
   Type value_;
   explicit constexpr Closed_bound(Type value) noexcept(
@@ -152,6 +156,9 @@ struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
                                                      other) noexcept(noexcept(Closed_bound{
       Type{std::forward<Bound>(other).value_}}))
       : Closed_bound{Type{std::forward<Bound>(other).value_}} {}
+  friend constexpr auto operator<=>(Closed_bound const &left,
+                                    Closed_bound const &right)
+      -> Comparison_category<Type> = default;
 
   friend constexpr auto operator<(Closed_bound const &left,
                                   Type const &right) noexcept(noexcept(bool{
@@ -175,7 +182,7 @@ struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
   }
 };
 
-template <std::totally_ordered Type>
+template <std::three_way_comparable Type>
 struct Unbounded : public Bound<Type, Unbounded<Type>> {
   explicit consteval Unbounded() noexcept = default;
   template <Bound_c Bound>
@@ -187,6 +194,9 @@ struct Unbounded : public Bound<Type, Unbounded<Type>> {
           Type>) explicit constexpr Unbounded(Bound &&other
                                               [[maybe_unused]]) noexcept(noexcept(Unbounded{}))
       : Unbounded{} {}
+  friend constexpr auto operator<=>(Unbounded const &left,
+                                    Unbounded const &right)
+      -> Comparison_category<Type> = default;
 
   friend constexpr auto operator<(Unbounded const &left [[maybe_unused]],
                                   Type const &right [[maybe_unused]]) noexcept {
@@ -266,44 +276,47 @@ struct Left_bound : public Directional_bound<BoundT, Left_bound<BoundT>> {
     return right < left;
   }
 };
-template <std::totally_ordered LeftT, std::totally_ordered_with<LeftT> RightT,
+template <std::three_way_comparable LeftT,
+          std::three_way_comparable_with<LeftT> RightT,
           template <typename> typename LeftBoundT,
           template <typename> typename RightBoundT>
-constexpr auto operator<=>(Left_bound<LeftBoundT<LeftT>> const &left,
-                           Left_bound<RightBoundT<RightT>> const
-                               &right) noexcept(noexcept(left.bound_.value_ <=>
-                                                         right.bound_.value_))
-    -> std::strong_ordering {
+constexpr auto
+operator<=>(Left_bound<LeftBoundT<LeftT>> const &left,
+            Left_bound<RightBoundT<RightT>> const
+                &right) noexcept(noexcept(left.bound_ <=> right.bound_))
+    -> decltype(auto) {
+  using ret_type = decltype(left.bound_ <=> right.bound_);
   using left_bound_type = LeftBoundT<LeftT>;
   using right_bound_type = RightBoundT<RightT>;
   if constexpr (std::same_as<left_bound_type, Unbounded<LeftT>> &&
                 std::same_as<right_bound_type, Unbounded<RightT>>) {
-    return std::strong_ordering::equivalent;
+    return ret_type::equivalent;
   } else if constexpr (std::same_as<left_bound_type, Unbounded<LeftT>>) {
-    return std::strong_ordering::less;
+    return ret_type::less;
   } else if constexpr (std::same_as<right_bound_type, Unbounded<RightT>>) {
-    return std::strong_ordering::greater;
+    return ret_type::greater;
   } else {
-    auto ret{left.bound_.value_ <=> right.bound_.value_};
+    ret_type ret{left.bound_ <=> right.bound_};
     if constexpr (std::same_as<left_bound_type, right_bound_type>) {
       return ret;
     } else {
       if (std::is_eq(ret)) {
         if constexpr (std::same_as<left_bound_type, Open_bound<LeftT>> &&
                       std::same_as<right_bound_type, Closed_bound<RightT>>) {
-          return std::strong_ordering::greater;
+          return ret_type::greater;
         } else {
           static_assert(std::same_as<left_bound_type, Closed_bound<LeftT>> &&
                             std::same_as<right_bound_type, Open_bound<RightT>>,
                         u8"Non-exhaustive");
-          return std::strong_ordering::less;
+          return ret_type::less;
         }
       }
       return ret;
     }
   }
 }
-template <std::totally_ordered LeftT, std::totally_ordered_with<LeftT> RightT,
+template <std::three_way_comparable LeftT,
+          std::three_way_comparable_with<LeftT> RightT,
           template <typename> typename LeftBoundT,
           template <typename> typename RightBoundT>
 constexpr auto operator==(Left_bound<LeftBoundT<LeftT>> const &left,
@@ -353,44 +366,47 @@ struct Right_bound : public Directional_bound<BoundT, Right_bound<BoundT>> {
     return !(left < right);
   }
 };
-template <std::totally_ordered LeftT, std::totally_ordered_with<LeftT> RightT,
+template <std::three_way_comparable LeftT,
+          std::three_way_comparable_with<LeftT> RightT,
           template <typename> typename LeftBoundT,
           template <typename> typename RightBoundT>
-constexpr auto operator<=>(Right_bound<LeftBoundT<LeftT>> const &left,
-                           Right_bound<RightBoundT<RightT>> const
-                               &right) noexcept(noexcept(left.bound_.value_ <=>
-                                                         right.bound_.value_))
-    -> std::strong_ordering {
+constexpr auto
+operator<=>(Right_bound<LeftBoundT<LeftT>> const &left,
+            Right_bound<RightBoundT<RightT>> const
+                &right) noexcept(noexcept(left.bound_ <=> right.bound_))
+    -> decltype(auto) {
+  using ret_type = decltype(left.bound_ <=> right.bound_);
   using left_bound_type = LeftBoundT<LeftT>;
   using right_bound_type = RightBoundT<RightT>;
   if constexpr (std::same_as<left_bound_type, Unbounded<LeftT>> &&
                 std::same_as<right_bound_type, Unbounded<RightT>>) {
-    return std::strong_ordering::equivalent;
+    return ret_type::equivalent;
   } else if constexpr (std::same_as<left_bound_type, Unbounded<LeftT>>) {
-    return std::strong_ordering::greater;
+    return ret_type::greater;
   } else if constexpr (std::same_as<right_bound_type, Unbounded<RightT>>) {
-    return std::strong_ordering::less;
+    return ret_type::less;
   } else {
-    auto ret{left.bound_.value_ <=> right.bound_.value_};
+    ret_type ret{left.bound_ <=> right.bound_};
     if constexpr (std::same_as<left_bound_type, right_bound_type>) {
       return ret;
     } else {
       if (std::is_eq(ret)) {
         if constexpr (std::same_as<left_bound_type, Open_bound<LeftT>> &&
                       std::same_as<right_bound_type, Closed_bound<RightT>>) {
-          return std::strong_ordering::less;
+          return ret_type::less;
         } else {
           static_assert(std::same_as<left_bound_type, Closed_bound<LeftT>> &&
                             std::same_as<right_bound_type, Open_bound<RightT>>,
                         u8"Non-exhaustive");
-          return std::strong_ordering::greater;
+          return ret_type::greater;
         }
       }
       return ret;
     }
   }
 }
-template <std::totally_ordered LeftT, std::totally_ordered_with<LeftT> RightT,
+template <std::three_way_comparable LeftT,
+          std::three_way_comparable_with<LeftT> RightT,
           template <typename> typename LeftBoundT,
           template <typename> typename RightBoundT>
 constexpr auto operator==(Right_bound<LeftBoundT<LeftT>> const &left,
