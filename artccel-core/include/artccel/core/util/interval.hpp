@@ -88,7 +88,7 @@ template <std::totally_ordered Type, typename Derived> struct Bound {
   }
   friend constexpr auto operator>(Bound const &left,
                                   Type const &right) noexcept(noexcept(bool{
-      static_cast<Derived const &>(left) > left})) -> bool {
+      static_cast<Derived const &>(left) > right})) -> bool {
     return static_cast<Derived const &>(left) > right;
   }
   friend constexpr auto operator>(Type const &left,
@@ -119,7 +119,7 @@ struct Open_bound : public Bound<Type, Open_bound<Type>> {
   }
   friend constexpr auto operator>(Open_bound const &left,
                                   Type const &right) noexcept(noexcept(bool{
-      left.value_ > left})) -> bool {
+      left.value_ > right})) -> bool {
     return left.value_ > right;
   }
   friend constexpr auto
