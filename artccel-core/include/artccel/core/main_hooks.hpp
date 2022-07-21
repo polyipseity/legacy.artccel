@@ -21,8 +21,9 @@
 #include <tl/expected.hpp> // import tl::expected
 #pragma warning(pop)
 
+#include "util/contracts.hpp"      // import util::Validate
 #include "util/error_handling.hpp" // import util::Exception_error
-#include "util/interval.hpp"       // import util::Nonnegative_interval
+#include "util/interval.hpp"       // import util::nonnegative_interval
 #include "util/polyfill.hpp"       // import util::Move_only_function
 #include <artccel/core/export.h>   // import ARTCCEL_CORE_EXPORT
 
@@ -43,7 +44,7 @@ using Argv_string_t = gsl::czstring;
 namespace f {
 ARTCCEL_CORE_EXPORT auto safe_main(
     util::Move_only_function<int(Raw_arguments) const &> const &main_func,
-    util::Nonnegative_interval<int> const &argc,
+    util::Validate<util::nonnegative_interval<int>> const &argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     gsl::not_null<detail::Argv_string_t const *> const &argv) -> int;
 } // namespace f

@@ -37,11 +37,12 @@
 #include <artccel/core/platform/windows_error.hpp> // import platform::windows::f::throw_last_error, platform::windows::f::print_last_error
 #include <artccel/core/util/codecvt_extras.hpp> // import util::Codecvt_utf16_utf8
 #include <artccel/core/util/containers.hpp> // import util::f::atad, util::f::const_span
+#include <artccel/core/util/contracts.hpp>   // import util::Validate
 #include <artccel/core/util/conversions.hpp> // import util::f::int_clamp_cast, util::f::int_clamp_casts, util::f::int_exact_cast, util::f::int_modulo_cast, util::f::int_unsigned_cast, util::f::int_unsigned_clamp_cast, util::f::int_unsigned_exact_cast
 #include <artccel/core/util/encoding.hpp> // import util::f::loc_enc_to_utf8, util::f::utf16_to_utf8
 #include <artccel/core/util/error_handling.hpp> // import util::Exception_error, util::f::expect_noninvalid, util::f::expect_nonzero
 #include <artccel/core/util/exception_extras.hpp> // import util::f::ignore_all_exceptions
-#include <artccel/core/util/interval.hpp> // import util::Nonnegative_interval
+#include <artccel/core/util/interval.hpp> // import util::nonnegative_interval
 #include <artccel/core/util/polyfill.hpp> // import util::Move_only_function, util::f::unreachable
 #include <artccel/core/util/utility_extras.hpp> // import util::Semiregularize
 
@@ -309,7 +310,7 @@ namespace f {
 auto safe_main(
 #pragma clang diagnostic pop
     util::Move_only_function<int(Raw_arguments) const &> const &main_func,
-    util::Nonnegative_interval<int> const &argc,
+    util::Validate<util::nonnegative_interval<int>> const &argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     gsl::not_null<gsl::czstring const *> const &argv) -> int {
   return main_func([args{util::f::const_span(argv.get(), argv.get() + argc)}] {
@@ -323,7 +324,7 @@ auto safe_main(
 #ifdef _WIN32
 auto safe_main(
     util::Move_only_function<int(Raw_arguments) const &> const &main_func,
-    util::Nonnegative_interval<int> const &argc,
+    util::Validate<util::nonnegative_interval<int>> const &argc,
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     gsl::not_null<gsl::cwzstring const *> const &argv) -> int {
   auto const utf8_args_storage{

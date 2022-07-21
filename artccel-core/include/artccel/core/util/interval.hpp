@@ -9,7 +9,7 @@
 #include <utility> // import std::declval, std::forward, std::move
 
 #include "concepts_extras.hpp" // import Brace_convertible_to, Derived_from_but_not, Differ_from
-#include "meta.hpp"           // import Comparison_category
+#include "contracts.hpp"      // import Validator_c
 #include "utility_extras.hpp" // import Consteval_t, Delegate, dependent_false_v
 
 namespace artccel::core::util {
@@ -33,57 +33,58 @@ concept Directional_bound_c = requires(std::remove_cv_t<Type> type_norm) {
 };
 template <Bound_c BoundT> struct Left_bound;
 template <Bound_c BoundT> struct Right_bound;
-template <Bound_c auto Left, Bound_c auto Right>
-requires std::same_as < typename std::remove_cv_t<decltype(Left)>::type,
-typename std::remove_cv_t<decltype(Right)>::type > class Interval;
+template <Bound_c LeftBoundT, Bound_c RightBoundT>
+requires std::same_as<typename LeftBoundT::type, typename RightBoundT::type>
+class Interval;
 template <typename Type>
 concept Interval_c = requires(std::remove_cv_t<Type> type_norm) {
-  std::same_as<decltype(type_norm), Interval<decltype(type_norm)::left_,
-                                             decltype(type_norm)::right_>>;
+  std::same_as<decltype(type_norm),
+               Interval<typename decltype(type_norm)::left_bound_type,
+                        typename decltype(type_norm)::right_bound_type>>;
 };
 
 // mathematical classifications
 template <std::three_way_comparable Type, Type Left, Type Right>
-using Open_interval =
-    Interval<Open_bound{Left}, Open_bound{Right}>; // (Left,Right)
+constexpr Interval open_interval{Open_bound{Left},
+                                 Open_bound{Right}}; // (Left,Right)
 template <std::three_way_comparable Type, Type Left, Type Right>
-using Closed_interval =
-    Interval<Closed_bound{Left}, Closed_bound{Right}>; // [Left,Right]
+constexpr Interval closed_interval{Closed_bound{Left},
+                                   Closed_bound{Right}}; // [Left,Right]
 template <std::three_way_comparable Type, Type Left, Type Right>
-using LC_RO_interval =
-    Interval<Closed_bound{Left}, Open_bound{Right}>; // [Left,Right)
+constexpr Interval lc_ro_interval{Closed_bound{Left},
+                                  Open_bound{Right}}; // [Left,Right)
 template <std::three_way_comparable Type, Type Left, Type Right>
-using LO_RC_interval =
-    Interval<Open_bound{Left}, Closed_bound{Right}>; // (Left,Right]
+constexpr Interval lo_rc_interval{Open_bound{Left},
+                                  Closed_bound{Right}}; // (Left,Right]
 template <std::three_way_comparable Type, Type Left>
-using LC_RU_interval =
-    Interval<Closed_bound{Left}, Unbounded<Type>{}>; // [Left,+∞)
+constexpr Interval lc_ru_interval{Closed_bound{Left},
+                                  Unbounded<Type>{}}; // [Left,+∞)
 template <std::three_way_comparable Type, Type Left>
-using LO_RU_interval =
-    Interval<Open_bound{Left}, Unbounded<Type>{}>; // (Left,+∞)
+constexpr Interval lo_ru_interval{Open_bound{Left},
+                                  Unbounded<Type>{}}; // (Left,+∞)
 template <std::three_way_comparable Type, Type Right>
-using LU_RC_interval =
-    Interval<Unbounded<Type>{}, Closed_bound{Right}>; // (-∞,Right]
+constexpr Interval lu_rc_interval{Unbounded<Type>{},
+                                  Closed_bound{Right}}; // (-∞,Right]
 template <std::three_way_comparable Type, Type Right>
-using LU_RO_interval =
-    Interval<Unbounded<Type>{}, Open_bound{Right}>; // (-∞,Right)
+constexpr Interval lu_ro_interval{Unbounded<Type>{},
+                                  Open_bound{Right}}; // (-∞,Right)
 template <std::three_way_comparable Type>
-using Unbounded_interval =
-    Interval<Unbounded<Type>{}, Unbounded<Type>{}>; // (-∞,+∞)
+constexpr Interval unbounded_interval{Unbounded<Type>{},
+                                      Unbounded<Type>{}}; // (-∞,+∞)
 template <std::three_way_comparable Type, Type Val = Type{}>
-using Empty_interval = Open_interval<Type, Val, Val>; // (Val,Val) = {}
+constexpr auto empty_interval{open_interval<Type, Val, Val>}; // (Val,Val) = {}
 template <std::three_way_comparable Type, Type Val>
-using Degenerate_interval =
-    Closed_interval<Type, Val, Val>; // [Val,Val] = {Val}
+constexpr auto degenerate_interval{
+    closed_interval<Type, Val, Val>}; // [Val,Val] = {Val}
 // common uses
 template <std::three_way_comparable Type, Type Zero = Type{0}>
-using Nonnegative_interval = LC_RU_interval<Type, Zero>; // [0,+∞)
+constexpr auto nonnegative_interval{lc_ru_interval<Type, Zero>}; // [0,+∞)
 template <std::three_way_comparable Type, Type Zero = Type{0}>
-using Nonpositive_interval = LU_RC_interval<Type, Zero>; // (-∞,0]
+constexpr auto nonpositive_interval{lu_rc_interval<Type, Zero>}; // (-∞,0]
 template <std::three_way_comparable Type, Type Zero = Type{0}>
-using Positive_interval = LO_RU_interval<Type, Zero>; // (0,+∞)
+constexpr auto positive_interval{lo_ru_interval<Type, Zero>}; // (0,+∞)
 template <std::three_way_comparable Type, Type Zero = Type{0}>
-using Negative_interval = LU_RO_interval<Type, Zero>; // (-∞,0)
+constexpr auto negative_interval{lu_ro_interval<Type, Zero>}; // (-∞,0)
 
 template <std::three_way_comparable Type, typename Derived> struct Bound {
   using type = Type;
@@ -424,59 +425,58 @@ constexpr auto operator==(Right_bound<LeftBoundT<LeftT>> const &left,
   return std::is_eq(left <=> right);
 }
 
-template <Bound_c auto Left, Bound_c auto Right>
-requires std::same_as < typename std::remove_cv_t<decltype(Left)>::type,
-typename std::remove_cv_t<decltype(Right)>::type > class Interval
-    : public Delegate<typename decltype(Left)::type, false> {
+template <Bound_c LeftBoundT, Bound_c RightBoundT>
+requires std::same_as<typename LeftBoundT::type, typename RightBoundT::type>
+class Interval {
 public:
-  using type = typename Interval::type;
-  constexpr static auto left_{Left};
-  constexpr static auto right_{Right};
-  consteval Interval(Consteval_t tag [[maybe_unused]],
-                     type value) noexcept(noexcept(Interval{std::move(value)}))
-      : Interval{std::move(value)} {
-    /* the parameter is passed-by-value to not bound to a temporary for using
-     * this type as non-type template parameters */
-  }
-  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  constexpr Interval(type value) noexcept(
-      std::is_nothrow_constructible_v<typename Interval::Delegate,
-                                      decltype(std::move(value))>
-          &&noexcept(check(this->value_)))
-      : Interval::Delegate{std::move(value)} {
-    check(this->value_);
-  }
-  template <Interval_c Intl>
-  requires Differ_from<std::remove_cvref_t<Intl>, Interval>
-  constexpr Interval(Intl &&other) = delete;
-  template <Interval_c Intl>
+  using left_bound_type = LeftBoundT;
+  using right_bound_type = RightBoundT;
+  using validate_type = typename LeftBoundT::type;
+
+  LeftBoundT left_;
+  RightBoundT right_;
+  explicit constexpr Interval(LeftBoundT left, RightBoundT right) noexcept(
+      noexcept(decltype(left_){std::move(left)}, void(),
+               decltype(right_){std::move(right)}))
+      : left_{std::move(left)}, right_{std::move(right)} {};
+  template <typename Other>
   requires(
-      Differ_from<std::remove_cvref_t<Intl>, Interval> &&Brace_convertible_to<
-          typename std::remove_cvref_t<Intl>::type, type> &&Left_bound{
-          std::remove_cvref_t<Intl>::left_} >= Left_bound{Left} &&
-      Right_bound{std::remove_cvref_t<Intl>::right_} <=
-          Right_bound{
-              Right}) constexpr Interval(Intl &&
-                                             other) noexcept(std::
-                                                                 is_nothrow_constructible_v<
-                                                                     typename Intl::
-                                                                         Delegate,
-                                                                     decltype(std::forward<
-                                                                                  Intl>(
-                                                                                  other)
-                                                                                  .value_)>)
+      !std::same_as<std::remove_cvref_t<Other>, Interval> &&
+      Interval_c<std::remove_cvref_t<Other>> &&
+      Brace_convertible_to<typename std::remove_cvref_t<Other>::left_bound_type,
+                           LeftBoundT> &&
+      Brace_convertible_to<
+          typename std::remove_cvref_t<Other>::right_bound_type,
+          RightBoundT>) explicit constexpr Interval(Other &&
+                                                        other) noexcept(noexcept(Interval{
+      LeftBoundT{std::forward<Other>(other).left_},
+      RightBoundT{std::forward<Other>(other).right_}}))
+      : Interval{LeftBoundT{std::forward<Other>(other).left_},
+                 RightBoundT{std::forward<Other>(other).right_}} {}
 
-      : Intl::Delegate{std::forward<Intl>(other).value_} {}
-
-private:
-  constexpr static void check(type const &value) noexcept(
-      noexcept(Left < value && u8"value is outside the lower bound",
-               value < Right && u8"value is outside the upper bound")) {
+  constexpr void validate(validate_type const &value [[maybe_unused]]) const
+      noexcept(noexcept(left_ < value && u8"value is outside the lower bound",
+                        value < right_ &&
+                            u8"value is outside the upper bound")) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(Left < value && u8"value is outside the lower bound");
+    assert(left_ < value && u8"value is outside the lower bound");
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
-    assert(value < Right && u8"value is outside the upper bound");
+    assert(value < right_ && u8"value is outside the upper bound");
   }
+  template <typename Other>
+  requires Interval_c<std::remove_cvref_t<Other>>
+  constexpr auto subsumes(Other &&other) const noexcept(noexcept(bool{
+      Brace_convertible_to<typename std::remove_cvref_t<Other>::validate_type,
+                           validate_type> &&
+      Left_bound{left_} <= Left_bound{other.left_} &&
+      Right_bound{other.right_} <= Right_bound{right_}})) -> bool {
+    return Brace_convertible_to<
+               typename std::remove_cvref_t<Other>::validate_type,
+               validate_type> &&
+           Left_bound{left_} <= Left_bound{other.left_} &&
+           Right_bound{other.right_} <= Right_bound{right_};
+  }
+#pragma warning(suppress : 4820)
 };
 } // namespace artccel::core::util
 

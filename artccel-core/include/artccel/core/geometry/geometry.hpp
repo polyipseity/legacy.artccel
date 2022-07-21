@@ -7,14 +7,16 @@
 #include <tuple>    // import std::tuple
 #include <typeinfo> // import typeid, std::type_info
 
-#include "../util/clone.hpp"    // import util::Cloneable, util::Cloneable_bases
-#include "../util/interval.hpp" // import util::Nonnegative_interval
+#include "../util/clone.hpp" // import util::Cloneable, util::Cloneable_bases
+#include "../util/contracts.hpp" // import util::Validate
+#include "../util/interval.hpp"  // import util::nonnegative_interval
 #include "../util/semantics.hpp" // import util::Observer_ptr
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core {
 namespace geometry {
-using Dimension_t = util::Nonnegative_interval<std::int_fast8_t>;
+using Dimension_t =
+    util::Validate<util::nonnegative_interval<std::int_fast8_t>>;
 
 class ARTCCEL_CORE_EXPORT Geometry;
 class ARTCCEL_CORE_EXPORT Primitive;
