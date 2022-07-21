@@ -5,7 +5,7 @@ include(FetchContent)
 # helpers
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "OPT_IN" CACHE STRING "https://cmake.org/cmake/help/latest/module/FetchContent.html?highlight=fetchcontent_try_find_package_mode#variable:FETCHCONTENT_TRY_FIND_PACKAGE_MODE")
 
-function(find_package_or_fetch_content package target target_options package_options)
+function(find_package_or_fetch_content package target target_options package_options ...)
 	if(FETCHCONTENT_TRY_FIND_PACKAGE_MODE STREQUAL "OPT_IN")
 		set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "ALWAYS")
 		message(WARNING "'FETCHCONTENT_TRY_FIND_PACKAGE_MODE' is treated as 'ALWAYS'")
@@ -38,7 +38,10 @@ function(find_package_or_fetch_content package target target_options package_opt
 		set("${_target_option}" "${_target_option_val}")
 	endforeach()
 
+	FetchContent_GetProperties("${package}")
 	FetchContent_MakeAvailable("${package}")
+	list(FIND ARGN EXCLUDE_FROM_ALL _exclude_from_all)
+	set_property(DIRECTORY "${${package}_SOURCE_DIR}" PROPERTY EXCLUDE_FROM_ALL "${_exclude_from_all}")
 	add_library("${package}::${target}" ALIAS "${target}")
 	export(TARGETS "${target}" NAMESPACE "${package}::" FILE "${target}-targets.cmake")
 endfunction()
