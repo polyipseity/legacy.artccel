@@ -2,9 +2,10 @@
 #define GUARD_D0C3CB97_52B0_4DA4_8BCE_22BAFB070268
 #pragma once
 
-#include <concepts> // import std::derived_from, std::same_as
-#include <sstream>  // import std::basic_stringbuf, std::basic_stringstream
-#include <string>   // import std::basjc_string
+#include <concepts>    // import std::derived_from, std::same_as
+#include <sstream>     // import std::basic_stringbuf, std::basic_stringstream
+#include <string>      // import std::basjc_string
+#include <type_traits> // import std::remove_cv_t
 
 #include "meta.hpp" // import Replace_all_t
 
@@ -13,9 +14,11 @@ template <typename Type>
 concept Char_traits_c = requires {
   // not the actual requirements, but close enough
   // https://cppreference.com/w/cpp/io/basic_stringbuf
-  typename std::basic_string<typename Type::char_type, Type>;
-  typename std::basic_stringstream<typename Type::char_type, Type>;
-  typename std::basic_stringbuf<typename Type::char_type, Type>;
+  typename std::basic_string<typename std::remove_cv_t<Type>::char_type, Type>;
+  typename std::basic_stringstream<typename std::remove_cv_t<Type>::char_type,
+                                   Type>;
+  typename std::basic_stringbuf<typename std::remove_cv_t<Type>::char_type,
+                                Type>;
 };
 template <Char_traits_c Type, typename Replace>
 using Rebind_char_traits_t =

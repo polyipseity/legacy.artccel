@@ -3,12 +3,13 @@
 #pragma once
 
 #include <array>            // import std::array, std::data, std::size
-#include <concepts>         // import std::same_as
 #include <cstddef>          // import std::size_t
 #include <initializer_list> // import std::initializer_list
 #include <span>             // import std::dynamic_extent, std::span
 #include <type_traits> // import std::is_convertible_v, std::is_lvalue_reference_v, std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t
 #include <utility> // import std::forward, std::index_sequence, std::in_place, std::in_place_t, std::make_index_sequence, std::move
+
+#include "concepts_extras.hpp" // import Dynamic_extent, Guard_special_constructors, Nondynamic_extent
 
 namespace artccel::core::util {
 template <typename> struct Array_size;
@@ -53,26 +54,23 @@ public:
                                                                         arg))>)
       : Value_span::span{arg}, move_{true} {}
   template <typename... Args>
-  requires(sizeof...(Args) >= 2) explicit(extent !=
-                                          std::dynamic_extent) constexpr
+  requires(sizeof...(Args) >= 2) explicit(Nondynamic_extent<extent>) constexpr
       // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
       Value_span(Move_span_t tag [[maybe_unused]], Args &&...args) noexcept(
           std::is_nothrow_constructible_v<typename Value_span::span,
                                           decltype((args))...>)
       : Value_span::span{args...}, move_{true} {}
-  template <typename Arg>
-  requires(!std::same_as<std::remove_cvref_t<Arg>, Value_span>)
-      // TODO: explicit should use reflection
-      explicit(!std::is_convertible_v<std::remove_cvref_t<Arg> &,
-                                      typename Value_span::span>) constexpr
+  template <Guard_special_constructors<Value_span> Arg>
+  // TODO: explicit should use reflection
+  explicit(!std::is_convertible_v<std::remove_cvref_t<Arg> &,
+                                  typename Value_span::span>) constexpr
       // NOLINTNEXTLINE(bugprone-forwarding-reference-overload,google-explicit-constructor,hicpp-explicit-conversions)
       Value_span(Arg &&arg) noexcept(
           std::is_nothrow_constructible_v<typename Value_span::span,
                                           decltype((arg))>)
       : Value_span::span{arg}, move_{!std::is_lvalue_reference_v<Arg>} {}
   template <typename... Args>
-  requires(sizeof...(Args) >= 2) explicit(extent !=
-                                          std::dynamic_extent) constexpr
+  requires(sizeof...(Args) >= 2) explicit(Nondynamic_extent<extent>) constexpr
       // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
       Value_span(Args &&...args) noexcept(
           std::is_nothrow_constructible_v<
@@ -115,7 +113,8 @@ constexpr auto atad
 }
 
 template <std::size_t Size, typename... Args>
-requires(Size != std::dynamic_extent) constexpr auto static_span
+requires Nondynamic_extent<Size>
+constexpr auto static_span
     [[nodiscard]] (Args &&...args) noexcept(noexcept(std::span{
         std::forward<Args>(args)...})) {
   using span_type = decltype(std::span{std::forward<Args>(args)...});
@@ -128,8 +127,8 @@ constexpr auto const_span
         std::forward<Args>(args)...})) {
   using span_type = decltype(std::span{std::forward<Args>(args)...});
   return std::span < typename span_type::element_type const,
-         Size == std::dynamic_extent ? span_type::extent
-                                     : Size > {std::forward<Args>(args)...};
+         Dynamic_extent<Size> ? span_type::extent
+                              : Size > {std::forward<Args>(args)...};
 }
 
 template <std::size_t Size = std::dynamic_extent, typename... Args>
@@ -140,8 +139,8 @@ constexpr auto const_array
   using array_type = decltype(std::array{std::forward<Args>(args)...});
   // mandatory copy/move elision
   return std::array < typename array_type::value_type const,
-         Size == std::dynamic_extent ? Array_size_v<array_type>
-                                     : Size > {std::forward<Args>(args)...};
+         Dynamic_extent<Size> ? Array_size_v<array_type>
+                              : Size > {std::forward<Args>(args)...};
 }
 template <std::size_t Size = std::dynamic_extent, typename Type,
           std::size_t InSize>
@@ -150,7 +149,7 @@ constexpr auto const_array
   return [&array]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
                                        [[maybe_unused]]) {
     return std::array < Type const,
-           Size == std::dynamic_extent ? InSize : Size > {{array[Idxs]...}};
+           Dynamic_extent<Size> ? InSize : Size > {{array[Idxs]...}};
   }
   (std::make_index_sequence<InSize>{});
 }
@@ -159,33 +158,31 @@ template <std::size_t Size = std::dynamic_extent, typename Type,
 constexpr auto const_array [[nodiscard]] (std::array<Type, InSize> &&array) {
   return [&array]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
                                        [[maybe_unused]]) {
-    return std::array < Type const, Size == std::dynamic_extent
-                                        ? InSize
-                                        : Size > {{std::move(array[Idxs])...}};
+    return std::array < Type const,
+           Dynamic_extent<Size> ? InSize : Size > {{std::move(array[Idxs])...}};
   }
   (std::make_index_sequence<InSize>{});
 }
 template <std::size_t Size = std::dynamic_extent, typename Type,
           std::size_t InSize>
-requires(InSize != std::dynamic_extent) constexpr auto const_array
-    [[nodiscard]] (std::span<Type, InSize> span) {
+requires Nondynamic_extent<InSize>
+constexpr auto const_array [[nodiscard]] (std::span<Type, InSize> span) {
   return [span]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
                                      [[maybe_unused]]) {
     return std::array < Type const,
-           Size == std::dynamic_extent ? InSize : Size > {{span[Idxs]...}};
+           Dynamic_extent<Size> ? InSize : Size > {{span[Idxs]...}};
   }
   (std::make_index_sequence<InSize>{});
 }
 template <std::size_t Size = std::dynamic_extent, typename Type,
           std::size_t InSize>
-requires(InSize != std::dynamic_extent) constexpr auto const_array
-    [[nodiscard]] (Move_span_t tag [[maybe_unused]],
-                   std::span<Type, InSize> span) {
+requires Nondynamic_extent<InSize>
+constexpr auto const_array [[nodiscard]] (Move_span_t tag [[maybe_unused]],
+                                          std::span<Type, InSize> span) {
   return [span]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
                                      [[maybe_unused]]) {
-    return std::array < Type const, Size == std::dynamic_extent
-                                        ? InSize
-                                        : Size > {{std::move(span[Idxs])...}};
+    return std::array < Type const,
+           Dynamic_extent<Size> ? InSize : Size > {{std::move(span[Idxs])...}};
   }
   (std::make_index_sequence<InSize>{});
 }
@@ -198,8 +195,8 @@ requires(sizeof...(Args) != 1) constexpr auto const_array
 }
 
 template <typename Type, std::size_t Size>
-requires(Size != std::dynamic_extent) constexpr auto to_array(
-    Value_span<Type, Size> const &span) {
+requires Nondynamic_extent<Size>
+constexpr auto to_array(Value_span<Type, Size> const &span) {
   return [&span]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
                                       [[maybe_unused]]) {
     return std::array<std::remove_cv_t<Type>, Size>{
@@ -229,8 +226,8 @@ constexpr auto to_array_cv(Type (&&array)[Size]) {
   (std::make_index_sequence<Size>{});
 }
 template <typename Type, std::size_t Size>
-requires(Size != std::dynamic_extent) constexpr auto to_array_cv(
-    Value_span<Type, Size> const &span) {
+requires Nondynamic_extent<Size>
+constexpr auto to_array_cv(Value_span<Type, Size> const &span) {
   return [&span]<std::size_t... Idxs>(std::index_sequence<Idxs...> idxs
                                       [[maybe_unused]]) {
     return std::array<Type, Size>{{span.forward(span[Idxs])...}};

@@ -15,6 +15,7 @@
 #include <gsl/gsl> // import gsl::owner
 #pragma warning(pop)
 
+#include "concepts_extras.hpp" // import Differ_from, Not_derived_from, Nonempty_pack
 #include "meta.hpp" // import Replace_all_t, Replace_all_t_t, Replace_target, Transform_list_identity_t
 #include "utility_extras.hpp" // import f::unify_ptr_to_ref, f::unify_ref_to_ptr
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
@@ -82,12 +83,12 @@ constexpr auto clone_raw [[nodiscard]] (Ptr const &ptr, Func &&func) {
   using ret_type = decltype(ret);
   if constexpr (std::is_pointer_v<ret_type>) {
     return std::unique_ptr<std::remove_pointer_t<ret_type>>{ret};
-  } else if constexpr (!std::same_as<decltype(ret.release()), void>) {
+  } else if constexpr (Differ_from<decltype(ret.release()), void>) {
     using raw_type =
         std::remove_pointer_t<decltype(f::unify_ref_to_ptr(ret.release()))>;
     if constexpr (requires {
                     typename ret_type::deleter_type;
-                    requires !std::same_as<decltype(ret.get_deleter()), void>;
+                    { ret.get_deleter() } -> Differ_from<void>;
                   }) {
       auto &&deleter{f::unify_ptr_to_ref(ret.get_deleter())};
       using deleter_type = typename ret_type::deleter_type;
@@ -119,12 +120,13 @@ using clone_deleter_t =
 template <typename Ptr, Cloner_of<Ptr> Func,
           typename Return = Replace_all_t<Ptr, clone_element_t<Ptr, Func>,
                                           Clone_auto_element_t<>>>
-requires(!std::derived_from<
-         clone_element_t<Ptr, Func>,
-         std::enable_shared_from_this<clone_element_t<Ptr, Func>>>) ||
+requires Not_derived_from<
+    clone_element_t<Ptr, Func>,
+    std::enable_shared_from_this<clone_element_t<Ptr, Func>>> ||
     std::derived_from<Replace_all_t_t<Return, Clone_auto_element_t, int>,
-                      std::shared_ptr<int>> constexpr auto clone
-    [[nodiscard]] (Ptr const &ptr, Func &&func) -> decltype(auto) {
+                      std::shared_ptr<int>>
+constexpr auto clone [[nodiscard]] (Ptr const &ptr, Func &&func)
+-> decltype(auto) {
   using return_type = Replace_all_t_t<
       Replace_all_t_t<Return, Clone_auto_deleter_t, clone_deleter_t<Ptr, Func>>,
       Clone_auto_element_t, clone_element_t<Ptr, Func>>;
@@ -239,9 +241,9 @@ private:
       -> gsl::owner<void *> = 0;
 };
 template <typename Type, typename... Bases>
-requires(sizeof...(Bases) >= 1)
-    // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
-    class Cloneable_0<Type, Bases...> : public virtual Cloneable<Bases>... {
+requires Nonempty_pack<Bases...>
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+class Cloneable_0<Type, Bases...> : public virtual Cloneable<Bases>... {
 public:
   constexpr auto clone [[nodiscard]] () const {
     return std::unique_ptr<Type>{static_cast<gsl::owner<Type *>>(clone_impl())};

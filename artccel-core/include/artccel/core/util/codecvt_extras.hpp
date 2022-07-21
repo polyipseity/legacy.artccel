@@ -10,7 +10,7 @@
 #include <stdexcept> // import std::range_error
 #include <string> // import std::basic_string, std::data, std::size, std::string
 #include <string_view> // import std::basic_string_view
-#include <type_traits> // import std::conditional_t
+#include <type_traits> // import std::conditional_t, std::remove_cv_t
 
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
@@ -30,9 +30,11 @@ using Codecvt_utf16_utf8 = std::codecvt<char16_t, char8_t, std::mbstate_t>;
 using Codecvt_utf32_utf8 = std::codecvt<char32_t, char8_t, std::mbstate_t>;
 using Codecvt_wchar_char = std::codecvt<wchar_t, char, std::mbstate_t>;
 template <typename Type>
-concept Codecvt_c = std::derived_from<
-    Type, std::codecvt<typename Type::intern_type, typename Type::extern_type,
-                       typename Type::state_type>>;
+concept Codecvt_c = std::derived_from < std::remove_cv_t<Type>,
+        std::codecvt < typename std::remove_cv_t<Type>::intern_type,
+typename std::remove_cv_t<Type>::extern_type,
+    typename std::remove_cv_t<Type>::state_type >>
+    ;
 enum struct Codecvt_error : std::int_fast8_t;
 using Codecvt_error_with_exception = Error_with_exception<Codecvt_error>;
 

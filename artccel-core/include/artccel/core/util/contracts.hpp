@@ -2,11 +2,11 @@
 #define GUARD_EBF8F06E_8088_4FBC_AEBA_8CEB64E4F6AD
 #pragma once
 
-#include <concepts>    // import std::same_as
-#include <type_traits> // import std::is_nothrow_constructible_v, std::remove_cv_t
-#include <utility>     // import std::forward, std::move
+#include <concepts> // import std::same_as
+#include <type_traits> // import std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t
+#include <utility> // import std::forward, std::move
 
-#include "concepts_extras.hpp" // import Brace_convertible_to, Differ_from
+#include "concepts_extras.hpp" // import Guard_special_constructors
 #include "utility_extras.hpp"  // import Consteval_t, Delegate
 
 namespace artccel::core::util {
@@ -19,9 +19,8 @@ concept Validator_c =
 };
 template <Validator_c auto Validator> class Validate;
 template <typename Type>
-concept Validate_c = requires(std::remove_cv_t<Type> type_norm) {
-  std::same_as<decltype(type_norm), Validate<decltype(type_norm)::validator>>;
-};
+concept Validate_c = std::same_as<std::remove_cv_t<Type>,
+                                  Validate<std::remove_cv_t<Type>::validator>>;
 
 template <Validator_c auto Validator>
 class Validate
@@ -43,13 +42,11 @@ public:
       : Validate::Delegate{std::move(value)} {
     Validator.validate(this->value_);
   }
-  template <typename Other>
-  requires Differ_from<std::remove_cvref_t<Other>, Validate> &&
-      Validate_c<std::remove_cvref_t<Other>>
+  template <Guard_special_constructors<Validate> Other>
+  requires Validate_c<std::remove_cvref_t<Other>>
   constexpr Validate(Other &&other) = delete;
-  template <typename Other>
-  requires Differ_from<std::remove_cvref_t<Other>, Validate> &&
-      Validate_c<std::remove_cvref_t<Other>> &&
+  template <Guard_special_constructors<Validate> Other>
+  requires Validate_c<std::remove_cvref_t<Other>> &&
       (Validator.subsumes(Other::validator_)) constexpr Validate(
           Other &&
               other) noexcept(std::

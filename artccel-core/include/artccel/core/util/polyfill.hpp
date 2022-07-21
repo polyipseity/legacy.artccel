@@ -9,6 +9,7 @@
 #include <ofats/invocable.h> // import ofats::any_invocable
 #pragma warning(pop)
 
+#include "concepts_extras.hpp"   // import Enum
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT
 
 namespace artccel::core::util {
@@ -17,10 +18,9 @@ using Move_only_function =
     ofats::any_invocable<Signature>; // TODO: C++23: std::move_only_function
 
 namespace f {
-constexpr auto to_underlying [[nodiscard]] (
-    auto enum_) noexcept requires std::is_enum_v<decltype(enum_)> {
+constexpr auto to_underlying [[nodiscard]] (Enum auto value) noexcept {
   // TODO: C++23: std::to_underlying
-  return static_cast<std::underlying_type_t<decltype(enum_)>>(enum_);
+  return static_cast<std::underlying_type_t<decltype(value)>>(value);
 }
 ARTCCEL_CORE_EXPORT inline void unreachable [[noreturn]] () noexcept {
   // TODO: C++23: std::unreachable

@@ -3,7 +3,7 @@
 #pragma once
 
 #include <cassert>  // import assert
-#include <concepts> // import std::default_initializable, std::equality_comparable_with, std::invocable, std::same_as
+#include <concepts> // import std::default_initializable, std::equality_comparable_with, std::invocable
 #include <exception> // import std::exception_ptr, std::make_exception_ptr, std::rethrow_exception
 #include <functional>  // import std::invoke
 #include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_empty_v, std::remove_cvref_t
@@ -19,11 +19,15 @@
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect
 #pragma warning(pop)
 
+#include "concepts_extras.hpp" // import Differ_from, Guard_special_constructors
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
 template <typename Error = std::monostate> class Error_with_exception;
 using Exception_error = Error_with_exception<>;
+template <typename Type>
+concept Stateless_error =
+    std::is_empty_v<Type> && std::default_initializable<Type>;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpadded"
@@ -60,23 +64,20 @@ public:
   explicit Error_with_exception(
       gsl::strict_not_null<std::exception_ptr> exc_ptr, Error error)
       : exc_ptr_{std::move(exc_ptr)}, error_{std::move(error)} {}
-  explicit Error_with_exception(
-      gsl::strict_not_null<std::exception_ptr> exc_ptr) requires
-      std::is_empty_v<Error> && std::default_initializable<Error>
+  explicit Error_with_exception(gsl::strict_not_null<std::exception_ptr>
+                                    exc_ptr) requires Stateless_error<Error>
       : Error_with_exception{std::move(exc_ptr), Error{}} {}
   template <typename Exception>
-  requires(!std::same_as<
-           std::remove_cvref_t<Exception>,
-           std::exception_ptr>) explicit Error_with_exception(Exception &&exc,
-                                                              Error error)
+  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr>
+  explicit Error_with_exception(Exception &&exc, Error error)
       : Error_with_exception{gsl::strict_not_null{std::make_exception_ptr(
                                  std::forward<Exception>(exc))},
                              std::move(error)} {}
-  template <typename Exception>
-  requires(!std::same_as<std::remove_cvref_t<Exception>, std::exception_ptr>) &&
-      std::is_empty_v<Error> &&std::default_initializable<Error>
-      // NOLINTNEXTLINE(bugprone-forwarding-reference-overload): constrained
-      explicit Error_with_exception(Exception &&exc)
+  template <Guard_special_constructors<Error_with_exception> Exception>
+  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr> &&
+      Stateless_error<Error>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
+  explicit Error_with_exception(Exception &&exc)
       : Error_with_exception{std::forward<Exception>(exc), Error{}} {}
 
   template <typename Ret>
@@ -183,6 +184,8 @@ public:
 };
 extern template class ARTCCEL_CORE_EXPORT_DECLARATION Error_with_exception<>;
 static_assert(Exception_error::empty_, u8"Implementation error");
+static_assert(Stateless_error<typename Exception_error::error_type>,
+              u8"Implementation error");
 
 namespace f {
 constexpr auto

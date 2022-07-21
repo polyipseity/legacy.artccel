@@ -45,9 +45,11 @@ enum struct Out_t : bool {};
 
 template <typename Type, typename Ret>
 concept Compute_in_c =
-    std::derived_from<Type, Compute_in<Type, Ret>> && std::copyable<Ret>;
+    std::derived_from<std::remove_cv_t<Type>,
+                      Compute_in<std::remove_cv_t<Type>, Ret>>;
 template <typename Type>
-concept Compute_in_any_c = Compute_in_c<Type, typename Type::return_type>;
+concept Compute_in_any_c =
+    Compute_in_c<Type, typename std::remove_cv_t<Type>::return_type>;
 
 enum struct Compute_option : std::uint_fast8_t {
   empty = util::empty_bitmask,

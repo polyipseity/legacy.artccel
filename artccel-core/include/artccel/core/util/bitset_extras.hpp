@@ -7,7 +7,8 @@
 #include <cstddef> // import std::size_t
 #include <utility> // import std::move
 
-#include "enum_bitset.hpp" // import Bitset_of, Enum_bitset
+#include "concepts_extras.hpp" // import Enum
+#include "enum_bitset.hpp"     // import Bitset_of, Enum_bitset
 
 namespace artccel::core::util {
 template <typename> struct Bitset_size;
@@ -19,8 +20,7 @@ template <std::size_t Size> struct Check_bitset {
   std::bitset<Size> value_;
   explicit consteval Check_bitset(std::bitset<Size> value) noexcept
       : value_{std::move(value)} {}
-  explicit consteval Check_bitset(
-      auto value) noexcept requires std::is_enum_v<decltype(value)>
+  explicit consteval Check_bitset(Enum auto value) noexcept
       : value_{Enum_bitset{} | value} {}
   constexpr void operator()(std::bitset<Size> const &value
                             [[maybe_unused]]) const noexcept {
@@ -28,9 +28,8 @@ template <std::size_t Size> struct Check_bitset {
     assert((value_ & value) == value && u8"value has invalid bits set to 1");
   }
 };
-template <typename Enum>
-requires std::is_enum_v<Enum> Check_bitset(Enum value)
-->Check_bitset<Bitset_size_v<Bitset_of<Enum>>>;
+template <Enum Enum>
+Check_bitset(Enum value) -> Check_bitset<Bitset_size_v<Bitset_of<Enum>>>;
 
 template <std::size_t Size> struct Bitset_size<std::bitset<Size>> {
   constexpr static auto value{Size};

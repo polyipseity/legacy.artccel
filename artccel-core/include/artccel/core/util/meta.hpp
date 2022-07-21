@@ -2,13 +2,13 @@
 #define GUARD_7B51F7E5_D339_44D7_85C1_7DE334308D98
 #pragma once
 
-#include <array>    // import std::array
-#include <concepts> // import std::same_as
-#include <cstddef>  // import std::size_t
-#include <span>     // import std::dynamic_extent, std::span
+#include <array>   // import std::array
+#include <cstddef> // import std::size_t
+#include <span>    // import std::dynamic_extent, std::span
 
-#include "containers.hpp" // import f::to_array_cv
-#include "semantics.hpp"  // import null_terminator_size
+#include "concepts_extras.hpp" // import Differ_from, Nondynamic_extent
+#include "containers.hpp"      // import f::to_array_cv
+#include "semantics.hpp"       // import null_terminator_size
 
 namespace artccel::core::util {
 template <typename Type, typename Find, typename Replace> struct Replace_all;
@@ -62,9 +62,8 @@ template <typename Type, typename Find, typename Replace>
 struct Replace_all<Type &&, Find, Replace> {
   using type = Replace_all_t<Type, Find, Replace> &&;
 };
-template <typename NotFound, typename Find, typename Replace>
-requires(
-    !std::same_as<NotFound, Find>) struct Replace_all<NotFound, Find, Replace> {
+template <typename NotFound, Differ_from<NotFound> Find, typename Replace>
+struct Replace_all<NotFound, Find, Replace> {
   using type = NotFound;
 };
 
@@ -81,9 +80,8 @@ template <typename CharT, std::size_t Size> struct Template_string {
       : Template_string{f::to_array_cv(str)} {
     // implicit for use in string literal operator template
   }
-  explicit consteval Template_string(std::span<CharT const, Size> str) requires(
-      Size != std::dynamic_extent)
-      : Template_string{f::to_array_cv(str)} {}
+  explicit consteval Template_string(std::span<CharT const, Size> str) requires
+      Nondynamic_extent<Size> : Template_string{f::to_array_cv(str)} {}
   explicit consteval Template_string(char chr) : Template_string{{{chr}}} {}
   explicit consteval Template_string(wchar_t chr) : Template_string{{{chr}}} {}
   explicit consteval Template_string(char8_t chr) : Template_string{{{chr}}} {}
