@@ -7,6 +7,15 @@
 #include <utility>     // import std::forward
 
 namespace artccel::core::util {
+namespace detail {
+template <typename Left, typename Right>
+concept Differ_from_0 = !std::same_as<Left, Right>;
+} // namespace detail
+
+template <typename Left, typename Right>
+concept Differ_from =
+    detail::Differ_from_0<Left, Right> && detail::Differ_from_0<Right, Left>;
+
 template <typename Type>
 concept Arithmetic = std::is_arithmetic_v<Type>;
 template <typename Derived, typename Base>
