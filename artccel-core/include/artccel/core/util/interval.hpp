@@ -76,24 +76,24 @@ template <std::totally_ordered Type, typename Derived> struct Bound {
   constexpr Bound(Bound &&) noexcept = default;
   constexpr auto operator=(Bound &&) noexcept -> Bound & = default;
 
-  friend constexpr auto
-  operator<(Bound const &left, Type const &right) noexcept(
-      noexcept(static_cast<Derived const &>(left) < right)) -> decltype(auto) {
+  friend constexpr auto operator<(Bound const &left,
+                                  Type const &right) noexcept(noexcept(bool{
+      static_cast<Derived const &>(left) < right})) -> bool {
     return static_cast<Derived const &>(left) < right;
   }
-  friend constexpr auto
-  operator<(Type const &left, Bound const &right) noexcept(
-      noexcept(left < static_cast<Derived const &>(right))) -> decltype(auto) {
+  friend constexpr auto operator<(Type const &left,
+                                  Bound const &right) noexcept(noexcept(bool{
+      left < static_cast<Derived const &>(right)})) -> bool {
     return left < static_cast<Derived const &>(right);
   }
-  friend constexpr auto
-  operator>(Bound const &left, Type const &right) noexcept(
-      noexcept(static_cast<Derived const &>(left) > left)) -> decltype(auto) {
+  friend constexpr auto operator>(Bound const &left,
+                                  Type const &right) noexcept(noexcept(bool{
+      static_cast<Derived const &>(left) > left})) -> bool {
     return static_cast<Derived const &>(left) > right;
   }
-  friend constexpr auto
-  operator>(Type const &left, Bound const &right) noexcept(
-      noexcept(left > static_cast<Derived const &>(right))) -> decltype(auto) {
+  friend constexpr auto operator>(Type const &left,
+                                  Bound const &right) noexcept(noexcept(bool{
+      left > static_cast<Derived const &>(right)})) -> bool {
     return left > static_cast<Derived const &>(right);
   }
 
@@ -107,28 +107,24 @@ struct Open_bound : public Bound<Type, Open_bound<Type>> {
   explicit constexpr Open_bound(Type value) noexcept(noexcept(decltype(value_){
       std::move(value)}))
       : value_{std::move(value)} {};
-  friend constexpr auto
-  operator<(Open_bound const &left,
-            Type const &right) noexcept(noexcept(left.value_ < right))
-      -> decltype(auto) {
+  friend constexpr auto operator<(Open_bound const &left,
+                                  Type const &right) noexcept(noexcept(bool{
+      left.value_ < right})) -> bool {
     return left.value_ < right;
   }
   friend constexpr auto
-  operator<(Type const &left,
-            Open_bound const &right) noexcept(noexcept(left < right.value_))
-      -> decltype(auto) {
+  operator<(Type const &left, Open_bound const &right) noexcept(noexcept(bool{
+      left < right.value_})) -> bool {
     return left < right.value_;
   }
-  friend constexpr auto
-  operator>(Open_bound const &left,
-            Type const &right) noexcept(noexcept(left.value_ > left))
-      -> decltype(auto) {
+  friend constexpr auto operator>(Open_bound const &left,
+                                  Type const &right) noexcept(noexcept(bool{
+      left.value_ > left})) -> bool {
     return left.value_ > right;
   }
   friend constexpr auto
-  operator>(Type const &left,
-            Open_bound const &right) noexcept(noexcept(left > right.value_))
-      -> decltype(auto) {
+  operator>(Type const &left, Open_bound const &right) noexcept(noexcept(bool{
+      left > right.value_})) -> bool {
     return left > right.value_;
   }
 };
@@ -139,28 +135,24 @@ struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
   explicit constexpr Closed_bound(Type value) noexcept(
       noexcept(decltype(value_){std::move(value)}))
       : value_{std::move(value)} {};
-  friend constexpr auto
-  operator<(Closed_bound const &left,
-            Type const &right) noexcept(noexcept(left.value_ <= right))
-      -> decltype(auto) {
+  friend constexpr auto operator<(Closed_bound const &left,
+                                  Type const &right) noexcept(noexcept(bool{
+      left.value_ <= right})) -> bool {
     return left.value_ <= right;
   }
   friend constexpr auto
-  operator<(Type const &left,
-            Closed_bound const &right) noexcept(noexcept(left <= right.value_))
-      -> decltype(auto) {
+  operator<(Type const &left, Closed_bound const &right) noexcept(noexcept(bool{
+      left <= right.value_})) -> bool {
     return left <= right.value_;
   }
-  friend constexpr auto
-  operator>(Closed_bound const &left,
-            Type const &right) noexcept(noexcept(left.value_ >= right))
-      -> decltype(auto) {
+  friend constexpr auto operator>(Closed_bound const &left,
+                                  Type const &right) noexcept(noexcept(bool{
+      left.value_ >= right})) -> bool {
     return left.value_ >= right;
   }
   friend constexpr auto
-  operator>(Type const &left,
-            Closed_bound const &right) noexcept(noexcept(left >= right.value_))
-      -> decltype(auto) {
+  operator>(Type const &left, Closed_bound const &right) noexcept(noexcept(bool{
+      left >= right.value_})) -> bool {
     return left >= right.value_;
   }
 };
