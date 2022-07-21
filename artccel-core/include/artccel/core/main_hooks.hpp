@@ -69,8 +69,8 @@ private:
 
 public:
   explicit Main_program(
-      std::weak_ptr<destructor_exceptions_out_type> destructor_excs_out,
-      Raw_arguments arguments);
+      Raw_arguments arguments,
+      std::weak_ptr<destructor_exceptions_out_type> destructor_excs_out = {});
   ~Main_program() noexcept;
   auto arguments [[nodiscard]] () const -> std::span<Argument const>;
 

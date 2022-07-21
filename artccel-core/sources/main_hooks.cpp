@@ -4,7 +4,7 @@
 #include <cstddef>   // import std::ptrdiff_t, std::size_t
 #include <cstring>   // import std::memcpy, std::memmove
 #include <cwchar>    // import std::mbsinit, std::mbstate_t, std::wcslen
-#include <exception> // import std::current_exception, std::exception_ptr
+#include <exception> // import std::current_exception
 #include <ios> // import std::ios_base::openmode, std::ios_base::seekdir, std::streamsize
 #include <iostream> // import std::cin, std::clog, std::cout, std::ios_base::sync_with_stdio
 #include <locale> // import std::codecvt_base::result, std::locale, std::locale::global
@@ -355,8 +355,8 @@ auto safe_main(
 } // namespace f
 
 Main_program::Main_program(
-    std::weak_ptr<std::vector<std::exception_ptr>> destructor_excs_out,
-    Raw_arguments arguments)
+    Raw_arguments arguments,
+    std::weak_ptr<destructor_exceptions_out_type> destructor_excs_out)
     : early_structor_{[&destructor_excs_out] {
         std::vector<unique_finalizer_type> finalizers{};
 
