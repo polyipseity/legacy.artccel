@@ -97,12 +97,12 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 	string(APPEND _line_filters "{\"name\": \".h\"}, {\"name\": \".c\"},")
 
 	if(language STREQUAL "CXX")
-		string(APPEND _line_filters [[
-{"name": ".hpp"}, {"name": ".cpp"},
-{"name": ".hxx"}, {"name": ".cxx"},
-{"name": ".hh" }, {"name": ".cc" },
-{"name": ".h++"}, {"name": ".c++"},
-]])
+		string(APPEND _line_filters "\
+{\"name\": \".hpp\"}, {\"name\": \".cpp\"},\
+{\"name\": \".hxx\"}, {\"name\": \".cxx\"},\
+{\"name\": \".hh\"}, {\"name\": \".cc\"},\
+{\"name\": \".h++\"}, {\"name\": \".c++\"},\
+")
 	endif()
 
 	# actual work
