@@ -6,8 +6,8 @@ include(FetchContent)
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "OPT_IN" CACHE STRING "https://cmake.org/cmake/help/latest/module/FetchContent.html?highlight=fetchcontent_try_find_package_mode#variable:FETCHCONTENT_TRY_FIND_PACKAGE_MODE")
 
 function(make_excludable_available option_or_name)
-	if(option_or_name STREQUAL EXCLUDE_FROM_ALL)
-		set(_exclude_from_all EXCLUDE_FROM_ALL)
+	if(option_or_name STREQUAL "EXCLUDE_FROM_ALL")
+		set(_exclude_from_all "EXCLUDE_FROM_ALL")
 		list(POP_FRONT ARGV)
 	else()
 		set(_exclude_from_all "")
@@ -57,12 +57,12 @@ function(find_package_or_fetch_content package target target_options package_opt
 		set("${_target_option}" "${_target_option_val}")
 	endforeach()
 
-	list(FIND ARGN EXCLUDE_FROM_ALL _exclude_from_all)
+	list(FIND ARGN "EXCLUDE_FROM_ALL" _exclude_from_all)
 
 	if(_exclude_from_all EQUAL -1)
 		set(_exclude_from_all "")
 	else()
-		set(_exclude_from_all EXCLUDE_FROM_ALL)
+		set(_exclude_from_all "EXCLUDE_FROM_ALL")
 	endif()
 
 	make_excludable_available(${_exclude_from_all} "${package}")
