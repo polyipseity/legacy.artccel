@@ -100,7 +100,7 @@ function(target_integrate_clang_tidy target language link_filter_excludes argume
 		string(APPEND _line_filters "\
 {\"name\": \".hpp\"}, {\"name\": \".cpp\"},\
 {\"name\": \".hxx\"}, {\"name\": \".cxx\"},\
-{\"name\": \".hh\"}, {\"name\": \".cc\"},\
+{\"name\": \".hh\" }, {\"name\": \".cc\" },\
 {\"name\": \".h++\"}, {\"name\": \".c++\"},\
 ")
 	endif()
