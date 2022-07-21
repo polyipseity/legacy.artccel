@@ -32,7 +32,7 @@ template <typename Error> class Error_with_exception {
 public:
   using error_type = Error;
   using empty_error_type = std::monostate;
-  constexpr static auto empty_v{std::same_as<error_type, empty_error_type>};
+  constexpr static auto empty_{std::same_as<error_type, empty_error_type>};
 
 private:
 #pragma warning(suppress : 4251)
@@ -132,14 +132,14 @@ public:
             std::invoke(std::forward<decltype(func)>(func), std::move(error))}};
   }
   template <typename Ret>
-  requires(!empty_v) friend auto discard_err
+  requires(!empty_) friend auto discard_err
       [[nodiscard]] (tl::expected<Ret, Error_with_exception> const &result) {
     return map_err(result, [](Error const &discard [[maybe_unused]]) noexcept {
       return std::monostate{};
     });
   }
   template <typename Ret>
-  requires(!empty_v) friend auto discard_err
+  requires(!empty_) friend auto discard_err
       [[nodiscard]] (tl::expected<Ret, Error_with_exception> &&result) {
     return map_err(std::move(result),
                    [](Error const &discard [[maybe_unused]]) noexcept {
@@ -182,7 +182,7 @@ public:
 #pragma warning(suppress : 4820)
 };
 extern template class ARTCCEL_CORE_EXPORT_DECLARATION Error_with_exception<>;
-static_assert(Exception_error::empty_v, u8"Implementation error");
+static_assert(Exception_error::empty_, u8"Implementation error");
 
 namespace f {
 constexpr auto

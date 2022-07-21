@@ -120,10 +120,10 @@ template <typename Ptr, Cloner_of<Ptr> Func,
           typename Return = Replace_all_t<Ptr, clone_element_t<Ptr, Func>,
                                           Clone_auto_element_t<>>>
 requires(!std::derived_from<
-             clone_element_t<Ptr, Func>,
-             std::enable_shared_from_this<clone_element_t<Ptr, Func>>> ||
-         std::derived_from<Replace_all_t_t<Return, Clone_auto_element_t, int>,
-                           std::shared_ptr<int>>) constexpr auto clone
+         clone_element_t<Ptr, Func>,
+         std::enable_shared_from_this<clone_element_t<Ptr, Func>>>) ||
+    std::derived_from<Replace_all_t_t<Return, Clone_auto_element_t, int>,
+                      std::shared_ptr<int>> constexpr auto clone
     [[nodiscard]] (Ptr const &ptr, Func &&func) -> decltype(auto) {
   using return_type = Replace_all_t_t<
       Replace_all_t_t<Return, Clone_auto_deleter_t, clone_deleter_t<Ptr, Func>>,
