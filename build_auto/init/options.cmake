@@ -12,7 +12,7 @@ endif()
 # external
 option(ARTCCEL_INSTALL "Generate and install targets" "${ARTCCEL_STANDALONE}")
 option(ARTCCEL_TEST "Build and perform tests" "${ARTCCEL_STANDALONE}")
-set(ARTCCEL_TARGET_NAMESPACE "artccel" CACHE STRING "Namespace of targets")
+set(ARTCCEL_TARGET_NAMESPACE "artccel-" CACHE STRING "Namespace of targets")
 set(ARTCCEL_EXPORT_NAMESPACE "artccel::" CACHE STRING "Namespace of exported targets")
 
 # build
