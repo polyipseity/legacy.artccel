@@ -4,9 +4,9 @@
 
 #include <cassert>  // import assert
 #include <compare>  // import tegory, std::is_eq
-#include <concepts> // import std::same_as, std::three_way_comparable, std::three_way_comparable_with
+#include <concepts> // import std::compare_three_way_result_t, std::same_as, std::three_way_comparable, std::three_way_comparable_with
 #include <type_traits> // import std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t
-#include <utility> // import std::forward, std::move
+#include <utility> // import std::declval, std::forward, std::move
 
 #include "concepts_extras.hpp" // import Brace_convertible_to, Derived_from_but_not, Differ_from
 #include "meta.hpp"           // import Comparison_category
@@ -104,19 +104,20 @@ struct Open_bound : public Bound<Type, Open_bound<Type>> {
   explicit constexpr Open_bound(Type value) noexcept(noexcept(decltype(value_){
       std::move(value)}))
       : value_{std::move(value)} {};
-  template <Bound_c Bound>
+  template <typename Other>
   requires(
-      !std::same_as<Bound, Open_bound> &&
-      std::same_as<Bound, Open_bound<typename Bound::type>> &&
+      !std::same_as<std::remove_cvref_t<Other>, Open_bound> &&
+      std::same_as<std::remove_cvref_t<Other>,
+                   Open_bound<typename std::remove_cvref_t<Other>::type>> &&
       Brace_convertible_to<
-          typename Bound::type,
-          Type>) explicit constexpr Open_bound(Bound &&
+          typename std::remove_cvref_t<Other>::type,
+          Type>) explicit constexpr Open_bound(Other &&
                                                    other) noexcept(noexcept(Open_bound{
-      Type{std::forward<Bound>(other).value_}}))
-      : Open_bound{Type{std::forward<Bound>(other).value_}} {}
+      Type{std::forward<Other>(other).value_}}))
+      : Open_bound{Type{std::forward<Other>(other).value_}} {}
   friend constexpr auto operator<=>(Open_bound const &left,
                                     Open_bound const &right)
-      -> Comparison_category<Type> = default;
+      -> std::compare_three_way_result_t<Type> = default;
 
   friend constexpr auto operator<(Open_bound const &left,
                                   Type const &right) noexcept(noexcept(bool{
@@ -146,19 +147,20 @@ struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
   explicit constexpr Closed_bound(Type value) noexcept(
       noexcept(decltype(value_){std::move(value)}))
       : value_{std::move(value)} {};
-  template <Bound_c Bound>
+  template <typename Other>
   requires(
-      !std::same_as<Bound, Closed_bound> &&
-      std::same_as<Bound, Closed_bound<typename Bound::type>> &&
+      !std::same_as<std::remove_cvref_t<Other>, Closed_bound> &&
+      std::same_as<std::remove_cvref_t<Other>,
+                   Closed_bound<typename std::remove_cvref_t<Other>::type>> &&
       Brace_convertible_to<
-          typename Bound::type,
-          Type>) explicit constexpr Closed_bound(Bound &&
+          typename std::remove_cvref_t<Other>::type,
+          Type>) explicit constexpr Closed_bound(Other &&
                                                      other) noexcept(noexcept(Closed_bound{
-      Type{std::forward<Bound>(other).value_}}))
-      : Closed_bound{Type{std::forward<Bound>(other).value_}} {}
+      Type{std::forward<Other>(other).value_}}))
+      : Closed_bound{Type{std::forward<Other>(other).value_}} {}
   friend constexpr auto operator<=>(Closed_bound const &left,
                                     Closed_bound const &right)
-      -> Comparison_category<Type> = default;
+      -> std::compare_three_way_result_t<Type> = default;
 
   friend constexpr auto operator<(Closed_bound const &left,
                                   Type const &right) noexcept(noexcept(bool{
@@ -185,18 +187,19 @@ struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
 template <std::three_way_comparable Type>
 struct Unbounded : public Bound<Type, Unbounded<Type>> {
   explicit consteval Unbounded() noexcept = default;
-  template <Bound_c Bound>
+  template <typename Other>
   requires(
-      !std::same_as<Bound, Unbounded> &&
-      std::same_as<Bound, Unbounded<typename Bound::type>> &&
+      !std::same_as<std::remove_cvref_t<Other>, Unbounded> &&
+      std::same_as<std::remove_cvref_t<Other>,
+                   Unbounded<typename std::remove_cvref_t<Other>::type>> &&
       Brace_convertible_to<
-          typename Bound::type,
-          Type>) explicit constexpr Unbounded(Bound &&other
+          typename std::remove_cvref_t<Other>::type,
+          Type>) explicit constexpr Unbounded(Other &&other
                                               [[maybe_unused]]) noexcept(noexcept(Unbounded{}))
       : Unbounded{} {}
   friend constexpr auto operator<=>(Unbounded const &left,
                                     Unbounded const &right)
-      -> Comparison_category<Type> = default;
+      -> std::compare_three_way_result_t<Type> = default;
 
   friend constexpr auto operator<(Unbounded const &left [[maybe_unused]],
                                   Type const &right [[maybe_unused]]) noexcept {
@@ -242,16 +245,18 @@ struct Left_bound : public Directional_bound<BoundT, Left_bound<BoundT>> {
   explicit constexpr Left_bound(BoundT bound) noexcept(
       noexcept(decltype(bound_){std::move(bound)}))
       : bound_{std::move(bound)} {};
-  template <Directional_bound_c DirBound>
+  template <typename Other>
   requires(
-      !std::same_as<DirBound, Left_bound> &&
-      std::same_as<DirBound, Left_bound<typename DirBound::bound_type>> &&
+      !std::same_as<std::remove_cvref_t<Other>, Left_bound> &&
+      std::same_as<
+          std::remove_cvref_t<Other>,
+          Left_bound<typename std::remove_cvref_t<Other>::bound_type>> &&
       Brace_convertible_to<
-          typename DirBound::bound_type,
-          BoundT>) explicit constexpr Left_bound(DirBound &&
+          typename std::remove_cvref_t<Other>::bound_type,
+          BoundT>) explicit constexpr Left_bound(Other &&
                                                      other) noexcept(noexcept(Left_bound{
-      BoundT{std::forward<DirBound>(other).bound_}}))
-      : Left_bound{BoundT{std::forward<DirBound>(other).bound_}} {}
+      BoundT{std::forward<Other>(other).bound_}}))
+      : Left_bound{BoundT{std::forward<Other>(other).bound_}} {}
 
   friend constexpr auto operator<(Left_bound const &left,
                                   type const &right) noexcept(noexcept(bool{
@@ -283,9 +288,10 @@ template <std::three_way_comparable LeftT,
 constexpr auto
 operator<=>(Left_bound<LeftBoundT<LeftT>> const &left,
             Left_bound<RightBoundT<RightT>> const
-                &right) noexcept(noexcept(left.bound_ <=> right.bound_))
+                &right) noexcept(noexcept(std::declval<LeftT>() <=>
+                                          std::declval<RightT>()))
     -> decltype(auto) {
-  using ret_type = decltype(left.bound_ <=> right.bound_);
+  using ret_type = std::compare_three_way_result_t<LeftT, RightT>;
   using left_bound_type = LeftBoundT<LeftT>;
   using right_bound_type = RightBoundT<RightT>;
   if constexpr (std::same_as<left_bound_type, Unbounded<LeftT>> &&
@@ -296,7 +302,7 @@ operator<=>(Left_bound<LeftBoundT<LeftT>> const &left,
   } else if constexpr (std::same_as<right_bound_type, Unbounded<RightT>>) {
     return ret_type::greater;
   } else {
-    ret_type ret{left.bound_ <=> right.bound_};
+    ret_type ret{left.bound_.value_ <=> right.bound_.value_};
     if constexpr (std::same_as<left_bound_type, right_bound_type>) {
       return ret;
     } else {
@@ -333,16 +339,18 @@ struct Right_bound : public Directional_bound<BoundT, Right_bound<BoundT>> {
   explicit constexpr Right_bound(BoundT bound) noexcept(
       noexcept(decltype(bound_){std::move(bound)}))
       : bound_{std::move(bound)} {};
-  template <Directional_bound_c DirBound>
+  template <typename Other>
   requires(
-      !std::same_as<DirBound, Right_bound> &&
-      std::same_as<DirBound, Right_bound<typename DirBound::bound_type>> &&
+      !std::same_as<std::remove_cvref_t<Other>, Right_bound> &&
+      std::same_as<
+          std::remove_cvref_t<Other>,
+          Right_bound<typename std::remove_cvref_t<Other>::bound_type>> &&
       Brace_convertible_to<
-          typename DirBound::bound_type,
-          BoundT>) explicit constexpr Right_bound(DirBound &&
+          typename std::remove_cvref_t<Other>::bound_type,
+          BoundT>) explicit constexpr Right_bound(Other &&
                                                       other) noexcept(noexcept(Right_bound{
-      BoundT{std::forward<DirBound>(other).bound_}}))
-      : Right_bound{BoundT{std::forward<DirBound>(other).bound_}} {}
+      BoundT{std::forward<Other>(other).bound_}}))
+      : Right_bound{BoundT{std::forward<Other>(other).bound_}} {}
 
   friend constexpr auto
   operator<(Right_bound const &left,
@@ -373,9 +381,10 @@ template <std::three_way_comparable LeftT,
 constexpr auto
 operator<=>(Right_bound<LeftBoundT<LeftT>> const &left,
             Right_bound<RightBoundT<RightT>> const
-                &right) noexcept(noexcept(left.bound_ <=> right.bound_))
+                &right) noexcept(noexcept(std::declval<LeftT>() <=>
+                                          std::declval<RightT>()))
     -> decltype(auto) {
-  using ret_type = decltype(left.bound_ <=> right.bound_);
+  using ret_type = std::compare_three_way_result_t<LeftT, RightT>;
   using left_bound_type = LeftBoundT<LeftT>;
   using right_bound_type = RightBoundT<RightT>;
   if constexpr (std::same_as<left_bound_type, Unbounded<LeftT>> &&
@@ -386,7 +395,7 @@ operator<=>(Right_bound<LeftBoundT<LeftT>> const &left,
   } else if constexpr (std::same_as<right_bound_type, Unbounded<RightT>>) {
     return ret_type::less;
   } else {
-    ret_type ret{left.bound_ <=> right.bound_};
+    ret_type ret{left.bound_.value_ <=> right.bound_.value_};
     if constexpr (std::same_as<left_bound_type, right_bound_type>) {
       return ret;
     } else {
