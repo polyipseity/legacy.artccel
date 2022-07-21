@@ -35,6 +35,14 @@ if(NOT core_PRECOMPILE_HEADERS)
 	set(core_PRECOMPILE_HEADERS "")
 endif()
 
+add_executable("${ARTCCEL_TARGET_NAMESPACE}-core-tests"
+	"tests/main.cpp")
+target_as_test("${ARTCCEL_TARGET_NAMESPACE}-core-tests")
+target_precompile_headers("${ARTCCEL_TARGET_NAMESPACE}-core-tests" PRIVATE ${core_PRECOMPILE_HEADERS})
+target_link_libraries("${ARTCCEL_TARGET_NAMESPACE}-core-tests" "${ARTCCEL_TARGET_NAMESPACE}-core")
+add_sanitizers("${ARTCCEL_TARGET_NAMESPACE}-core-tests")
+target_integrate_clang_tidy("${ARTCCEL_TARGET_NAMESPACE}-core-tests" CXX "export.h" "")
+
 add_executable("${ARTCCEL_TARGET_NAMESPACE}-core-exe" "sources/exe/main.cpp")
 add_executable("${ARTCCEL_EXPORT_NAMESPACE}${ARTCCEL_TARGET_NAMESPACE}-core-exe" ALIAS "${ARTCCEL_TARGET_NAMESPACE}-core-exe")
 target_precompile_headers("${ARTCCEL_TARGET_NAMESPACE}-core-exe" PRIVATE ${core_PRECOMPILE_HEADERS})
