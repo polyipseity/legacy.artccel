@@ -44,16 +44,16 @@ public:
   }
   template <Guard_special_constructors<Validate> Other>
   requires Validate_c<std::remove_cvref_t<Other>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   constexpr Validate(Other &&other) = delete;
   template <Guard_special_constructors<Validate> Other>
   requires Validate_c<std::remove_cvref_t<Other>> &&
-      (Validator.subsumes(Other::validator_)) constexpr Validate(
-          Other &&
-              other) noexcept(std::
-                                  is_nothrow_constructible_v<
-                                      typename Validate::Delegate,
-                                      decltype(type{
-                                          std::forward<Other>(other).value_})>)
+      (Validator.subsumes(Other::validator_))
+      // NOLINTNEXTLINE(bugprone-forwarding-reference-overload,google-explicit-constructor,hicpp-explicit-conversions)
+      constexpr Validate(Other &&other) noexcept(
+          std::is_nothrow_constructible_v<
+              typename Validate::Delegate,
+              decltype(type{std::forward<Other>(other).value_})>)
 
       : Validate::Delegate{type{std::forward<Other>(other).value_}} {}
 };

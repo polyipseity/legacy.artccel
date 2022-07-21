@@ -93,15 +93,17 @@ protected:
 
 template <std::three_way_comparable Type>
 struct Open_bound : public Bound<Type, Open_bound<Type>> {
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   Type value_;
   explicit constexpr Open_bound(Type value) noexcept(noexcept(decltype(value_){
       std::move(value)}))
-      : value_{std::move(value)} {};
+      : value_{std::move(value)} {}
   template <Guard_special_constructors<Open_bound> Other>
   requires std::same_as<
       std::remove_cvref_t<Other>,
       Open_bound<typename std::remove_cvref_t<Other>::type>> &&
       Brace_convertible_to<typename std::remove_cvref_t<Other>::type, Type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   explicit constexpr Open_bound(Other &&other) noexcept(noexcept(Open_bound{
       Type{std::forward<Other>(other).value_}}))
       : Open_bound{Type{std::forward<Other>(other).value_}} {}
@@ -133,15 +135,17 @@ struct Open_bound : public Bound<Type, Open_bound<Type>> {
 
 template <std::three_way_comparable Type>
 struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   Type value_;
   explicit constexpr Closed_bound(Type value) noexcept(
       noexcept(decltype(value_){std::move(value)}))
-      : value_{std::move(value)} {};
+      : value_{std::move(value)} {}
   template <Guard_special_constructors<Closed_bound> Other>
   requires std::same_as<
       std::remove_cvref_t<Other>,
       Closed_bound<typename std::remove_cvref_t<Other>::type>> &&
       Brace_convertible_to<typename std::remove_cvref_t<Other>::type, Type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   explicit constexpr Closed_bound(Other &&other) noexcept(noexcept(Closed_bound{
       Type{std::forward<Other>(other).value_}}))
       : Closed_bound{Type{std::forward<Other>(other).value_}} {}
@@ -178,6 +182,7 @@ struct Unbounded : public Bound<Type, Unbounded<Type>> {
   requires std::same_as<std::remove_cvref_t<Other>,
                         Unbounded<typename std::remove_cvref_t<Other>::type>> &&
       Brace_convertible_to<typename std::remove_cvref_t<Other>::type, Type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   explicit constexpr Unbounded(Other &&other
                                [[maybe_unused]]) noexcept(noexcept(Unbounded{}))
       : Unbounded{} {}
@@ -225,16 +230,18 @@ template <Bound_c BoundT>
 struct Left_bound : public Directional_bound<BoundT, Left_bound<BoundT>> {
   using type = typename Left_bound::type;
 
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   BoundT bound_;
   explicit constexpr Left_bound(BoundT bound) noexcept(
       noexcept(decltype(bound_){std::move(bound)}))
-      : bound_{std::move(bound)} {};
+      : bound_{std::move(bound)} {}
   template <Guard_special_constructors<Left_bound> Other>
   requires std::same_as<
       std::remove_cvref_t<Other>,
       Left_bound<typename std::remove_cvref_t<Other>::bound_type>> &&
       Brace_convertible_to<typename std::remove_cvref_t<Other>::bound_type,
                            BoundT>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   explicit constexpr Left_bound(Other &&other) noexcept(noexcept(Left_bound{
       BoundT{std::forward<Other>(other).bound_}}))
       : Left_bound{BoundT{std::forward<Other>(other).bound_}} {}
@@ -270,8 +277,7 @@ constexpr auto
 operator<=>(Left_bound<LeftBoundT<LeftT>> const &left,
             Left_bound<RightBoundT<RightT>> const
                 &right) noexcept(noexcept(std::declval<LeftT>() <=>
-                                          std::declval<RightT>()))
-    -> decltype(auto) {
+                                          std::declval<RightT>())) {
   using ret_type = std::compare_three_way_result_t<LeftT, RightT>;
   using left_bound_type = LeftBoundT<LeftT>;
   using right_bound_type = RightBoundT<RightT>;
@@ -316,16 +322,18 @@ template <Bound_c BoundT>
 struct Right_bound : public Directional_bound<BoundT, Right_bound<BoundT>> {
   using type = typename Right_bound::type;
 
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   BoundT bound_;
   explicit constexpr Right_bound(BoundT bound) noexcept(
       noexcept(decltype(bound_){std::move(bound)}))
-      : bound_{std::move(bound)} {};
+      : bound_{std::move(bound)} {}
   template <Guard_special_constructors<Right_bound> Other>
   requires std::same_as<
       std::remove_cvref_t<Other>,
       Right_bound<typename std::remove_cvref_t<Other>::bound_type>> &&
       Brace_convertible_to<typename std::remove_cvref_t<Other>::bound_type,
                            BoundT>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   explicit constexpr Right_bound(Other &&other) noexcept(noexcept(Right_bound{
       BoundT{std::forward<Other>(other).bound_}}))
       : Right_bound{BoundT{std::forward<Other>(other).bound_}} {}
@@ -360,8 +368,7 @@ constexpr auto
 operator<=>(Right_bound<LeftBoundT<LeftT>> const &left,
             Right_bound<RightBoundT<RightT>> const
                 &right) noexcept(noexcept(std::declval<LeftT>() <=>
-                                          std::declval<RightT>()))
-    -> decltype(auto) {
+                                          std::declval<RightT>())) {
   using ret_type = std::compare_three_way_result_t<LeftT, RightT>;
   using left_bound_type = LeftBoundT<LeftT>;
   using right_bound_type = RightBoundT<RightT>;
@@ -404,24 +411,30 @@ constexpr auto operator==(Right_bound<LeftBoundT<LeftT>> const &left,
 
 template <Bound_c LeftBoundT, Bound_c RightBoundT>
 requires std::same_as<typename LeftBoundT::type, typename RightBoundT::type>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 class Interval {
+#pragma clang diagnostic pop
 public:
   using left_bound_type = LeftBoundT;
   using right_bound_type = RightBoundT;
   using validate_type = typename LeftBoundT::type;
 
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   LeftBoundT left_;
+  // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   RightBoundT right_;
   explicit constexpr Interval(LeftBoundT left, RightBoundT right) noexcept(
       noexcept(decltype(left_){std::move(left)}, void(),
                decltype(right_){std::move(right)}))
-      : left_{std::move(left)}, right_{std::move(right)} {};
+      : left_{std::move(left)}, right_{std::move(right)} {}
   template <Guard_special_constructors<Interval> Other>
   requires Interval_c<std::remove_cvref_t<Other>> &&
       Brace_convertible_to<typename std::remove_cvref_t<Other>::left_bound_type,
                            LeftBoundT> &&
       Brace_convertible_to<
           typename std::remove_cvref_t<Other>::right_bound_type, RightBoundT>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   explicit constexpr Interval(Other &&other) noexcept(noexcept(Interval{
       LeftBoundT{std::forward<Other>(other).left_},
       RightBoundT{std::forward<Other>(other).right_}}))
@@ -439,7 +452,8 @@ public:
   }
   template <typename Other>
   requires Interval_c<std::remove_cvref_t<Other>>
-  constexpr auto subsumes(Other &&other) const noexcept(noexcept(bool{
+  constexpr auto subsumes [[nodiscard]] (
+      Other &&other) const noexcept(noexcept(bool{
       Brace_convertible_to<typename std::remove_cvref_t<Other>::validate_type,
                            validate_type> &&
       Left_bound{left_} <= Left_bound{other.left_} &&
