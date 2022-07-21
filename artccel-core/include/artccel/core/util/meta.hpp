@@ -3,14 +3,18 @@
 #pragma once
 
 #include <array>    // import std::array
-#include <concepts> // import std::same_as
+#include <concepts> // import std::same_as, std::three_way_comparable
 #include <cstddef>  // import std::size_t
 #include <span>     // import std::dynamic_extent, std::span
+#include <utility>  // import std::declval
 
 #include "containers.hpp" // import f::to_array_cv
 #include "semantics.hpp"  // import null_terminator_size
 
 namespace artccel::core::util {
+template <typename Type> struct Comparison_category;
+template <typename Type>
+using Comparison_category_t = typename Comparison_category<Type>::type;
 template <typename Type, typename Find, typename Replace> struct Replace_all;
 enum struct Replace_target : bool { self, container };
 template <typename Type, typename Find, typename Replace>
@@ -29,6 +33,11 @@ using Transform_list_t = typename Transform_list<Transform, From, To>::type;
 template <typename From, template <typename...> typename To>
 using Transform_list_identity_t =
     Transform_list_t<Transform_list_placeholder, From, To>;
+
+template <typename T> struct Comparison_category { using type = void; };
+template <std::three_way_comparable T> struct Comparison_category<T> {
+  using type = decltype(std::declval<T>() <=> std::declval<T>());
+};
 
 template <typename Found, typename Replace>
 struct Replace_all<Found, Found, Replace> {
