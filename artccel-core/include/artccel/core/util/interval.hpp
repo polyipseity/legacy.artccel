@@ -196,26 +196,12 @@ public:
   using type = typename Interval::type;
   constexpr static auto left_{Left};
   constexpr static auto right_{Right};
-  /*
-  usage
-  `{Consteval_t{}, (constant expression)}`
-  checking (debug ONLY)
-  - compile-time checking, causes (complicated) compile error @ assert
-  */
   consteval Interval(Consteval_t tag [[maybe_unused]],
                      type value) noexcept(noexcept(Interval{std::move(value)}))
       : Interval{std::move(value)} {
     /* the parameter is passed-by-value to not bound to a temporary for using
      * this type as non-type template parameters */
   }
-  /*
-  usage
-  `(expression)`
-  checking (debug ONLY)
-  - compile-time checking requires constexpr/consteval context, causes
-  (complicated) compile error @ assert
-  - runtime checking
-  */
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   constexpr Interval(type value) noexcept(
       std::is_nothrow_constructible_v<typename Interval::Delegate,
