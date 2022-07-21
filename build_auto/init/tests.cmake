@@ -1,10 +1,17 @@
 cmake_minimum_required(VERSION 3.16)
 
-# tests
-include(CTest)
+# preconditions
+if(NOT DEFINED ROOT_SOURCE_DIR)
+	message(FATAL_ERROR "'ROOT_SOURCE_DIR' is undefined")
+endif()
 
-if(NOT BUILD_TESTING)
-	set(ARTCCEL_TEST false)
+# tests
+if(ARTCCEL_TEST)
+	include(CTest)
+
+	if(NOT BUILD_TESTING)
+		set(ARTCCEL_TEST false)
+	endif()
 endif()
 
 add_custom_target("${ARTCCEL_TARGET_NAMESPACE}tests"
@@ -23,3 +30,6 @@ function(target_as_test target)
 	add_dependencies("${ARTCCEL_TARGET_NAMESPACE}tests" "${target}")
 	add_test(NAME "${target}" COMMAND "${target}")
 endfunction()
+
+set(CUSTOM_TESTS_IGNORE "$ENV{ARTCCEL_CUSTOM_TESTS_IGNORE}")
+configure_file("${ROOT_SOURCE_DIR}/in/CTestCustom.cmake" "${PROJECT_BINARY_DIR}" @ONLY)

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 include(FetchContent)
+include("${CMAKE_CURRENT_LIST_DIR}/../util.cmake")
 
 # helpers
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "OPT_IN" CACHE STRING "https://cmake.org/cmake/help/latest/module/FetchContent.html?highlight=fetchcontent_try_find_package_mode#variable:FETCHCONTENT_TRY_FIND_PACKAGE_MODE")
@@ -20,6 +21,19 @@ function(make_excludable_available option_or_name)
 		if(NOT "${_lc_name}_POPULATED")
 			FetchContent_Populate("${_name}")
 			add_subdirectory("${${_lc_name}_SOURCE_DIR}" "${${_lc_name}_BINARY_DIR}" ${_exclude_from_all})
+
+			if(_exclude_from_all STREQUAL "EXCLUDE_FROM_ALL")
+				get_subdirectories_recursively(_directories "${${_lc_name}_SOURCE_DIR}")
+				list(APPEND _directories "${${_lc_name}_SOURCE_DIR}")
+
+				foreach(_directory IN LISTS _directories)
+					get_directory_property(_tests DIRECTORY "${_directory}" TESTS)
+
+					if(_tests)
+						set(ENV{ARTCCEL_CUSTOM_TESTS_IGNORE} "$ENV{ARTCCEL_CUSTOM_TESTS_IGNORE};${_tests}")
+					endif()
+				endforeach()
+			endif()
 		endif()
 	endforeach()
 endfunction()

@@ -1,0 +1,3 @@
+cmake_minimum_required(VERSION 3.16)
+
+set(CTEST_CUSTOM_TESTS_IGNORE @CUSTOM_TESTS_IGNORE@)
