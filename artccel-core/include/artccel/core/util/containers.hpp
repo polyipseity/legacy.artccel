@@ -59,7 +59,7 @@ public:
       Value_span(Move_span_t tag [[maybe_unused]], Args &&...args) noexcept(
           std::is_nothrow_constructible_v<typename Value_span::span,
                                           decltype((args))...>)
-      : Value_span::span{args...}, move_{true} {}
+      : Value_span::span(args...), move_{true} {}
   template <Guard_special_constructors<Value_span> Arg>
   // TODO: explicit should use reflection
   explicit(!std::is_convertible_v<std::remove_cvref_t<Arg> &,
@@ -75,7 +75,7 @@ public:
       Value_span(Args &&...args) noexcept(
           std::is_nothrow_constructible_v<
               typename Value_span::span, decltype(std::forward<Args>(args))...>)
-      : Value_span::span{std::forward<Args>(args)...} {}
+      : Value_span::span(std::forward<Args>(args)...) {}
 
   constexpr auto forward [[nodiscard]] (reference element) const
       noexcept(noexcept(element_type{std::move(element)},

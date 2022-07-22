@@ -482,9 +482,9 @@ private:
 protected:
   template <typename... Args, util::Invocable_r<Ret, Args...> Func>
   explicit Compute_function(Func &&function, Args &&...args)
-      : Compute_function{Compute_option::concurrent | Compute_option::defer,
+      : Compute_function(Compute_option::concurrent | Compute_option::defer,
                          std::forward<Func>(function),
-                         std::forward<Args>(args)...} {}
+                         std::forward<Args>(args)...) {}
   template <typename... Args, util::Invocable_r<Ret, Args...> Func>
   explicit Compute_function(Compute_options const &options, Func &&function,
                             Args &&...args)
