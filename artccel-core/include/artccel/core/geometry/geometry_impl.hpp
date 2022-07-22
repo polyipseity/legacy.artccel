@@ -111,7 +111,7 @@ template <Dimension_t Dim>
 class Point_impl : public virtual Point,
                    public virtual util::Cloneable_impl<Point_impl<Dim>>,
                    public Primitive_impl<Dim> {
-  friend typename Point_impl::Cloneable_impl_0;
+  friend util::Cloneable_impl<Point_impl>;
 
 public:
   using Point_impl::Primitive_impl::dimension_;
