@@ -1,6 +1,11 @@
 #include <cstdlib> // import EXIT_SUCCESS
 #include <memory>  // import std::make_shared
 
+#pragma warning(push)
+#pragma warning(disable : 4626 4820)
+#include <gsl/gsl> // import gsl::wzstring, gsl::zstring
+#pragma warning(pop)
+
 #include <artccel/core/main_hooks.hpp> // import Main_program, Raw_arguments, artccel::core::f::safe_main
 
 namespace detail {
