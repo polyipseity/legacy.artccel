@@ -9,6 +9,7 @@
 #include <utility> // import std::declval, std::forward, std::move
 
 #include "concepts_extras.hpp" // import Brace_convertible_to, Derived_from_but_not, Differ_from, Guard_special_constructors
+#include "contracts.hpp"       // import Validator_c
 
 namespace artccel::core::util {
 template <std::three_way_comparable Type, typename Derived> struct Bound;
@@ -466,6 +467,9 @@ public:
   }
 #pragma warning(suppress : 4820)
 };
+static_assert(
+    Validator_c<decltype(Interval{Unbounded<bool>{}, Unbounded<bool>{}})>,
+    u8"Implementation error");
 } // namespace artccel::core::util
 
 #endif
