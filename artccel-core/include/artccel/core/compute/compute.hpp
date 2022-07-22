@@ -415,9 +415,9 @@ protected:
   Compute_value(Compute_value const &other) noexcept(noexcept(Compute_value{
       other,
       other.mutex_.value_ ? std::make_unique<std::shared_mutex>() : nullptr}))
-      : Compute_value{other, other.mutex_.value_
+      : Compute_value(other, other.mutex_.value_
                                  ? std::make_unique<std::shared_mutex>()
-                                 : nullptr} {}
+                                 : nullptr) {}
   auto operator=(Compute_value const &right) noexcept(
       noexcept(Compute_value{right}.swap(*this), *this)) -> Compute_value & {
     Compute_value{right}.swap(*this);
@@ -432,11 +432,11 @@ protected:
     return *this;
   }
 
-  Compute_value(Compute_value const &other,
-                std::remove_cv_t<decltype(mutex_)> &&
-                    mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
-                                             void(),
-                                             decltype(value_){other.value_}))
+  explicit Compute_value(
+      Compute_value const &other,
+      std::remove_cv_t<decltype(mutex_)>
+          &&mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)}, void(),
+                                     decltype(value_){other.value_}))
       : mutex_{std::move(mutex)}, value_{other.value_} {}
 
 private:
@@ -629,9 +629,9 @@ protected:
       Compute_function{other, other.mutex_.value_
                                   ? std::make_unique<std::shared_mutex>()
                                   : nullptr}))
-      : Compute_function{other, other.mutex_.value_
+      : Compute_function(other, other.mutex_.value_
                                     ? std::make_unique<std::shared_mutex>()
-                                    : nullptr} {}
+                                    : nullptr) {}
   auto operator=(Compute_function const &right) noexcept(
       noexcept(this == &right, swap(right), *this)) -> Compute_function & {
     Compute_function{right}.swap(*this);
@@ -647,7 +647,7 @@ protected:
     return *this;
   }
 
-  Compute_function(
+  explicit Compute_function(
       Compute_function const &other,
       std::remove_cv_t<decltype(mutex_)>
           &&mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)}, void(),
