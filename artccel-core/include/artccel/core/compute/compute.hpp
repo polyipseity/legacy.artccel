@@ -5,10 +5,11 @@
 #include <concepts>   // import std::copyable, std::derived_from
 #include <cstdint>    // import std::uint_fast8_t
 #include <functional> // import std::function, std::invoke
-#include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::weak_ptr
+#include <memory> // import std::enable_shared_from_this, std::make_shared, std::make_unique, std::unique_ptr, std::weak_ptr
 #include <mutex>  // import std::lock_guard, std::scoped_lock
 #include <optional>     // import std::nullopt, std::optional
 #include <shared_mutex> // import std::shared_lock, std::shared_mutex
+#include <tuple>        // import std::tuple
 #include <type_traits>  // import std::remove_cv_t
 #include <utility> // import std::exchange, std::forward, std::move, std::swap
 
@@ -17,18 +18,21 @@
 #include <gsl/gsl> // import gsl::owner
 #pragma warning(pop)
 
-#include "../util/bitset_extras.hpp"   // import util::Check_bitset
+#include "../util/bitset_extras.hpp" // import util::Check_bitset
+#include "../util/clone.hpp" // import util::Cloneable, util::Cloneable_bases, util::Cloneable_impl
 #include "../util/concepts_extras.hpp" // import util::Invocable_r
 #include "../util/concurrent.hpp" // import util::Nullable_lockable, util::Semiregular_once_flag
 #include "../util/enum_bitset.hpp" // import util::Bitset_of, util::Enum_bitset, util::empty_bitmask, util::f::next_bitmask, util::operators::enum_bitset
 #include "../util/polyfill.hpp"    // import util::f::unreachable
 #include "../util/utility_extras.hpp" // import util::f::forward_apply
 
-namespace artccel::core::compute {
-// NOLINTNEXTLINE(google-build-using-namespace)
-using namespace util::operators::enum_bitset;
-
-enum struct Compute_option : std::uint_fast8_t;
+namespace artccel::core {
+namespace compute {
+enum struct Compute_option : std::uint_fast8_t {
+  empty = util::empty_bitmask,
+  concurrent = util::f::next_bitmask(empty),
+  defer = util::f::next_bitmask(concurrent),
+};
 using Compute_options = util::Bitset_of<Compute_option>;
 template <std::copyable Ret> class Compute_io;
 template <typename Derived, std::copyable Ret> class Compute_in;
@@ -50,12 +54,45 @@ concept Compute_in_c =
 template <typename Type>
 concept Compute_in_any_c =
     Compute_in_c<Type, typename std::remove_cv_t<Type>::return_type>;
+} // namespace compute
 
-enum struct Compute_option : std::uint_fast8_t {
-  empty = util::empty_bitmask,
-  concurrent = util::f::next_bitmask(empty),
-  defer = util::f::next_bitmask(concurrent),
+namespace util {
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace compute;
+
+template <typename Derived, std::copyable Ret>
+struct Cloneable_bases<Compute_in<Derived, Ret>> {
+  using type = std::tuple<>;
 };
+template <std::copyable Ret, Ret Val>
+struct Cloneable_bases<Compute_constant<Ret, Val>> {
+  using self_type = Compute_constant<Ret, Val>;
+  using type = std::tuple<Compute_in<self_type, Ret>>;
+  using impl_type = std::tuple<>;
+};
+template <std::copyable Ret, auto Func>
+requires util::Invocable_r<decltype(Func), Ret>
+struct Cloneable_bases<Compute_function_constant<Ret, Func>> {
+  using self_type = Compute_function_constant<Ret, Func>;
+  using type = std::tuple<Compute_in<self_type, Ret>>;
+  using impl_type = std::tuple<>;
+};
+template <std::copyable Ret> struct Cloneable_bases<Compute_value<Ret>> {
+  using self_type = Compute_value<Ret>;
+  using type = std::tuple<Compute_in<self_type, Ret>>;
+  using impl_type = std::tuple<>;
+};
+template <std::copyable Ret, std::copyable... TArgs>
+struct Cloneable_bases<Compute_function<Ret(TArgs...)>> {
+  using self_type = Compute_function<Ret(TArgs...)>;
+  using type = std::tuple<Compute_in<self_type, Ret>>;
+  using impl_type = std::tuple<>;
+};
+} // namespace util
+
+namespace compute {
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace util::operators::enum_bitset;
 
 template <std::copyable Ret> class Compute_io {
 public:
@@ -73,19 +110,26 @@ protected:
 };
 
 template <typename Derived, std::copyable Ret>
-class Compute_in : public Compute_io<Ret>,
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+class Compute_in : public virtual util::Cloneable<Compute_in<Derived, Ret>>,
+                   public Compute_io<Ret>,
                    public std::enable_shared_from_this<Derived> {
 public:
   using return_type = typename Compute_in::return_type;
-  virtual auto clone_unmodified [[nodiscard]] () const
-      -> gsl::owner<Compute_in *> = 0;
   constexpr static util::Check_bitset clone_valid_options{
       Compute_option::concurrent | Compute_option::defer};
-  virtual auto clone [[nodiscard]] (Compute_options const &options) const
-      -> gsl::owner<Compute_in *> = 0;
+  using util::Cloneable<Compute_in>::clone;
+  constexpr auto clone [[nodiscard]] (Compute_options const &options) const {
+    return std::unique_ptr<Compute_in>{clone_impl_options(options)};
+  }
 
 protected:
   using Compute_in::Compute_io::Compute_io;
+
+private:
+  constexpr virtual auto clone_impl_options
+      [[nodiscard]] (Compute_options const &options) const
+      -> gsl::owner<Compute_in *> = 0;
 #pragma warning(suppress : 4625 4626 5026 5027)
 };
 
@@ -154,7 +198,11 @@ auto operator<<(Out_t tag [[maybe_unused]],
 }
 
 template <std::copyable Ret, Ret Val>
-class Compute_constant : public Compute_in<Compute_constant<Ret, Val>, Ret> {
+class Compute_constant
+    : public virtual util::Cloneable_impl<Compute_constant<Ret, Val>>,
+      public Compute_in<Compute_constant<Ret, Val>, Ret> {
+  friend util::Cloneable_impl<Compute_constant>;
+
 private:
   enum struct Friend : bool {};
 
@@ -162,48 +210,57 @@ public:
   using return_type = typename Compute_constant::return_type;
   constexpr static auto value_{Val};
   template <typename... Args>
-  explicit constexpr Compute_constant(Friend tag [[maybe_unused]],
-                                      Args &&...args)
-      : Compute_constant{std::forward<Args>(args)...} {}
+  explicit Compute_constant(
+      Friend tag [[maybe_unused]],
+      Args &&...args) noexcept(noexcept(Compute_constant(std::
+                                                             forward<Args>(
+                                                                 args)...)))
+      : Compute_constant(std::forward<Args>(args)...) {}
 
   template <typename... Args>
-  constexpr static auto create [[nodiscard]] (Args &&...args) {
+  static auto create [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_constant>(Friend{},
                                               std::forward<Args>(args)...);
   }
   template <typename... Args>
-  constexpr static auto create_const [[nodiscard]] (Args &&...args) {
+  static auto create_const [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_constant const>(
         Friend{}, std::forward<Args>(args)...);
   }
-  constexpr auto operator() [[nodiscard]] () const
-      noexcept(noexcept(Ret{value_})) -> Ret override {
+  auto operator() [[nodiscard]] () const noexcept(noexcept(Ret{value_}))
+      -> Ret override {
     return value_;
   }
 
-  auto clone_unmodified [[nodiscard]] () const
-      -> gsl::owner<Compute_constant *> override {
-    return new Compute_constant{/* *this */};
+  using Compute_constant::Cloneable_impl::clone;
+  auto clone [[nodiscard]] (Compute_options const &options) const {
+    return std::unique_ptr<Compute_constant>{clone_impl_options(options)};
   }
-  auto clone [[nodiscard]] (Compute_options const &options) const
-      -> gsl::owner<Compute_constant *> override {
-    Compute_constant::clone_valid_options(options);
-    return new Compute_constant{/* *this */};
-  }
-  constexpr ~Compute_constant() noexcept override = default;
-  Compute_constant(Compute_constant const &) = delete;
+  ~Compute_constant() noexcept override = default;
   auto operator=(Compute_constant const &) = delete;
   Compute_constant(Compute_constant &&) = delete;
   auto operator=(Compute_constant &&) = delete;
 
 protected:
-  constexpr Compute_constant() noexcept = default;
+  Compute_constant() noexcept = default;
+  Compute_constant(Compute_constant const &other [[maybe_unused]]) noexcept {}
+
+private:
+  auto clone_impl_options [[nodiscard]] (Compute_options const &options) const
+      -> gsl::owner<Compute_constant *> override {
+    Compute_constant::clone_valid_options(options);
+    return new Compute_constant{*this};
+  }
 };
 
 template <std::copyable Ret, auto Func>
 requires util::Invocable_r<decltype(Func), Ret>
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Compute_function_constant
-    : public Compute_in<Compute_function_constant<Ret, Func>, Ret> {
+    : public virtual util::Cloneable_impl<Compute_function_constant<Ret, Func>>,
+      public Compute_in<Compute_function_constant<Ret, Func>, Ret> {
+  friend util::Cloneable_impl<Compute_function_constant>;
+
 private:
   enum struct Friend : bool {};
 
@@ -211,54 +268,69 @@ public:
   using return_type = typename Compute_function_constant::return_type;
   constexpr static auto function_{Func};
   template <typename... Args>
-  explicit constexpr Compute_function_constant(Friend tag [[maybe_unused]],
-                                               Args &&...args)
-      : Compute_function_constant{std::forward<Args>(args)...} {}
+  explicit Compute_function_constant(
+      Friend tag [[maybe_unused]],
+      Args
+          &&...args) noexcept(noexcept(Compute_function_constant(std::
+                                                                     forward<
+                                                                         Args>(
+                                                                         args)...)))
+      : Compute_function_constant(std::forward<Args>(args)...) {}
 
   template <typename... Args>
-  constexpr static auto create [[nodiscard]] (Args &&...args) {
+  static auto create [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_function_constant>(
         Friend{}, std::forward<Args>(args)...);
   }
   template <typename... Args>
-  constexpr static auto create_const [[nodiscard]] (Args &&...args) {
+  static auto create_const [[nodiscard]] (Args &&...args) {
     return std::make_shared<Compute_function_constant const>(
         Friend{}, std::forward<Args>(args)...);
   }
-  constexpr auto operator() [[nodiscard]] () const
+  auto operator() [[nodiscard]] () const
       noexcept(noexcept(Ret{std::invoke(Func)})) -> Ret override {
     return std::invoke(Func);
   }
 
-  auto clone_unmodified [[nodiscard]] () const
-      -> gsl::owner<Compute_function_constant *> override {
-    return new Compute_function_constant{/* *this */};
+  using util::Cloneable_impl<Compute_function_constant>::clone;
+  auto clone [[nodiscard]] (Compute_options const &options) const {
+    return std::unique_ptr<Compute_function_constant>{
+        clone_impl_options(options)};
   }
-  auto clone [[nodiscard]] (Compute_options const &options) const
-      -> gsl::owner<Compute_function_constant *> override {
-    Compute_function_constant::clone_valid_options(options);
-    return new Compute_function_constant{/* *this */};
-  }
-  constexpr ~Compute_function_constant() noexcept override = default;
-  Compute_function_constant(Compute_function_constant const &) = delete;
+  ~Compute_function_constant() noexcept override = default;
   auto operator=(Compute_function_constant const &) = delete;
   Compute_function_constant(Compute_function_constant &&) = delete;
   auto operator=(Compute_function_constant &&) = delete;
 
 protected:
-  constexpr Compute_function_constant() noexcept = default;
+  Compute_function_constant() noexcept = default;
+  Compute_function_constant(Compute_function_constant const &other
+                            [[maybe_unused]]) noexcept {}
+
+private:
+  auto clone_impl_options [[nodiscard]] (Compute_options const &options) const
+      -> gsl::owner<Compute_function_constant *> override {
+    Compute_function_constant::clone_valid_options(options);
+    return new Compute_function_constant{*this};
+  }
+#pragma warning(suppress : 4250)
 };
 
 template <std::copyable Ret>
-class Compute_value : public Compute_in<Compute_value<Ret>, Ret> {
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+class Compute_value : public virtual util::Cloneable_impl<Compute_value<Ret>>,
+                      public Compute_in<Compute_value<Ret>, Ret> {
+  friend util::Cloneable_impl<Compute_value>;
+
 private:
   enum struct Friend : bool {};
 
 public:
   using return_type = typename Compute_value::return_type;
   template <typename... Args>
-  explicit Compute_value(Friend tag [[maybe_unused]], Args &&...args)
-      : Compute_value{std::forward<Args>(args)...} {}
+  explicit Compute_value(Friend tag [[maybe_unused]], Args &&...args) noexcept(
+      noexcept(Compute_value(std::forward<Args>(args)...)))
+      : Compute_value(std::forward<Args>(args)...) {}
 
 private:
   util::Nullable_lockable</* mutable */ std::shared_mutex> const mutex_;
@@ -328,16 +400,9 @@ public:
     return left.value_ = std::move(value);
   }
 
-  auto clone_unmodified [[nodiscard]] () const
-      -> gsl::owner<Compute_value *> override {
-    return new Compute_value{*this};
-  }
-  auto clone [[nodiscard]] (Compute_options const &options) const
-      -> gsl::owner<Compute_value *> override {
-    Compute_value::clone_valid_options(options);
-    return new Compute_value{*this, (options | Compute_option::concurrent).any()
-                                        ? std::make_unique<std::shared_mutex>()
-                                        : nullptr};
+  using util::Cloneable_impl<Compute_value>::clone;
+  auto clone [[nodiscard]] (Compute_options const &options) const {
+    return std::unique_ptr<Compute_value>{clone_impl_options(options)};
   }
   ~Compute_value() noexcept override = default;
 
@@ -367,17 +432,31 @@ protected:
     return *this;
   }
 
-  explicit Compute_value(
-      Compute_value const &other,
-      std::remove_cv_t<decltype(mutex_)>
-          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)}, void(),
-                                   decltype(value_){other.value_}))
+  Compute_value(Compute_value const &other,
+                std::remove_cv_t<decltype(mutex_)> &&
+                    mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)},
+                                             void(),
+                                             decltype(value_){other.value_}))
       : mutex_{std::move(mutex)}, value_{other.value_} {}
+
+private:
+  auto clone_impl_options [[nodiscard]] (Compute_options const &options) const
+      -> gsl::owner<Compute_value *> override {
+    Compute_value::clone_valid_options(options);
+    return new Compute_value{*this, (options | Compute_option::concurrent).any()
+                                        ? std::make_unique<std::shared_mutex>()
+                                        : nullptr};
+  }
+#pragma warning(suppress : 4250)
 };
 
 template <std::copyable Ret, std::copyable... TArgs>
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Compute_function<Ret(TArgs...)>
-    : public Compute_in<Compute_function<Ret(TArgs...)>, Ret> {
+    : public virtual util::Cloneable_impl<Compute_function<Ret(TArgs...)>>,
+      public Compute_in<Compute_function<Ret(TArgs...)>, Ret> {
+  friend util::Cloneable_impl<Compute_function>;
+
 private:
   enum struct Friend : bool {};
 
@@ -385,8 +464,12 @@ public:
   using return_type = typename Compute_function::return_type;
   using signature_type = Ret(TArgs...);
   template <typename... Args>
-  explicit Compute_function(Friend tag [[maybe_unused]], Args &&...args)
-      : Compute_function{std::forward<Args>(args)...} {}
+  explicit Compute_function(
+      Friend tag [[maybe_unused]],
+      Args &&...args) noexcept(noexcept(Compute_function(std::
+                                                             forward<Args>(
+                                                                 args)...)))
+      : Compute_function(std::forward<Args>(args)...) {}
 
 protected:
   enum struct Bound_action : bool { compute, reset };
@@ -529,17 +612,9 @@ public:
     return *left.reset(util::Enum_bitset{} | Compute_option::empty);
   }
 
-  auto clone_unmodified [[nodiscard]] () const
-      -> gsl::owner<Compute_function *> override {
-    return new Compute_function{*this};
-  }
-  auto clone [[nodiscard]] (Compute_options const &options) const
-      -> gsl::owner<Compute_function *> override {
-    Compute_function::clone_valid_options(options);
-    return new Compute_function{*this,
-                                (options | Compute_option::concurrent).any()
-                                    ? std::make_unique<std::shared_mutex>()
-                                    : nullptr};
+  using util::Cloneable_impl<Compute_function>::clone;
+  auto clone [[nodiscard]] (Compute_options const &options) const {
+    return std::unique_ptr<Compute_function>{clone_impl_options(options)};
   }
   ~Compute_function() noexcept override = default;
 
@@ -572,14 +647,25 @@ protected:
     return *this;
   }
 
-  explicit Compute_function(
+  Compute_function(
       Compute_function const &other,
       std::remove_cv_t<decltype(mutex_)>
-          mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)}, void(),
-                                   decltype(function_){other.function_}, void(),
-                                   decltype(bound_){other.bound_}))
+          &&mutex) noexcept(noexcept(decltype(mutex_){std::move(mutex)}, void(),
+                                     decltype(function_){other.function_},
+                                     void(), decltype(bound_){other.bound_}))
       : mutex_{std::move(mutex)}, function_{other.function_},
         bound_{other.bound_} {}
+
+private:
+  auto clone_impl_options [[nodiscard]] (Compute_options const &options) const
+      -> gsl::owner<Compute_function *> override {
+    Compute_function::clone_valid_options(options);
+    return new Compute_function{*this,
+                                (options | Compute_option::concurrent).any()
+                                    ? std::make_unique<std::shared_mutex>()
+                                    : nullptr};
+  }
+#pragma warning(suppress : 4250)
 };
 template <typename Func>
 Compute_function(Func &&func, auto &&...) -> Compute_function<
@@ -588,6 +674,7 @@ template <typename Func>
 Compute_function(Compute_options const &, Func &&func, auto &&...)
     -> Compute_function<decltype(decltype(std::function{
         std::forward<Func>(func)})::operator())>;
-} // namespace artccel::core::compute
+} // namespace compute
+} // namespace artccel::core
 
 #endif

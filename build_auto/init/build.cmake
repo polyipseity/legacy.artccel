@@ -25,6 +25,7 @@ add_compile_options(
 	"$<${CXX_CLANG_LIKE_COMPILER_GENEXP}:-Wno-missing-variable-declarations>"
 	"$<${CXX_CLANG_LIKE_COMPILER_GENEXP}:-Wno-return-std-move-in-c++11>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/wd4068>" # unknown pragma
+	"$<$<CXX_COMPILER_ID:MSVC>:/wd4435>" # object layout under /vd2 will change due to virtual base
 	"$<$<CXX_COMPILER_ID:MSVC>:/wd4464>" # relative include path contains '..'
 	"$<$<CXX_COMPILER_ID:MSVC>:/wd4514>" # unreferenced inline function has been removed
 	"$<$<CXX_COMPILER_ID:MSVC>:/wd4710>" # function not inlined

@@ -261,6 +261,9 @@ template <typename Type, typename... Bases>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Cloneable_impl_0 : public virtual Cloneable<Type>,
                          public virtual Cloneable_impl<Bases>... {
+public:
+  using Cloneable<Type>::clone;
+
 protected:
   using Cloneable<Type>::Cloneable;
   using Cloneable_impl<Bases>::Cloneable_impl...;

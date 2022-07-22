@@ -4,6 +4,7 @@
 #include <artccel/core/main_hooks.hpp> // import Main_program, Raw_arguments, artccel::core::f::safe_main
 
 namespace detail {
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace artccel::core;
 
 static auto main_0(artccel::core::Raw_arguments arguments) -> int {

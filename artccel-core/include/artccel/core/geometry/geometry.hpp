@@ -51,7 +51,6 @@ protected:
   Quality() noexcept;
 };
 
-#pragma warning(suppress : 4435)
 class Geometry : public virtual util::Cloneable<Geometry> {
 public:
   virtual auto dimension [[nodiscard]] () const -> Dimension_t = 0;
@@ -80,9 +79,8 @@ protected:
       -> util::Observer_ptr<Quality const> = 0;
 };
 
-#pragma warning(suppress : 4435) // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Primitive : public virtual Geometry,
-#pragma warning(suppress : 4435)
                   public virtual util::Cloneable<Primitive> {
 public:
   ~Primitive() noexcept override;
@@ -97,7 +95,7 @@ protected:
 #pragma warning(suppress : 4250)
 };
 
-#pragma warning(suppress : 4435) // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
+// NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Point : public virtual Primitive, public virtual util::Cloneable<Point> {
 public:
   ~Point() noexcept override;
