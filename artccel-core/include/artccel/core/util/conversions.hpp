@@ -2,7 +2,9 @@
 #define GUARD_4D02DFF6_D796_408D_96E0_25F301394495
 #pragma once
 
+#include <algorithm>   // import std::clamp
 #include <concepts>    // import std::integral
+#include <cstdint>     // import std::intmax_t, std::uintmax_t
 #include <functional>  // import std::invoke
 #include <limits>      // import std::numeric_limits
 #include <stdexcept>   // import std::overflow_error
@@ -10,13 +12,13 @@
 #include <tuple>       // import std::tuple
 #include <type_traits> // import std::conditional_t, std::make_signed_t, std::make_unsigned_t, std::remove_cvref_t
 
-#include "concepts_extras.hpp" // import Regular_invocable_r
-#include "error_handling.hpp"  // import Error_with_exception
-
 #pragma warning(push)
 #pragma warning(disable : 4582 4583 4625 4626 4820 5026 5027)
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect
 #pragma warning(pop)
+
+#include "concepts_extras.hpp" // import Nonempty_pack, Regular_invocable_r
+#include "error_handling.hpp"  // import Error_with_exception
 
 namespace artccel::core::util {
 namespace detail {
@@ -157,6 +159,7 @@ constexpr auto int_signed_clamp_cast(std::integral auto value) noexcept {
   return f::int_signedness_clamp_cast<false>(value);
 }
 } // namespace f
+
 namespace detail {
 template <std::integral Int, std::integral... Ints>
 constexpr auto int_roundrobin_clamp_cast(std::integral auto value) noexcept {
@@ -168,14 +171,34 @@ constexpr auto int_roundrobin_clamp_cast(std::integral auto value) noexcept {
   }
 }
 } // namespace detail
-namespace f {
+
 template <std::integral Int, std::integral... Ints>
+constexpr auto ints_minimax{[]() noexcept {
+  using first_limits = std::numeric_limits<Int>;
+  using ret_type = std::conditional_t<(first_limits::is_signed && ... &&
+                                       std::numeric_limits<Ints>::is_signed),
+                                      std::intmax_t, std::uintmax_t>;
+  return ret_type{
+      detail::int_roundrobin_clamp_cast<Int, Ints...>(first_limits::max())};
+}()};
+template <std::integral Int, std::integral... Ints>
+constexpr auto ints_maximin{[]() noexcept {
+  using first_limits = std::numeric_limits<Int>;
+  using ret_type = std::conditional_t<(first_limits::is_signed && ... &&
+                                       std::numeric_limits<Ints>::is_signed),
+                                      std::intmax_t, std::uintmax_t>;
+  return ret_type{
+      detail::int_roundrobin_clamp_cast<Int, Ints...>(first_limits::lowest())};
+}()};
+
+namespace f {
+template <std::integral... Ints>
+requires Nonempty_pack<Ints...>
 constexpr auto int_clamp_casts(std::integral auto value) noexcept {
-  using out_types =
-      std::tuple<std::remove_cvref_t<Int>, std::remove_cvref_t<Ints>...>;
-  auto const ret{detail::int_roundrobin_clamp_cast<Int, Ints...>(value)};
-  return out_types{assert_success(f::int_exact_cast<Int>(ret)),
-                   assert_success(f::int_exact_cast<Ints>(ret))...};
+  using out_types = std::tuple<std::remove_cvref_t<Ints>...>;
+  auto const ret{std::clamp<decltype(value)>(value, ints_maximin<Ints...>,
+                                             ints_minimax<Ints...>)};
+  return out_types{assert_success(f::int_exact_cast<Ints>(ret))...};
 }
 } // namespace f
 } // namespace artccel::core::util
