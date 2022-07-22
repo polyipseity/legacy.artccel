@@ -241,7 +241,7 @@ private:
       -> gsl::owner<void *> = 0;
 };
 template <typename Type, typename... Bases>
-requires Nonempty_pack<Bases...>
+requires Nonempty_type_pack<Bases...>
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class Cloneable_0<Type, Bases...> : public virtual Cloneable<Bases>... {
 public:

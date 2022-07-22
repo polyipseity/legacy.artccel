@@ -193,7 +193,7 @@ constexpr auto ints_maximin{[]() noexcept {
 
 namespace f {
 template <std::integral... Ints>
-requires Nonempty_pack<Ints...>
+requires Nonempty_type_pack<Ints...>
 constexpr auto int_clamp_casts(std::integral auto value) noexcept {
   using out_types = std::tuple<std::remove_cvref_t<Ints>...>;
   auto const ret{std::clamp<decltype(value)>(value, ints_maximin<Ints...>,

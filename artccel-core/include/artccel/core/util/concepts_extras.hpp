@@ -23,7 +23,9 @@ concept Derived_from_but_not =
 template <typename Derived, typename Base>
 concept Not_derived_from = !std::derived_from<Derived, Base>;
 template <typename... Args>
-concept Nonempty_pack = sizeof...(Args) >= 1;
+concept Nonempty_type_pack = sizeof...(Args) >= 1;
+template <auto... Args>
+concept Nonempty_value_pack = sizeof...(Args) >= 1;
 
 template <typename From, typename To>
 concept Brace_convertible_to = requires(From &&from) {
