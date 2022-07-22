@@ -12,20 +12,19 @@
 #include "contracts.hpp"       // import Validator_c
 
 namespace artccel::core::util {
-template <std::three_way_comparable Type, typename Derived> struct Bound;
+template <std::three_way_comparable Type> struct Bound;
 template <typename Type>
-concept Bound_c = Derived_from_but_not<
-    std::remove_cv_t<Type>,
-    Bound<typename std::remove_cv_t<Type>::type, std::remove_cv_t<Type>>>;
+concept Bound_c =
+    Derived_from_but_not<std::remove_cv_t<Type>,
+                         Bound<typename std::remove_cv_t<Type>::type>>;
 template <std::three_way_comparable Type> struct Open_bound;
 template <std::three_way_comparable Type> struct Closed_bound;
 template <std::three_way_comparable Type> struct Unbounded;
-template <Bound_c BoundT, typename Derived> struct Directional_bound;
+template <Bound_c BoundT> struct Directional_bound;
 template <typename Type>
 concept Directional_bound_c = Derived_from_but_not<
     std::remove_cv_t<Type>,
-    Directional_bound<typename std::remove_cv_t<Type>::bound_type,
-                      std::remove_cv_t<Type>>>;
+    Directional_bound<typename std::remove_cv_t<Type>::bound_type>>;
 template <Bound_c BoundT> struct Left_bound;
 template <Bound_c BoundT> struct Right_bound;
 template <Bound_c LeftBoundT, Bound_c RightBoundT>
@@ -79,7 +78,7 @@ constexpr auto positive_interval{lo_ru_interval<Type, Zero>}; // (0,+∞)
 template <std::three_way_comparable Type, Type Zero = Type{0}>
 constexpr auto negative_interval{lu_ro_interval<Type, Zero>}; // (-∞,0)
 
-template <std::three_way_comparable Type, typename Derived> struct Bound {
+template <std::three_way_comparable Type> struct Bound {
   using type = Type;
 
   constexpr Bound() noexcept = default;
@@ -93,7 +92,7 @@ protected:
 };
 
 template <std::three_way_comparable Type>
-struct Open_bound : public Bound<Type, Open_bound<Type>> {
+struct Open_bound : public Bound<Type> {
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   Type value_;
   explicit constexpr Open_bound(Type value) noexcept(noexcept(decltype(value_){
@@ -135,7 +134,7 @@ struct Open_bound : public Bound<Type, Open_bound<Type>> {
 };
 
 template <std::three_way_comparable Type>
-struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
+struct Closed_bound : public Bound<Type> {
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   Type value_;
   explicit constexpr Closed_bound(Type value) noexcept(
@@ -177,7 +176,7 @@ struct Closed_bound : public Bound<Type, Closed_bound<Type>> {
 };
 
 template <std::three_way_comparable Type>
-struct Unbounded : public Bound<Type, Unbounded<Type>> {
+struct Unbounded : public Bound<Type> {
   explicit consteval Unbounded() noexcept = default;
   template <Guard_special_constructors<Unbounded> Other>
   requires std::same_as<std::remove_cvref_t<Other>,
@@ -211,7 +210,7 @@ struct Unbounded : public Bound<Type, Unbounded<Type>> {
   }
 };
 
-template <Bound_c BoundT, typename Derived> struct Directional_bound {
+template <Bound_c BoundT> struct Directional_bound {
   using bound_type = BoundT;
   using type = typename BoundT::type;
 
@@ -227,8 +226,7 @@ protected:
   constexpr ~Directional_bound() noexcept = default;
 };
 
-template <Bound_c BoundT>
-struct Left_bound : public Directional_bound<BoundT, Left_bound<BoundT>> {
+template <Bound_c BoundT> struct Left_bound : public Directional_bound<BoundT> {
   using type = typename Left_bound::type;
 
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
@@ -320,7 +318,7 @@ constexpr auto operator==(Left_bound<LeftBoundT<LeftT>> const &left,
 }
 
 template <Bound_c BoundT>
-struct Right_bound : public Directional_bound<BoundT, Right_bound<BoundT>> {
+struct Right_bound : public Directional_bound<BoundT> {
   using type = typename Right_bound::type;
 
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
