@@ -31,5 +31,4 @@ function(target_as_test target)
 	add_test(NAME "${target}" COMMAND "${target}")
 endfunction()
 
-set(CUSTOM_TESTS_IGNORE "$ENV{ARTCCEL_CUSTOM_TESTS_IGNORE}")
 configure_file("${ROOT_SOURCE_DIR}/in/CTestCustom.cmake" "${PROJECT_BINARY_DIR}" @ONLY)

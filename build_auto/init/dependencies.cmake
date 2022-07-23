@@ -6,15 +6,15 @@ include("${CMAKE_CURRENT_LIST_DIR}/../util.cmake")
 # helpers
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "OPT_IN" CACHE STRING "https://cmake.org/cmake/help/latest/module/FetchContent.html?highlight=fetchcontent_try_find_package_mode#variable:FETCHCONTENT_TRY_FIND_PACKAGE_MODE")
 
-function(make_excludable_available option_or_name)
+function(make_excludable_available tests_appended_out_var option_or_name)
 	if(option_or_name STREQUAL "EXCLUDE_FROM_ALL")
 		set(_exclude_from_all "EXCLUDE_FROM_ALL")
-		list(POP_FRONT ARGV)
 	else()
+		list(PREPEND ARGN "${option_or_name}")
 		set(_exclude_from_all "")
 	endif()
 
-	foreach(_name IN LISTS ARGV)
+	foreach(_name IN LISTS ARGN)
 		FetchContent_GetProperties("${_name}")
 		string(TOLOWER "${_name}" _lc_name)
 
@@ -30,15 +30,17 @@ function(make_excludable_available option_or_name)
 					get_directory_property(_tests DIRECTORY "${_directory}" TESTS)
 
 					if(_tests)
-						set(ENV{ARTCCEL_CUSTOM_TESTS_IGNORE} "$ENV{ARTCCEL_CUSTOM_TESTS_IGNORE};${_tests}")
+						list(APPEND "${tests_appended_out_var}" ${_tests})
 					endif()
 				endforeach()
 			endif()
 		endif()
 	endforeach()
+
+	set("${tests_appended_out_var}" "${${tests_appended_out_var}}" PARENT_SCOPE)
 endfunction()
 
-function(find_package_or_fetch_content package target target_options package_options)
+function(find_package_or_fetch_content tests_appended_out_var package target target_options package_options)
 	if(FETCHCONTENT_TRY_FIND_PACKAGE_MODE STREQUAL "OPT_IN")
 		set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE "ALWAYS")
 		message(WARNING "'FETCHCONTENT_TRY_FIND_PACKAGE_MODE' is treated as 'ALWAYS'")
@@ -79,9 +81,11 @@ function(find_package_or_fetch_content package target target_options package_opt
 		set(_exclude_from_all "EXCLUDE_FROM_ALL")
 	endif()
 
-	make_excludable_available(${_exclude_from_all} "${package}")
+	make_excludable_available("${tests_appended_out_var}" ${_exclude_from_all} "${package}")
 	add_library("${package}::${target}" ALIAS "${target}")
 	export(TARGETS "${target}" NAMESPACE "${package}::" FILE "${target}-targets.cmake")
+
+	set("${tests_appended_out_var}" "${${tests_appended_out_var}}" PARENT_SCOPE)
 endfunction()
 
 # dependencies

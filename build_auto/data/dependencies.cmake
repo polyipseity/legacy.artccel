@@ -12,7 +12,8 @@ FetchContent_Declare(Microsoft.GSL
 	GIT_PROGRESS true
 	FIND_PACKAGE_ARGS
 )
-find_package_or_fetch_content(Microsoft.GSL GSL
+find_package_or_fetch_content(ARTCCEL_CUSTOM_TESTS_IGNORE
+	Microsoft.GSL GSL
 	"GSL_INSTALL;${ARTCCEL_INSTALL};GSL_TEST;${ARTCCEL_TEST}"
 	"4.0.0;EXACT;REQUIRED;CONFIG"
 	EXCLUDE_FROM_ALL)
@@ -25,7 +26,7 @@ FetchContent_Declare(ofats-any_invocable
 	GIT_PROGRESS true
 	FIND_PACKAGE_ARGS
 )
-make_excludable_available(EXCLUDE_FROM_ALL ofats-any_invocable)
+make_excludable_available(ARTCCEL_CUSTOM_TESTS_IGNORE EXCLUDE_FROM_ALL ofats-any_invocable)
 FetchContent_GetProperties(ofats-any_invocable)
 add_library(ofats::any_invocable INTERFACE IMPORTED)
 target_include_directories(ofats::any_invocable INTERFACE "${ofats-any_invocable_SOURCE_DIR}/include")
@@ -38,7 +39,8 @@ FetchContent_Declare(tl-expected
 	GIT_PROGRESS true
 	FIND_PACKAGE_ARGS
 )
-find_package_or_fetch_content(tl-expected expected
+find_package_or_fetch_content(ARTCCEL_CUSTOM_TESTS_IGNORE
+	tl-expected expected
 	"EXPECTED_BUILD_TESTS;${ARTCCEL_TEST}"
 	"1.0.0;EXACT;REQUIRED;CONFIG"
 	EXCLUDE_FROM_ALL)
