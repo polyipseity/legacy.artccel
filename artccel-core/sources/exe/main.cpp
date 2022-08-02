@@ -8,7 +8,7 @@
 
 #pragma warning(push)
 #pragma warning(disable : 4626 4820)
-#include <gsl/gsl> // import gsl::index, gsl::owner, gsl::wzstring, gsl::zstring
+#include <gsl/gsl> // import gsl::index, gsl::wzstring, gsl::zstring
 #pragma warning(pop)
 
 #include <artccel/core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
@@ -70,16 +70,14 @@ static void echo_cin() {
 
 static auto main_0(Raw_arguments arguments) -> int {
   std::shared_ptr<typename Main_program::destructor_exceptions_out_type> const
-      program_dtor_excs{
-          new typename Main_program::destructor_exceptions_out_type{},
-          [](gsl::owner<
-              typename Main_program::destructor_exceptions_out_type const *>
-                 ptr) {
-            if (ptr != nullptr) {
-              std::ranges::for_each(*ptr, std::rethrow_exception);
-            }
-            delete ptr;
-          }};
+      program_dtor_excs{new
+                        typename Main_program::destructor_exceptions_out_type{},
+                        [](auto const *ptr) {
+                          if (ptr) {
+                            std::ranges::for_each(*ptr, std::rethrow_exception);
+                          }
+                          delete ptr;
+                        }};
   Main_program const program{arguments, program_dtor_excs};
   detail::print_args(program);
   detail::echo_cin();
