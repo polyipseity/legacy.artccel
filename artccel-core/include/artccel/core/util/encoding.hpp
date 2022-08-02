@@ -37,14 +37,14 @@ enum struct Convert_error : std::int_fast8_t { error, partial };
 enum struct Cuchar_error : std::int_fast8_t { error, partial };
 
 namespace detail {
-template <typename AsCharT, Template_string Str>
+template <typename ToCharT, Template_string Str>
 constexpr auto reinterpretation_storage{[] {
-  static_assert(sizeof(AsCharT) == sizeof(typename decltype(Str)::char_type),
-                u8"sizeof the two character types mismatch");
-  std::array<AsCharT, std::size(Str.data_)> init{};
-  std::ranges::transform(
-      std::as_const(Str.data_), std::begin(init),
-      [](auto chr) noexcept { return f::int_modulo_cast<AsCharT>(chr); });
+  using FromCharT = typename decltype(Str)::char_type;
+  static_assert(sizeof(FromCharT) == sizeof(ToCharT),
+                u8"unequal sizeof source and dest character types");
+  std::array<ToCharT, std::size(Str.data_)> init{};
+  std::ranges::transform(std::as_const(Str.data_), std::begin(init),
+                         f::int_modulo_cast<ToCharT, FromCharT>);
   return f::const_array(init);
 }()};
 } // namespace detail
