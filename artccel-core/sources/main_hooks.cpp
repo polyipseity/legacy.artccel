@@ -1,7 +1,7 @@
 #include <algorithm> // import std::max, std::min, std::ranges::for_each, std::ranges::transform
 #include <cassert>   // import assert
 #include <concepts>  // import std::integral, std::same_as
-#include <cstddef>   // import std::ptrdiff_t, std::size_t
+#include <cstddef>   // import std::size_t
 #include <cstring>   // import std::memcpy, std::memmove
 #include <cwchar>    // import std::mbsinit, std::mbstate_t, std::wcslen
 #include <exception> // import std::current_exception
@@ -286,16 +286,16 @@ protected:
     count = std::max(count, decltype(count){0});
     auto const init_count{count};
     while (count > 0 && underflow() != traits_type::eof()) {
-      auto const [copy_count_uz, copy_count_pd,
-                  copy_count_ss]{util::f::int_clamp_casts<
-          std::size_t, std::ptrdiff_t, std::streamsize>(std::min(
-          count, util::f::int_clamp_cast<decltype(count)>(egptr() - gptr())))};
-      std::memcpy(out, gptr(), copy_count_uz);
+      auto const [copy_count_unsigned, copy_count]{
+          util::f::int_clamp_casts<std::size_t, std::streamsize>(std::min(
+              count,
+              util::f::int_clamp_cast<decltype(count)>(egptr() - gptr())))};
+      std::memcpy(out, gptr(), copy_count_unsigned);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-      setg(eback(), gptr() + copy_count_pd, egptr());
+      setg(eback(), gptr() + copy_count, egptr());
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-      out += copy_count_pd;
-      count -= copy_count_ss;
+      out += copy_count;
+      count -= copy_count;
     }
     return init_count - count;
   }
