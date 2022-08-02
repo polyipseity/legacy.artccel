@@ -66,8 +66,7 @@ static auto main_0(Raw_arguments arguments) -> int {
   auto const program_dtor_excs{std::make_shared<
       typename Main_program::destructor_exceptions_out_type>()};
   gsl::final_action const rethrower{[&program_dtor_excs] {
-    std::ranges::for_each(*program_dtor_excs,
-                          [](auto exc) { std::rethrow_exception(exc); });
+    std::ranges::for_each(*program_dtor_excs, std::rethrow_exception);
   }};
   Main_program const program{arguments, program_dtor_excs};
   detail::print_args(program);
