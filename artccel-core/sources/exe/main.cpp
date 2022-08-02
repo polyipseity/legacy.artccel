@@ -2,13 +2,13 @@
 #include <cstdlib>     // import EXIT_SUCCESS
 #include <exception>   // import std::exception, std::rethrow_exception
 #include <iostream>    // import std::cin, std::cout, std::flush
-#include <memory>      // import std::shared_ptr
+#include <memory>      // import std::make_shared
 #include <string>      // import std::u8string
 #include <string_view> // import std::u8string_view
 
 #pragma warning(push)
 #pragma warning(disable : 4626 4820)
-#include <gsl/gsl> // import gsl::index, gsl::wzstring, gsl::zstring
+#include <gsl/gsl> // import gsl::final_action, gsl::index, gsl::wzstring, gsl::zstring
 #pragma warning(pop)
 
 #include <artccel/core/main_hooks.hpp> // import Argument::verbatim, Main_program, Raw_arguments, artccel::core::f::safe_main
@@ -17,21 +17,15 @@
 #include <artccel/core/util/reflect.hpp>  // import util::f::type_name_array
 #include <artccel/core/util/semantics.hpp> // import util::null_terminator_size
 
-#include <array>
-#include <artccel/core/compute/compute.hpp>
-#include <artccel/core/geometry/geometry.hpp>
-#include <artccel/core/geometry/geometry_impl.hpp>
-#include <artccel/core/util/clone.hpp>
-
 namespace artccel::core::detail {
 using util::literals::encoding::operator""_as_utf8_compat;
 using util::operators::utf8_compat::ostream::operator<<;
 
 static void print_args(Main_program const &program) {
   std::cout << u8"arguments:\n"_as_utf8_compat;
-  std::ranges::for_each(program.arguments(), [index{gsl::index{-1}}](
+  std::ranges::for_each(program.arguments(), [index{gsl::index{0}}](
                                                  auto const &arg) mutable {
-    std::cout << u8"|- argument "_as_utf8_compat << ++index
+    std::cout << u8"|- argument "_as_utf8_compat << index++
               << u8":\n"_as_utf8_compat;
     std::cout << u8" |- verbatim: "_as_utf8_compat << arg.verbatim()
               << u8'\n'_as_utf8_compat;
@@ -69,15 +63,12 @@ static void echo_cin() {
 }
 
 static auto main_0(Raw_arguments arguments) -> int {
-  std::shared_ptr<typename Main_program::destructor_exceptions_out_type> const
-      program_dtor_excs{new
-                        typename Main_program::destructor_exceptions_out_type{},
-                        [](auto const *ptr) {
-                          if (ptr) {
-                            std::ranges::for_each(*ptr, std::rethrow_exception);
-                          }
-                          delete ptr;
-                        }};
+  auto const program_dtor_excs{std::make_shared<
+      typename Main_program::destructor_exceptions_out_type>()};
+  gsl::final_action const rethrower{[&program_dtor_excs] {
+    std::ranges::for_each(*program_dtor_excs,
+                          [](auto exc) { std::rethrow_exception(exc); });
+  }};
   Main_program const program{arguments, program_dtor_excs};
   detail::print_args(program);
   detail::echo_cin();
