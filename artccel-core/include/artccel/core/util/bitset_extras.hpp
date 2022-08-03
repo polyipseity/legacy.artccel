@@ -9,6 +9,7 @@
 
 #include "concepts_extras.hpp" // import Enum
 #include "enum_bitset.hpp"     // import Bitset_of, Enum_bitset
+#include "utility_extras.hpp"  // import Initialize_t
 
 namespace artccel::core::util {
 template <typename> struct Bitset_size;
@@ -19,14 +20,19 @@ template <std::size_t Size> struct Check_bitset {
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   std::bitset<Size> value_;
   explicit consteval Check_bitset(std::bitset<Size> value) noexcept
-      : value_{std::move(value)} {}
+      : Check_bitset{Initialize_t{}, std::move(value)} {}
   explicit consteval Check_bitset(Enum auto value) noexcept
-      : value_{Enum_bitset{} | value} {}
+      : Check_bitset{Initialize_t{}, Enum_bitset{} | value} {}
   constexpr void operator()(std::bitset<Size> const &value
                             [[maybe_unused]]) const noexcept {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay,hicpp-no-array-decay)
     assert((value_ & value) == value && u8"value has invalid bits set to 1");
   }
+
+protected:
+  explicit consteval Check_bitset(Initialize_t tag [[maybe_unused]],
+                                  std::bitset<Size> &&value) noexcept
+      : value_{std::move(value)} {}
 };
 template <Enum Enum>
 Check_bitset(Enum value) -> Check_bitset<Bitset_size_v<Bitset_of<Enum>>>;

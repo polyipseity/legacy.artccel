@@ -20,6 +20,7 @@
 #pragma warning(pop)
 
 #include "concepts_extras.hpp" // import Differ_from, Guard_special_constructors
+#include "utility_extras.hpp"  // import Initialize_t
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
@@ -43,7 +44,37 @@ private:
   gsl::strict_not_null<std::exception_ptr> exc_ptr_;
   Error error_ [[no_unique_address, msvc::no_unique_address]];
 
+protected:
+  explicit Error_with_exception(
+      Initialize_t tag [[maybe_unused]],
+      gsl::strict_not_null<std::exception_ptr> &&exc_ptr, Error &&error)
+      : exc_ptr_{std::move(exc_ptr)}, error_{std::move(error)} {}
+
 public:
+  explicit Error_with_exception(
+      gsl::strict_not_null<std::exception_ptr> exc_ptr, Error error)
+      : Error_with_exception{Initialize_t{}, std::move(exc_ptr),
+                             std::move(error)} {}
+  explicit Error_with_exception(gsl::strict_not_null<std::exception_ptr>
+                                    exc_ptr) requires Stateless_error<Error>
+      : Error_with_exception{Initialize_t{}, std::move(exc_ptr), Error{}} {}
+  template <typename Exception>
+  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr>
+  explicit Error_with_exception(Exception &&exc, Error error)
+      : Error_with_exception{Initialize_t{},
+                             gsl::strict_not_null{std::make_exception_ptr(
+                                 std::forward<Exception>(exc))},
+                             std::move(error)} {}
+  template <Guard_special_constructors<Error_with_exception> Exception>
+  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr> &&
+      Stateless_error<Error>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
+  explicit Error_with_exception(Exception &&exc)
+      : Error_with_exception{Initialize_t{},
+                             gsl::strict_not_null{std::make_exception_ptr(
+                                 std::forward<Exception>(exc))},
+                             Error{}} {}
+
   auto exc_ptr [[nodiscard]] () &noexcept -> auto & { return exc_ptr_; }
   auto exc_ptr [[nodiscard]] () const &noexcept -> auto const & {
     return exc_ptr_;
@@ -60,25 +91,6 @@ public:
       -> Error {
     return error_;
   }
-
-  explicit Error_with_exception(
-      gsl::strict_not_null<std::exception_ptr> exc_ptr, Error error)
-      : exc_ptr_{std::move(exc_ptr)}, error_{std::move(error)} {}
-  explicit Error_with_exception(gsl::strict_not_null<std::exception_ptr>
-                                    exc_ptr) requires Stateless_error<Error>
-      : Error_with_exception{std::move(exc_ptr), Error{}} {}
-  template <typename Exception>
-  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr>
-  explicit Error_with_exception(Exception &&exc, Error error)
-      : Error_with_exception{gsl::strict_not_null{std::make_exception_ptr(
-                                 std::forward<Exception>(exc))},
-                             std::move(error)} {}
-  template <Guard_special_constructors<Error_with_exception> Exception>
-  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr> &&
-      Stateless_error<Error>
-  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  explicit Error_with_exception(Exception &&exc)
-      : Error_with_exception{std::forward<Exception>(exc), Error{}} {}
 
   template <typename Ret>
   friend auto discard_exc

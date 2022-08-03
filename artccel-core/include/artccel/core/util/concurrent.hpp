@@ -9,7 +9,7 @@
 #include <shared_mutex> // import std::shared_mutex, std::shared_timed_mutex
 #include <utility> // import std::declval, std::forward, std::move, std::swap
 
-#include "utility_extras.hpp" // import Delegate
+#include "utility_extras.hpp" // import Delegate, Initialize_t
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT, ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
@@ -140,12 +140,17 @@ public:
 private:
   constexpr static NullLock null_lockable_{};
 
+protected:
+  explicit constexpr Nullable_lockable(Initialize_t tag [[maybe_unused]],
+                                       type &&value) noexcept
+      : Nullable_lockable::Delegate{Initialize_t{}, std::move(value)} {}
+
 public:
   constexpr Nullable_lockable() noexcept
-      : Nullable_lockable{std::make_unique<Lock>()} {}
+      : Nullable_lockable{Initialize_t{}, std::make_unique<Lock>()} {}
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
   constexpr Nullable_lockable(type value) noexcept
-      : Nullable_lockable::Delegate{std::move(value)} {}
+      : Nullable_lockable{Initialize_t{}, std::move(value)} {}
 
   Nullable_lockable(Nullable_lockable const &) = delete;
   auto operator=(Nullable_lockable const &) = delete;

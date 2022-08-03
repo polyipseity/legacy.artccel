@@ -16,6 +16,7 @@ template <typename Type> struct Semiregularize;
 template <typename Type, bool Explicit = true> struct Delegate;
 template <typename... Types> struct Overload;
 enum struct Consteval_t : bool {};
+enum struct Initialize_t : bool {};
 
 namespace detail {
 template <template <typename...> typename Tuple, typename... Args,
@@ -125,7 +126,8 @@ template <typename Type, bool Explicit> struct Delegate {
   }
 
 protected:
-  explicit constexpr Delegate(Type value) noexcept(noexcept(decltype(value_){
+  explicit constexpr Delegate(Initialize_t tag [[maybe_unused]],
+                              Type &&value) noexcept(noexcept(decltype(value_){
       std::move(value)}))
       : value_{std::move(value)} {}
 #pragma warning(suppress : 4625 4626)

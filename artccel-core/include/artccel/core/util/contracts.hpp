@@ -7,7 +7,7 @@
 #include <utility> // import std::forward, std::move
 
 #include "concepts_extras.hpp" // import Guard_special_constructors
-#include "utility_extras.hpp"  // import Consteval_t, Delegate
+#include "utility_extras.hpp"  // import Consteval_t, Delegate, Initialize_t
 
 namespace artccel::core::util {
 template <typename Type>
@@ -31,17 +31,29 @@ public:
   constexpr static auto validator_{Validator};
   using type = typename Validate::type;
 
-  consteval Validate(Consteval_t tag [[maybe_unused]],
-                     type value) noexcept(noexcept(Validate{std::move(value)}))
-      : Validate{std::move(value)} {}
-  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-  constexpr Validate(type value) noexcept(
-      std::is_nothrow_constructible_v<typename Validate::Delegate,
-                                      decltype(std::move(value))>
-          &&noexcept(Validator.validate(this->value_)))
-      : Validate::Delegate{std::move(value)} {
+protected:
+  explicit constexpr Validate(
+      Initialize_t tag [[maybe_unused]],
+      type &&value) noexcept(std::
+                                 is_nothrow_constructible_v<
+                                     typename Validate::Delegate,
+                                     decltype(Initialize_t{}),
+                                     decltype(std::move(value))>
+                                     &&noexcept(
+                                         Validator.validate(this->value_)))
+      : Validate::Delegate{Initialize_t{}, std::move(value)} {
     Validator.validate(this->value_);
   }
+
+public:
+  consteval Validate(Consteval_t tag [[maybe_unused]],
+                     type value) noexcept(noexcept(Validate{Initialize_t{},
+                                                            std::move(value)}))
+      : Validate{Initialize_t{}, std::move(value)} {}
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
+  constexpr Validate(type value) noexcept(noexcept(Validate{Initialize_t{},
+                                                            std::move(value)}))
+      : Validate{Initialize_t{}, std::move(value)} {}
   template <Guard_special_constructors<Validate> Other>
   requires Validate_c<std::remove_cvref_t<Other>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
