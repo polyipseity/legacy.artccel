@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_E7294948_95F0_4F1A_8194_D729FF88506C
 #define GUARD_E7294948_95F0_4F1A_8194_D729FF88506C
-#pragma once
 
 #include <cassert>  // import assert
 #include <concepts> // import std::default_initializable, std::equality_comparable_with, std::invocable

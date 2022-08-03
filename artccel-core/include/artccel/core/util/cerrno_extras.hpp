@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_A00D9886_2A47_4517_970B_9387D1B2FD94
 #define GUARD_A00D9886_2A47_4517_970B_9387D1B2FD94
-#pragma once
 
 #include <cerrno>      // import errno
 #include <type_traits> // import std::decay_t

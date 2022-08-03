@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_9E8CA71A_8CBD_403E_BE77_D755133577B9
 #define GUARD_9E8CA71A_8CBD_403E_BE77_D755133577B9
-#pragma once
 
 #include <array>   // import std::array
 #include <cassert> // import assert

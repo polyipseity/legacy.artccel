@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_6933EE58_E1D0_488A_9D33_8E0F8B10533C
 #define GUARD_6933EE58_E1D0_488A_9D33_8E0F8B10533C
-#pragma once
 
 #include <concepts> // import std::derived_from
 #include <cstdint>  // import std::int_fast8_t

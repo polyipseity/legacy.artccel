@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_82E14629_C023_4D47_B2A3_D5E21CC0799C
 #define GUARD_82E14629_C023_4D47_B2A3_D5E21CC0799C
-#pragma once
 
 #include <array>       // import std::array
 #include <cstdint>     // import std::int_fast8_t

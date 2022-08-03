@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_A112443D_3FC2_4920_B2D9_8EE0D25C37C1
 #define GUARD_A112443D_3FC2_4920_B2D9_8EE0D25C37C1
-#pragma once
 
 #include <cassert>  // import assert
 #include <concepts> // import std::constructible_from, std::convertible_to, std::derived_from, std::invocable, std::same_as

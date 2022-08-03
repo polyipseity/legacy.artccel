@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_07E85E44_C91F_4ACB_8F7D_C878E372E924
 #define GUARD_07E85E44_C91F_4ACB_8F7D_C878E372E924
-#pragma once
 
 #include <concepts>    // import std::invocable
 #include <exception>   // import std::current_exception, std::throw_with_nested

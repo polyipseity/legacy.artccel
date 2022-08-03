@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_B4659632_6C53_4BDB_82D4_2A563CFA703E
 #define GUARD_B4659632_6C53_4BDB_82D4_2A563CFA703E
-#pragma once
 
 #include <bitset>  // import std::bitset
 #include <cassert> // immport assert

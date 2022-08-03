@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_7E8E1598_4DA2_472F_908C_B6F29BE0389F
 #define GUARD_7E8E1598_4DA2_472F_908C_B6F29BE0389F
-#pragma once
 
 #include <concepts>    // import std::derived_from, std::same_as
 #include <cstddef>     // import std::size_t

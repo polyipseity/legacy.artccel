@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_EBA0DB96_F1BC_4222_95D0_F363D493BBC1
 #define GUARD_EBA0DB96_F1BC_4222_95D0_F363D493BBC1
-#pragma once
 
 #include <type_traits> // import std::is_enum_v, std::underlying_type_t
 

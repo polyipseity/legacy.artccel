@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_54788333_8D66_4378_A8B0_92306495AE04
 #define GUARD_54788333_8D66_4378_A8B0_92306495AE04
-#pragma once
 
 #include <cstddef> // import std::size_t
 

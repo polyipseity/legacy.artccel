@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_678654BB_B008_4FDC_84E6_9F0BC12F324F
 #define GUARD_678654BB_B008_4FDC_84E6_9F0BC12F324F
-#pragma once
 
 #include <concepts>   // import std::copyable, std::derived_from
 #include <cstdint>    // import std::uint_fast8_t

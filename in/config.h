@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_8742E330_7535_47C8_A6CD_A979308D449E
 #define GUARD_8742E330_7535_47C8_A6CD_A979308D449E
-#pragma once
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define ARTCCEL_VERSION_MAJOR /* clang-format off */@PROJECT_VERSION_MAJOR@ /* clang-format on */

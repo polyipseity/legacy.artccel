@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_4D02DFF6_D796_408D_96E0_25F301394495
 #define GUARD_4D02DFF6_D796_408D_96E0_25F301394495
-#pragma once
 
 #include <algorithm>   // import std::clamp
 #include <concepts>    // import std::integral

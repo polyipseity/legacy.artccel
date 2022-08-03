@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_557BEE04_C882_4E8E_BAC1_6411844FEDE8
 #define GUARD_557BEE04_C882_4E8E_BAC1_6411844FEDE8
-#pragma once
 
 #include <cassert>  // import assert
 #include <compare>  // import std::compare_three_way_result_t, std::is_eq

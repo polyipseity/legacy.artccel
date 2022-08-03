@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_EBF8F06E_8088_4FBC_AEBA_8CEB64E4F6AD
 #define GUARD_EBF8F06E_8088_4FBC_AEBA_8CEB64E4F6AD
-#pragma once
 
 #include <concepts> // import std::same_as
 #include <type_traits> // import std::is_nothrow_constructible_v, std::remove_cv_t, std::remove_cvref_t

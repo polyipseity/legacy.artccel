@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_02070F53_CF57_421A_A459_103D9FEF0F37
 #define GUARD_02070F53_CF57_421A_A459_103D9FEF0F37
-#pragma once
 
 #include <cassert>   // import assert
 #include <concepts>  // import std::derived_from, std::same_as

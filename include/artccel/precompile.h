@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_0849ED38_CAF3_47D7_B5FC_61B09E09BDEB
 #define GUARD_0849ED38_CAF3_47D7_B5FC_61B09E09BDEB
-#pragma once
 
 #include <algorithm>
 #include <cassert>

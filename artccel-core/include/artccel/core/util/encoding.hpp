@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_098CF151_8892_484F_B978_7F377A994280
 #define GUARD_098CF151_8892_484F_B978_7F377A994280
-#pragma once
 
 #include <algorithm> // import std::ranges::transform
 #include <array>     // import std::array, std::begin, std::data, std::size

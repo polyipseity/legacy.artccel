@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_DF82087C_C553_4C40_AFF6_0D9AE2D0D59F
 #define GUARD_DF82087C_C553_4C40_AFF6_0D9AE2D0D59F
-#pragma once
 
 #include <cstddef> // import std::size_t, std::span
 #include <string_view> // import std::data, std::size, std::string_view, std::u8string_view

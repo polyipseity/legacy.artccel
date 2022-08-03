@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_D0C3CB97_52B0_4DA4_8BCE_22BAFB070268
 #define GUARD_D0C3CB97_52B0_4DA4_8BCE_22BAFB070268
-#pragma once
 
 #include <concepts>    // import std::derived_from, std::same_as
 #include <sstream>     // import std::basic_stringbuf, std::basic_stringstream

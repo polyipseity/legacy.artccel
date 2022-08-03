@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_AAE270C5_7224_46AA_BB9A_DCAF891BA740
 #define GUARD_AAE270C5_7224_46AA_BB9A_DCAF891BA740
-#pragma once
 
 #include <bitset>  // import std::bitset
 #include <climits> // import CHAR_BIT

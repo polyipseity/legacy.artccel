@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_D3682EB3_8252_47E1_9845_97F4DC7F6846
 #define GUARD_D3682EB3_8252_47E1_9845_97F4DC7F6846
-#pragma once
 
 #include "compute/compute.hpp"
 #include "util/clone.hpp"

@@ -1,6 +1,6 @@
+#pragma once
 #ifndef GUARD_7B51F7E5_D339_44D7_85C1_7DE334308D98
 #define GUARD_7B51F7E5_D339_44D7_85C1_7DE334308D98
-#pragma once
 
 #include <array>   // import std::array
 #include <cstddef> // import std::size_t
