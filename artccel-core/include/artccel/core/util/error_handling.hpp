@@ -19,8 +19,8 @@
 #include <tl/expected.hpp> // import tl::expected, tl::unexpect
 #pragma warning(pop)
 
-#include "concepts_extras.hpp" // import Differ_from, Guard_special_constructors
-#include "utility_extras.hpp"  // import Initialize_t
+#include "concepts_extras.hpp"   // import Guard_special_constructors
+#include "utility_extras.hpp"    // import Initialize_t
 #include <artccel/core/export.h> // import ARTCCEL_CORE_EXPORT_DECLARATION
 
 namespace artccel::core::util {
@@ -58,22 +58,20 @@ public:
   explicit Error_with_exception(gsl::strict_not_null<std::exception_ptr>
                                     exc_ptr) requires Stateless_error<Error>
       : Error_with_exception{Initialize_t{}, std::move(exc_ptr), Error{}} {}
-  template <typename Exception>
-  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr>
-  explicit Error_with_exception(Exception &&exc, Error error)
+  explicit Error_with_exception(auto &&exc, Error error)
       : Error_with_exception{Initialize_t{},
                              gsl::strict_not_null{std::make_exception_ptr(
-                                 std::forward<Exception>(exc))},
+                                 std::forward<decltype(exc)>(exc))},
                              std::move(error)} {}
-  template <Guard_special_constructors<Error_with_exception> Exception>
-  requires Differ_from<std::remove_cvref_t<Exception>, std::exception_ptr> &&
-      Stateless_error<Error>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  explicit Error_with_exception(Exception &&exc)
-      : Error_with_exception{Initialize_t{},
-                             gsl::strict_not_null{std::make_exception_ptr(
-                                 std::forward<Exception>(exc))},
-                             Error{}} {}
+  explicit Error_with_exception(
+      Guard_special_constructors<Error_with_exception> auto &&exc) requires
+      Stateless_error<Error>
+      : Error_with_exception{
+            Initialize_t{},
+            gsl::strict_not_null{
+                std::make_exception_ptr(std::forward<decltype(exc)>(exc))},
+            Error{}} {}
 
   auto exc_ptr [[nodiscard]] () &noexcept -> auto & { return exc_ptr_; }
   auto exc_ptr [[nodiscard]] () const &noexcept -> auto const & {
