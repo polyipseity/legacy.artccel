@@ -6,7 +6,7 @@
 #include <concepts> // import std::default_initializable, std::equality_comparable_with, std::invocable
 #include <exception> // import std::exception_ptr, std::make_exception_ptr, std::rethrow_exception
 #include <functional>  // import std::invoke
-#include <type_traits> // import std::decay_t, std::invoke_result_t, std::is_empty_v, std::remove_cvref_t
+#include <type_traits> // import std::conditional_t, std::decay_t, std::invoke_result_t, std::is_empty_v, std::remove_cvref_t
 #include <utility>     // import std::forward, std::move
 #include <variant>     // import std::monostate
 
@@ -52,26 +52,18 @@ protected:
 
 public:
   explicit Error_with_exception(
-      gsl::strict_not_null<std::exception_ptr> exc_ptr, Error error)
+      gsl::strict_not_null<std::exception_ptr> exc_ptr,
+      Error error = std::conditional_t<Stateless_error<Error>, Error, void>{})
       : Error_with_exception{Initialize_t{}, std::move(exc_ptr),
                              std::move(error)} {}
-  explicit Error_with_exception(gsl::strict_not_null<std::exception_ptr>
-                                    exc_ptr) requires Stateless_error<Error>
-      : Error_with_exception{Initialize_t{}, std::move(exc_ptr), Error{}} {}
-  explicit Error_with_exception(auto &&exc, Error error)
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
+  explicit Error_with_exception(
+      Guard_special_constructors<Error_with_exception> auto &&exc,
+      Error error = std::conditional_t<Stateless_error<Error>, Error, void>{})
       : Error_with_exception{Initialize_t{},
                              gsl::strict_not_null{std::make_exception_ptr(
                                  std::forward<decltype(exc)>(exc))},
                              std::move(error)} {}
-  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  explicit Error_with_exception(
-      Guard_special_constructors<Error_with_exception> auto &&exc) requires
-      Stateless_error<Error>
-      : Error_with_exception{
-            Initialize_t{},
-            gsl::strict_not_null{
-                std::make_exception_ptr(std::forward<decltype(exc)>(exc))},
-            Error{}} {}
 
   auto exc_ptr [[nodiscard]] () &noexcept -> auto & { return exc_ptr_; }
   auto exc_ptr [[nodiscard]] () const &noexcept -> auto const & {
